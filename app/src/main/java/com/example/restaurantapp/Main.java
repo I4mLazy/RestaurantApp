@@ -13,28 +13,26 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
-import com.example.restaurantapp.databinding.ActivityMainBinding;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+
 public class Main extends AppCompatActivity {
 
-    private ActivityMainBinding binding;
+    BottomNavigationView bottomNavMenu;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-
-        binding = ActivityMainBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
-
+        setContentView(R.layout.activity_main);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) ->
         {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+        bottomNavMenu = findViewById(R.id.bottom_nav_menu);
         Intent intent = getIntent();
-        replaceFragment(new GmapsFragment());
-        binding.bottomNavMenu.setOnItemSelectedListener(item ->
+        bottomNavMenu.setOnItemSelectedListener(item ->
         {
             Fragment fragment = null;
             int itemId = item.getItemId();
@@ -50,12 +48,5 @@ public class Main extends AppCompatActivity {
     {
         FragmentManager fragmentManager = getSupportFragmentManager();
         fragmentManager.beginTransaction().replace(R.id.frameLayout, fragment).setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN).commit();
-    }
-
-    @Override
-    protected void onDestroy()
-    {
-        super.onDestroy();
-        binding = null;
     }
 }

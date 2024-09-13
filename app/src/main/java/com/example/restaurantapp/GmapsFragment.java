@@ -2,19 +2,30 @@ package com.example.restaurantapp;
 
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentContainer;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 
 /**
  * A simple {@link Fragment} subclass.
  * Use the {@link GmapsFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class GmapsFragment extends Fragment {
+public class GmapsFragment extends Fragment
+{
 
+    FragmentContainer mapContainer;
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -24,7 +35,8 @@ public class GmapsFragment extends Fragment {
     private String mParam1;
     private String mParam2;
 
-    public GmapsFragment() {
+    public GmapsFragment()
+    {
         // Required empty public constructor
     }
 
@@ -37,7 +49,8 @@ public class GmapsFragment extends Fragment {
      * @return A new instance of fragment GmapsFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static GmapsFragment newInstance(String param1, String param2) {
+    public static GmapsFragment newInstance(String param1, String param2)
+    {
         GmapsFragment fragment = new GmapsFragment();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
@@ -47,18 +60,31 @@ public class GmapsFragment extends Fragment {
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
+        if (getArguments() != null)
+        {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_gmaps, container, false);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
+    {
+        View view = inflater.inflate(R.layout.fragment_gmaps, container, false);
+        SupportMapFragment supportMapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.mapContainer);
+        supportMapFragment.getMapAsync(new OnMapReadyCallback()
+        {
+            @Override
+            public void onMapReady(@NonNull GoogleMap googleMap)
+            {
+                LatLng sydney = new LatLng(-33.852, 151.211);
+                googleMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
+                googleMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+            }
+        });
+        return view;
     }
 }
