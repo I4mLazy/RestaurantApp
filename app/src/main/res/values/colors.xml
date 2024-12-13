@@ -2,4 +2,6 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="primary">#6200EE</color> <!-- A deep purple -->
+    <color name="secondary">#03DAC5</color> <!-- A light teal -->
 </resources>

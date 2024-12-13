@@ -6,7 +6,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".login" >
+    android:background="#F5F5F5"
+    tools:context=".AuthenticationActivity" >
 
     <Space
         android:layout_width="match_parent"
@@ -39,8 +40,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="20"
+                android:fontFamily="sans-serif-medium"
                 android:gravity="center"
-                android:text="The Restaurant App" />
+                android:text="FeedMe"
+                android:textColor="#333333"
+                android:textSize="24sp" />
 
             <Space
                 android:layout_width="match_parent"
@@ -52,7 +56,7 @@
                 android:layout_height="0dp"
                 android:layout_weight="15"
                 android:gravity="center"
-                android:text="Everything Restaurant!" />
+                android:text="Slogan" />
 
             <Space
                 android:layout_width="match_parent"
@@ -89,7 +93,7 @@
             android:orientation="vertical">
 
             <EditText
-                android:id="@+id/editTextTextEmailAddress"
+                android:id="@+id/editTextEmail"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="50"
@@ -99,7 +103,7 @@
                 android:inputType="textEmailAddress" />
 
             <EditText
-                android:id="@+id/editTextTextPassword"
+                android:id="@+id/editTextPassword"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="50"
@@ -129,21 +133,37 @@
         <Space
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="35" />
+            android:layout_weight="10" />
 
         <TextView
-            android:id="@+id/fpw"
+            android:id="@+id/textViewForgotPassword"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="30"
             android:clickable="true"
             android:gravity="center"
-            android:text="Forgot Password" />
+            android:text="Forgot Password"
+            android:textColor="#007AFF" />
 
         <Space
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="35" />
+            android:layout_weight="20" />
+
+        <TextView
+            android:id="@+id/textViewSignUp"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="30"
+            android:clickable="true"
+            android:gravity="center"
+            android:textColor="#007AFF"
+            android:text="Sign Up" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="10" />
     </LinearLayout>
 
     <Space
@@ -169,18 +189,18 @@
             android:orientation="vertical">
 
             <Button
-                android:id="@+id/button"
+                android:id="@+id/buttonLogin"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="25"
-                android:text="Button" />
+                android:text="Login" />
 
             <Button
-                android:id="@+id/button2"
+                android:id="@+id/buttonGoogleSignIn"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="25"
-                android:text="Button" />
+                android:text="Sign in with Google" />
 
             <Button
                 android:id="@+id/button3"
@@ -208,10 +228,4 @@
         android:layout_height="0dp"
         android:layout_weight="5" />
 
-    <Button
-        android:onClick="onClick"
-        android:id="@+id/button5"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="temp" />
 </LinearLayout>
