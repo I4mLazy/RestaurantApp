@@ -1,6 +1,8 @@
 package com.example.restaurantapp;
 
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.activity.EdgeToEdge;
@@ -16,8 +18,14 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+
 import android.Manifest;
-public class Main extends AppCompatActivity {
+import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
+
+public class Main extends AppCompatActivity
+{
 
     BottomNavigationView bottomNavMenu;
     private static final int PERMISSION_REQUEST_ACCESS_FINE_LOCATION = 1;
@@ -28,6 +36,7 @@ public class Main extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
+
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) ->
         {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -42,6 +51,10 @@ public class Main extends AppCompatActivity {
             {
                 replaceFragment(new GmapsFragment());
             }
+            if (itemId == R.id.Profile)
+            {
+                replaceFragment(new ProfileFragment());
+            }
             return true;
         });
         requestLocationPermission();
@@ -53,7 +66,8 @@ public class Main extends AppCompatActivity {
         fragmentManager.beginTransaction().replace(R.id.frameLayout, fragment).setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN).commit();
     }
 
-    private void requestLocationPermission() {
+    private void requestLocationPermission()
+    {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
         {
             if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION))
@@ -70,7 +84,9 @@ public class Main extends AppCompatActivity {
                         .setNegativeButton("Cancel", null)
                         .create()
                         .show();
-            } else {
+            }
+            else
+            {
                 // No explanation needed; request the permission
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                         PERMISSION_REQUEST_ACCESS_FINE_LOCATION);
@@ -79,13 +95,18 @@ public class Main extends AppCompatActivity {
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)
+    {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == PERMISSION_REQUEST_ACCESS_FINE_LOCATION) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        if (requestCode == PERMISSION_REQUEST_ACCESS_FINE_LOCATION)
+        {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+            {
                 // Permission was granted.
                 // You can now use location-related features.
-            } else {
+            }
+            else
+            {
                 // Permission denied.
                 // You could disable location-related features, show an error message, etc.
             }

@@ -40,17 +40,21 @@ public class LoginFragment extends Fragment
     private BeginSignInRequest signInRequest;
 
 
-
     private final ActivityResultLauncher<IntentSenderRequest> signInLauncher =
-            registerForActivityResult(new ActivityResultContracts.StartIntentSenderForResult(), result -> {
-                if (result.getResultCode() == getActivity().RESULT_OK && result.getData() != null) {
-                    try {
+            registerForActivityResult(new ActivityResultContracts.StartIntentSenderForResult(), result ->
+            {
+                if (result.getResultCode() == getActivity().RESULT_OK && result.getData() != null)
+                {
+                    try
+                    {
                         SignInCredential credential = oneTapClient.getSignInCredentialFromIntent(result.getData());
                         String idToken = credential.getGoogleIdToken();
-                        if (idToken != null) {
+                        if (idToken != null)
+                        {
                             firebaseAuthWithGoogle(idToken);
                         }
-                    } catch (Exception e) {
+                    } catch (Exception e)
+                    {
                         Log.e(TAG, "Google Sign-In failed", e);
                     }
                 }
@@ -62,7 +66,8 @@ public class LoginFragment extends Fragment
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
+    {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_login, container, false);
 
@@ -109,56 +114,74 @@ public class LoginFragment extends Fragment
         return view;
     }
 
-    private void loginWithEmailPassword() {
+    private void loginWithEmailPassword()
+    {
         String email = editTextEmail.getText().toString().trim();
         String password = editTextPassword.getText().toString().trim();
 
-        if (email.isEmpty() || password.isEmpty()) {
+        if (email.isEmpty() || password.isEmpty())
+        {
             Toast.makeText(getContext(), "Please enter email and password", Toast.LENGTH_SHORT).show();
             return;
         }
 
         firebaseAuth.signInWithEmailAndPassword(email, password)
-                .addOnCompleteListener(requireActivity(), task -> {
-                    if (task.isSuccessful()) {
+                .addOnCompleteListener(requireActivity(), task ->
+                {
+                    if (task.isSuccessful())
+                    {
                         FirebaseUser user = firebaseAuth.getCurrentUser();
                         navigateToMainActivity(user);
-                    } else {
+                    }
+                    else
+                    {
                         Toast.makeText(getContext(), "Authentication failed", Toast.LENGTH_SHORT).show();
                     }
                 });
     }
 
-    private void loginWithGoogle() {
+    private void loginWithGoogle()
+    {
         oneTapClient.beginSignIn(signInRequest)
-                .addOnSuccessListener(requireActivity(), result -> {
-                    try {
+                .addOnSuccessListener(requireActivity(), result ->
+                {
+                    try
+                    {
                         // Start the intent sender for Google sign-in
                         signInLauncher.launch(new IntentSenderRequest.Builder(result.getPendingIntent().getIntentSender()).build());
-                    } catch (Exception e) {
+                    } catch (Exception e)
+                    {
                         Log.e(TAG, "Google Sign-In failed", e);
                     }
                 })
-                .addOnFailureListener(requireActivity(), e -> {
+                .addOnFailureListener(requireActivity(), e ->
+                {
                     Toast.makeText(getContext(), "Google Sign-In failed", Toast.LENGTH_SHORT).show();
                 });
     }
 
-    private void firebaseAuthWithGoogle(String idToken) {
+    private void firebaseAuthWithGoogle(String idToken)
+    {
         AuthCredential credential = GoogleAuthProvider.getCredential(idToken, null);
         firebaseAuth.signInWithCredential(credential)
-                .addOnCompleteListener(requireActivity(), task -> {
-                    if (task.isSuccessful()) {
+                .addOnCompleteListener(requireActivity(), task ->
+                {
+                    if (task.isSuccessful())
+                    {
                         FirebaseUser user = firebaseAuth.getCurrentUser();
                         navigateToMainActivity(user);
-                    } else {
+                    }
+                    else
+                    {
                         Toast.makeText(getContext(), "Google Sign-In failed", Toast.LENGTH_SHORT).show();
                     }
                 });
     }
 
-    private void navigateToMainActivity(FirebaseUser user) {
-        if (user != null) {
+    private void navigateToMainActivity(FirebaseUser user)
+    {
+        if (user != null)
+        {
             // Assuming the Activity is handling the navigation to MainActivity
             Intent intent = new Intent(getContext(), Main.class);
             startActivity(intent);
@@ -167,12 +190,14 @@ public class LoginFragment extends Fragment
     }
 
     @Override
-    public void onStart() {
+    public void onStart()
+    {
         super.onStart();
         FirebaseUser currentUser = firebaseAuth.getCurrentUser();
         Log.e(TAG, "Current User: " + currentUser);
-        if (currentUser != null) {
-            //navigateToMainActivity(currentUser); // Navigate directly if logged in
+        if (currentUser != null)
+        {
+            navigateToMainActivity(currentUser); // Navigate directly if logged in
         }
     }
 }

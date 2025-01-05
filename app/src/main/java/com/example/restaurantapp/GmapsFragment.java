@@ -10,6 +10,7 @@ import android.location.Location;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.widget.SearchView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
@@ -38,61 +39,22 @@ import com.google.android.libraries.places.api.model.PlaceLikelihood;
 import com.google.android.libraries.places.api.net.FindCurrentPlaceRequest;
 import com.google.android.libraries.places.api.net.FindCurrentPlaceResponse;
 import com.google.android.libraries.places.api.net.PlacesClient;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link GmapsFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class GmapsFragment extends Fragment
 {
+    private SearchView searchView;
     private GoogleMap mMap;
     private FusedLocationProviderClient fusedLocationClient;
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
 
     public GmapsFragment()
     {
-        // Required empty public constructor
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment GmapsFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static GmapsFragment newInstance(String param1, String param2)
-    {
-        GmapsFragment fragment = new GmapsFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState)
-    {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null)
-        {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
     }
 
     @Override
@@ -118,6 +80,83 @@ public class GmapsFragment extends Fragment
         });
 
         return view;
+    }
+
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState)
+    {
+        super.onViewCreated(view, savedInstanceState);
+        searchView = getView().findViewById(R.id.searchBar);
+        searchView.setOnClickListener(v -> searchView.setIconified(false));
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener()
+        {
+            @Override
+            public boolean onQueryTextSubmit(String query)
+            {
+                performSearch(query);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText)
+            {
+                updateSearchSuggestions(newText);
+                return true;
+            }
+        });
+    }
+
+    private void performSearch(String query)
+    {
+        if (!query.isEmpty())
+        {
+            // Reference to Firestore
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+            // Perform a query to find restaurants whose name matches the query
+            db.collection("restaurants")
+                    .orderBy("name")  // Order by name field to enable prefix search
+                    .startAt(query)  // Start matching from the query (inclusive)
+                    .endAt(query + "\uf8ff")  // Allow for any characters after the query
+                    .get()
+                    .addOnSuccessListener(querySnapshot ->
+                    {
+                        // Handle the query results
+                        List<Restaurant> results = new ArrayList<>();
+                        for (QueryDocumentSnapshot document : querySnapshot)
+                        {
+                            // Get restaurant object from Firestore document
+                            Restaurant restaurant = document.toObject(Restaurant.class);
+                            results.add(restaurant);  // Add to results list
+                        }
+                        updateSearchResults(results);  // Update UI with search results
+                    })
+                    .addOnFailureListener(e ->
+                    {
+                        // Handle any errors
+                        Log.e("SearchError", "Error performing search: ", e);
+                    });
+        }
+    }
+
+    private void updateSearchResults(List<Restaurant> results)
+    {
+        // Update the UI with the search results
+        // For example, update a RecyclerView or ListView with the result list
+        if (results.isEmpty())
+        {
+            showNoResultsMessage();  // Show a no results message if no matches found
+        }
+        else
+        {
+            displayResultsInUI(results);  // Display results in the UI
+        }
+    }
+
+
+    private void updateSearchSuggestions(String newText)
+    {
+        // Handle live search or suggestion updates here
     }
 
     private void setCurrentLocation(PlacesClient placesClient)
@@ -168,7 +207,7 @@ public class GmapsFragment extends Fragment
         setCurrentCameraPosition();
         mMap.getUiSettings().setCompassEnabled(true);
         mMap.getUiSettings().setZoomControlsEnabled(true);
-        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)== PackageManager.PERMISSION_GRANTED)
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
         {
             mMap.setMyLocationEnabled(true);
         }
@@ -182,14 +221,15 @@ public class GmapsFragment extends Fragment
         if (ActivityCompat.checkSelfPermission(requireActivity().getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(requireActivity().getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED)
         {
             CurrentLocationRequest currentLocationRequest = new CurrentLocationRequest.Builder()
-            .setDurationMillis(5000)
-            .setMaxUpdateAgeMillis(0)
-            .setPriority(Priority.PRIORITY_HIGH_ACCURACY).build();
+                    .setDurationMillis(5000)
+                    .setMaxUpdateAgeMillis(0)
+                    .setPriority(Priority.PRIORITY_HIGH_ACCURACY).build();
 
             Task<Location> locationTask = fusedLocationClient.getCurrentLocation(currentLocationRequest, null);
             locationTask.addOnCompleteListener(task ->
             {
-                if (task.isSuccessful()) {
+                if (task.isSuccessful())
+                {
                     Location location = task.getResult();
                     if (location != null)
                     {

@@ -3,8 +3,16 @@
 
     <item
         android:visible="true"
+        android:title="Profile"
+        android:id="@+id/Profile"
+        android:icon="@drawable/baseline_person_24"
+        />
+
+    <item
+        android:visible="true"
         android:id="@+id/Gmaps"
         android:title="Gmaps"
         android:icon="@drawable/baseline_map_24"
         />
+
 </menu>

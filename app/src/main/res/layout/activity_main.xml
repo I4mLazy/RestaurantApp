@@ -6,6 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:fitsSystemWindows="true"
     tools:context=".Main">
 
     <FrameLayout
@@ -19,10 +20,10 @@
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottom_nav_menu"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
+        android:minHeight="56dp"
+        android:layout_height="wrap_content"
         app:itemIconSize="24dp"
         app:itemPaddingBottom="8dp"
         app:menu="@menu/bottom_nav_menu" />
-    <!--style="@style/MyBottomNavStyle"-->
 
 </LinearLayout>

@@ -3,6 +3,7 @@ package com.example.restaurantapp;
 import android.content.Intent;
 import android.os.Bundle;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
 import android.text.TextUtils;
@@ -18,6 +19,12 @@ import androidx.fragment.app.FragmentTransaction;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.SetOptions;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class SignUpFragment extends Fragment
 {
@@ -28,10 +35,7 @@ public class SignUpFragment extends Fragment
 
     private FirebaseAuth firebaseAuth;
 
-    public SignUpFragment()
-    {
-
-    }
+    public SignUpFragment() {}
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
@@ -86,35 +90,88 @@ public class SignUpFragment extends Fragment
             return;
         }
 
-        // Create the account with Firebase Authentication
         firebaseAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(getActivity(), task ->
                 {
                     if (task.isSuccessful())
                     {
-                        // If registration is successful, log the user in
                         firebaseAuth.signInWithEmailAndPassword(email, password)
                                 .addOnCompleteListener(getActivity(), signInTask ->
                                 {
                                     if (signInTask.isSuccessful())
                                     {
                                         FirebaseUser user = firebaseAuth.getCurrentUser();
-                                        navigateToMainActivity(user);
-                                    } else
+                                        if (user != null)
+                                        {
+                                            FirebaseFirestore db = FirebaseFirestore.getInstance();
+                                            String userId = user.getUid();
+
+                                            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                                            builder.setTitle("Choose a Username");
+
+                                            final EditText input = new EditText(getActivity());
+                                            input.setHint("Enter username");
+                                            builder.setView(input);
+
+                                            builder.setPositiveButton("OK", (dialog, which) ->
+                                            {
+                                                String username = input.getText().toString().trim();
+                                                if (TextUtils.isEmpty(username))
+                                                {
+                                                    username = email.split("@")[0];
+                                                }
+                                                saveUserData(email, username, userId, db);
+                                            });
+
+                                            builder.setNegativeButton("Cancel", (dialog, which) ->
+                                            {
+                                                String username = email.split("@")[0];
+                                                saveUserData(email, username, userId, db);
+                                            });
+
+                                            builder.show();
+                                        }
+                                    }
+                                    else
                                     {
                                         Toast.makeText(getActivity(), "Sign-in failed: " + signInTask.getException().getMessage(), Toast.LENGTH_SHORT).show();
                                     }
                                 });
                         Toast.makeText(getActivity(), "Account Created Successfully", Toast.LENGTH_SHORT).show();
-
-                    } else
+                    }
+                    else
                     {
                         Toast.makeText(getActivity(), "Registration failed: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 });
     }
 
-    private void navigateToMainActivity(FirebaseUser user) {
+    private void saveUserData(String email, String username, String userId, FirebaseFirestore db)
+    {
+        Map<String, Object> userData = new HashMap<>();
+        userData.put("email", email);
+        userData.put("username", username);
+        userData.put("profileImage", "default_image_url");
+        userData.put("address", "");
+        userData.put("orderHistory", new ArrayList<String>());
+        userData.put("createdAt", System.currentTimeMillis());
+
+        db.collection("Users")
+                .document(userId)
+                .set(userData, SetOptions.merge())
+                .addOnSuccessListener(aVoid ->
+                {
+                    Toast.makeText(getActivity(), "User data saved successfully!", Toast.LENGTH_SHORT).show();
+                    navigateToMainActivity(firebaseAuth.getCurrentUser());
+                })
+                .addOnFailureListener(e ->
+                {
+                    Toast.makeText(getActivity(), "Error saving user data: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    private void navigateToMainActivity(FirebaseUser user)
+    {
         if (user != null)
         {
             Intent intent = new Intent(getActivity(), Main.class);
@@ -122,5 +179,4 @@ public class SignUpFragment extends Fragment
             getActivity().finish();
         }
     }
-
 }

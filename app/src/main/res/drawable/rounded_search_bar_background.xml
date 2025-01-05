@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="#FFFFFF"/> <!-- Background color of the search bar -->
+    <corners android:radius="25dp"/> <!-- This will make the edges fully circular -->
+    <stroke android:color="#DDDDDD" android:width="1dp"/> <!-- Optional: border around the search bar -->
+</shape>
