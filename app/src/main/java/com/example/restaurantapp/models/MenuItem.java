@@ -1,4 +1,4 @@
-package com.example.restaurantapp;
+package com.example.restaurantapp.models;
 
 import java.util.List;
 
@@ -178,5 +178,150 @@ public class MenuItem
     public void setOrderIndex(int orderIndex)
     {
         this.orderIndex = orderIndex;
+    }
+
+    public static class Option
+    {
+        private String name; // The name of the option (e.g., "Extra Toppings")
+        private String description; // A brief description of the option
+        private List<com.example.restaurantapp.models.Option.OptionValue> values; // The possible values for this option
+        private int maxSelection; // Maximum number of selections allowed (if applicable)
+
+        public Option(String name, String description, List<com.example.restaurantapp.models.Option.OptionValue> values, int maxSelection)
+        {
+            this.name = name;
+            this.description = description;
+            this.values = values;
+            this.maxSelection = maxSelection;
+        }
+
+        public String getName()
+        {
+            return name;
+        }
+
+        public void setName(String name)
+        {
+            this.name = name;
+        }
+
+        public String getDescription()
+        {
+            return description;
+        }
+
+        public void setDescription(String description)
+        {
+            this.description = description;
+        }
+
+        public List<com.example.restaurantapp.models.Option.OptionValue> getValues()
+        {
+            return values;
+        }
+
+        public void setValues(List<com.example.restaurantapp.models.Option.OptionValue> values)
+        {
+            this.values = values;
+        }
+
+        public int getMaxSelection()
+        {
+            return maxSelection;
+        }
+
+        public void setMaxSelection(int maxSelection)
+        {
+            this.maxSelection = maxSelection;
+        }
+
+        public static class OptionValue
+        {
+            private String name; // Name of the option value (e.g., "Extra Cheese")
+            private double additionalPrice; // Additional price for this option value
+
+            public OptionValue(String name, double additionalPrice)
+            {
+                this.name = name;
+                this.additionalPrice = additionalPrice;
+            }
+
+            public String getName()
+            {
+                return name;
+            }
+
+            public void setName(String name)
+            {
+                this.name = name;
+            }
+
+            public double getAdditionalPrice()
+            {
+                return additionalPrice;
+            }
+
+            public void setAdditionalPrice(double additionalPrice)
+            {
+                this.additionalPrice = additionalPrice;
+            }
+
+        }
+    }
+
+    public static class RequiredCustomization
+    {
+        private String name;
+        private String description;
+        private List<Option> options;
+        private boolean isRequired;
+
+        public RequiredCustomization(String name, String description, List<Option> options, boolean isRequired)
+        {
+            this.name = name;
+            this.description = description;
+            this.options = options;
+            this.isRequired = isRequired;
+        }
+
+        public String getName()
+        {
+            return name;
+        }
+
+        public void setName(String name)
+        {
+            this.name = name;
+        }
+
+        public String getDescription()
+        {
+            return description;
+        }
+
+        public void setDescription(String description)
+        {
+            this.description = description;
+        }
+
+        public List<Option> getOptions()
+        {
+            return options;
+        }
+
+        public void setOptions(List<Option> options)
+        {
+            this.options = options;
+        }
+
+        public boolean isRequired()
+        {
+            return isRequired;
+        }
+
+        public void setRequired(boolean required)
+        {
+            isRequired = required;
+        }
     }
 }

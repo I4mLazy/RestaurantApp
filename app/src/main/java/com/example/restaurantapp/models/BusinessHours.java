@@ -1,4 +1,4 @@
-package com.example.restaurantapp;
+package com.example.restaurantapp.models;
 
 import java.util.List;
 

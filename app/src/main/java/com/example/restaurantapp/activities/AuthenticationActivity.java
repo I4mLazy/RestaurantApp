@@ -1,9 +1,11 @@
-package com.example.restaurantapp;
+package com.example.restaurantapp.activities;
 
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentTransaction;
+
+import com.example.restaurantapp.R;
 
 public class AuthenticationActivity extends AppCompatActivity {
 

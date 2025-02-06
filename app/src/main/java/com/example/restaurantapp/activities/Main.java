@@ -1,8 +1,6 @@
-package com.example.restaurantapp;
+package com.example.restaurantapp.activities;
 
 import android.content.pm.PackageManager;
-import android.graphics.Color;
-import android.os.Build;
 import android.os.Bundle;
 
 import androidx.activity.EdgeToEdge;
@@ -17,12 +15,10 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
+import com.example.restaurantapp.R;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import android.Manifest;
-import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
 
 public class Main extends AppCompatActivity
 {

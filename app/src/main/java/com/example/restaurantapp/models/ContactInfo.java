@@ -1,4 +1,4 @@
-package com.example.restaurantapp;
+package com.example.restaurantapp.models;
 
 public class ContactInfo
 {

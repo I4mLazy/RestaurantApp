@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "625550119074",
+    "firebase_url": "https://feedme-01-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "feedme-01",
+    "storage_bucket": "feedme-01.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:625550119074:android:7ab93fc9355206dda887fb",
+        "android_client_info": {
+          "package_name": "com.example.restaurantapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "625550119074-hhl48ta6rgrjffdcune1jl5h2jg0uh82.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.restaurantapp",
+            "certificate_hash": "5b082649bb134ca521e4379a119bc17820b25f15"
+          }
+        },
+        {
+          "client_id": "625550119074-if9om96imfe32bm57mn24s0vq15qu8sj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDID_qGYeQSRcnS3B95xZ94X9mweaLWH88"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "625550119074-if9om96imfe32bm57mn24s0vq15qu8sj.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

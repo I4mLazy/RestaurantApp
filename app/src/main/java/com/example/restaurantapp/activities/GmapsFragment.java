@@ -1,25 +1,31 @@
-package com.example.restaurantapp;
+package com.example.restaurantapp.activities;
 
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 
-import static androidx.core.location.LocationManagerCompat.getCurrentLocation;
-
 import android.Manifest;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.SearchView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-
+import com.example.restaurantapp.BuildConfig;
+import com.example.restaurantapp.R;
+import com.example.restaurantapp.adapters.RestaurantAdapter;
+import com.example.restaurantapp.models.Restaurant;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.location.CurrentLocationRequest;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -51,6 +57,9 @@ public class GmapsFragment extends Fragment
     private SearchView searchView;
     private GoogleMap mMap;
     private FusedLocationProviderClient fusedLocationClient;
+    private TextView noResultsTextView;
+    private RestaurantAdapter restaurantAdapter;
+    private RecyclerView recyclerView;
 
 
     public GmapsFragment()
@@ -86,8 +95,24 @@ public class GmapsFragment extends Fragment
     public void onViewCreated(View view, Bundle savedInstanceState)
     {
         super.onViewCreated(view, savedInstanceState);
+        noResultsTextView = getView().findViewById(R.id.noResultsTextView);
+        recyclerView = getView().findViewById(R.id.searchResultsRecyclerView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        restaurantAdapter = new RestaurantAdapter(new ArrayList<>());
+        recyclerView.setAdapter(restaurantAdapter);
+
         searchView = getView().findViewById(R.id.searchBar);
-        searchView.setOnClickListener(v -> searchView.setIconified(false));
+        searchView.setOnClickListener(v ->
+        {
+            InputMethodManager imm = (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+
+            if (imm != null)
+            {
+                imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+            }
+            searchView.setIconified(false);
+        });
+
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener()
         {
             @Override
@@ -110,30 +135,24 @@ public class GmapsFragment extends Fragment
     {
         if (!query.isEmpty())
         {
-            // Reference to Firestore
             FirebaseFirestore db = FirebaseFirestore.getInstance();
-
-            // Perform a query to find restaurants whose name matches the query
-            db.collection("restaurants")
-                    .orderBy("name")  // Order by name field to enable prefix search
-                    .startAt(query)  // Start matching from the query (inclusive)
-                    .endAt(query + "\uf8ff")  // Allow for any characters after the query
+            db.collection("Restaurants")
+                    .orderBy("name")
+                    .startAt(query)
+                    .endAt(query + "\uf8ff")
                     .get()
                     .addOnSuccessListener(querySnapshot ->
                     {
-                        // Handle the query results
                         List<Restaurant> results = new ArrayList<>();
                         for (QueryDocumentSnapshot document : querySnapshot)
                         {
-                            // Get restaurant object from Firestore document
                             Restaurant restaurant = document.toObject(Restaurant.class);
-                            results.add(restaurant);  // Add to results list
+                            results.add(restaurant);
                         }
-                        updateSearchResults(results);  // Update UI with search results
+                        updateSearchResults(results);
                     })
                     .addOnFailureListener(e ->
                     {
-                        // Handle any errors
                         Log.e("SearchError", "Error performing search: ", e);
                     });
         }
@@ -141,18 +160,29 @@ public class GmapsFragment extends Fragment
 
     private void updateSearchResults(List<Restaurant> results)
     {
-        // Update the UI with the search results
-        // For example, update a RecyclerView or ListView with the result list
         if (results.isEmpty())
         {
-            showNoResultsMessage();  // Show a no results message if no matches found
-        }
-        else
+            // Show a no results message if no matches found
+            noResultsTextView.setVisibility(View.VISIBLE);
+            noResultsTextView.setText("No results found");
+            recyclerView.setVisibility(View.GONE);
+        } else
         {
             displayResultsInUI(results);  // Display results in the UI
         }
     }
 
+    private void displayResultsInUI(List<Restaurant> results)
+    {
+        // Assuming you have a RecyclerView and an adapter set up
+        restaurantAdapter.updateData(results);  // Update the adapter with the new data
+
+        // Hide the "No results found" message, if it's visible
+        noResultsTextView.setVisibility(View.GONE);
+
+        // Show the RecyclerView with the search results
+        recyclerView.setVisibility(View.VISIBLE);
+    }
 
     private void updateSearchSuggestions(String newText)
     {
@@ -180,8 +210,7 @@ public class GmapsFragment extends Fragment
                         Log.i("CurrentLocation", String.format("Place '%s' has likelihood: %f", placeLikelihood.getPlace().getDisplayName(),
                                 placeLikelihood.getLikelihood()));
                     }
-                }
-                else
+                } else
                 {
                     Exception exception = task.getException();
                     if (exception instanceof ApiException)
@@ -191,8 +220,7 @@ public class GmapsFragment extends Fragment
                     }
                 }
             });
-        }
-        else
+        } else
         {
             // A local method to request required permissions;
             // See https://developer.android.com/training/permissions/requesting
@@ -235,13 +263,11 @@ public class GmapsFragment extends Fragment
                     {
                         LatLng currentLatLng = new LatLng(location.getLatitude(), location.getLongitude());
                         focusOnLocation(mMap, currentLatLng);
-                    }
-                    else
+                    } else
                     {
                         // Handle location not available
                     }
-                }
-                else
+                } else
                 {
                     // Handle location request error
                 }

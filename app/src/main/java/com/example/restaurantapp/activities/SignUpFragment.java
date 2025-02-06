@@ -1,4 +1,4 @@
-package com.example.restaurantapp;
+package com.example.restaurantapp.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -17,6 +17,7 @@ import android.widget.Toast;
 
 import androidx.fragment.app.FragmentTransaction;
 
+import com.example.restaurantapp.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;

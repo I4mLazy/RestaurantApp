@@ -1,4 +1,4 @@
-package com.example.restaurantapp;
+package com.example.restaurantapp.models;
 
 import com.google.firebase.Timestamp;
 

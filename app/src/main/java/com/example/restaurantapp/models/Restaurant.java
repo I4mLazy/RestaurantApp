@@ -1,4 +1,4 @@
-package com.example.restaurantapp;
+package com.example.restaurantapp.models;
 
 import com.google.firebase.Timestamp;
 
@@ -21,6 +21,7 @@ public class Restaurant
     private int priceLevel;
     private Menu menu;
 
+    public Restaurant() {}
     public Restaurant(String name, String address, String location, double rating, String imageUrl, String restaurantID,
                       BusinessHours businessHours, Timestamp createdAt, ContactInfo contactInfo, boolean reservable,
                       List<String> type, List<String> tags, int priceLevel, Menu menu)

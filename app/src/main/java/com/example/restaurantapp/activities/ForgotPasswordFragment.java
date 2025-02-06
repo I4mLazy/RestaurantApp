@@ -1,4 +1,4 @@
-package com.example.restaurantapp;
+package com.example.restaurantapp.activities;
 
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -13,6 +13,7 @@ import android.widget.Toast;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
+import com.example.restaurantapp.R;
 import com.google.firebase.auth.FirebaseAuth;
 
 public class ForgotPasswordFragment extends Fragment
