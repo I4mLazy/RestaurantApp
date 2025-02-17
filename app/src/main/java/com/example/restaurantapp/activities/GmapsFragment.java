@@ -45,6 +45,7 @@ import com.google.android.libraries.places.api.model.PlaceLikelihood;
 import com.google.android.libraries.places.api.net.FindCurrentPlaceRequest;
 import com.google.android.libraries.places.api.net.FindCurrentPlaceResponse;
 import com.google.android.libraries.places.api.net.PlacesClient;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
@@ -102,23 +103,19 @@ public class GmapsFragment extends Fragment
         recyclerView.setAdapter(restaurantAdapter);
 
         searchView = getView().findViewById(R.id.searchBar);
-        searchView.setOnClickListener(v ->
-        {
-            InputMethodManager imm = (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-
-            if (imm != null)
-            {
-                imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-            }
-            searchView.setIconified(false);
-        });
-
+        searchView.setOnClickListener(v -> searchView.setIconified(false));
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener()
         {
             @Override
             public boolean onQueryTextSubmit(String query)
             {
                 performSearch(query);
+                InputMethodManager imm = (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+
+                if (imm != null)
+                {
+                    imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+                }
                 return true;
             }
 
@@ -166,28 +163,58 @@ public class GmapsFragment extends Fragment
             noResultsTextView.setVisibility(View.VISIBLE);
             noResultsTextView.setText("No results found");
             recyclerView.setVisibility(View.GONE);
-        } else
-        {
-            displayResultsInUI(results);  // Display results in the UI
         }
-    }
-
-    private void displayResultsInUI(List<Restaurant> results)
-    {
-        // Assuming you have a RecyclerView and an adapter set up
-        restaurantAdapter.updateData(results);  // Update the adapter with the new data
-
-        // Hide the "No results found" message, if it's visible
-        noResultsTextView.setVisibility(View.GONE);
-
-        // Show the RecyclerView with the search results
-        recyclerView.setVisibility(View.VISIBLE);
+        else
+        {
+            restaurantAdapter.updateData(results);
+            noResultsTextView.setVisibility(View.GONE);
+            recyclerView.setVisibility(View.VISIBLE);
+        }
     }
 
     private void updateSearchSuggestions(String newText)
     {
-        // Handle live search or suggestion updates here
+        if (newText.isEmpty())
+        {
+            recyclerView.setVisibility(View.GONE);
+            noResultsTextView.setVisibility(View.GONE);
+            return;
+        }
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("restaurants")
+                .orderBy("name")
+                .startAt(newText)
+                .endAt(newText + "\uf8ff")
+                .limit(10)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots ->
+                {
+                    List<Restaurant> filteredList = new ArrayList<>();
+                    for (DocumentSnapshot document : queryDocumentSnapshots)
+                    {
+                        Restaurant restaurant = document.toObject(Restaurant.class);
+                        filteredList.add(restaurant);
+                    }
+
+                    if (filteredList.isEmpty())
+                    {
+                        recyclerView.setVisibility(View.GONE);
+                        noResultsTextView.setVisibility(View.VISIBLE);
+                    }
+                    else
+                    {
+                        recyclerView.setVisibility(View.VISIBLE);
+                        noResultsTextView.setVisibility(View.GONE);
+                        restaurantAdapter.updateData(filteredList);
+                    }
+                })
+                .addOnFailureListener(e ->
+                {
+                    Log.e("Search", "Error fetching search results", e);
+                });
     }
+
 
     private void setCurrentLocation(PlacesClient placesClient)
     {
@@ -210,7 +237,8 @@ public class GmapsFragment extends Fragment
                         Log.i("CurrentLocation", String.format("Place '%s' has likelihood: %f", placeLikelihood.getPlace().getDisplayName(),
                                 placeLikelihood.getLikelihood()));
                     }
-                } else
+                }
+                else
                 {
                     Exception exception = task.getException();
                     if (exception instanceof ApiException)
@@ -220,7 +248,8 @@ public class GmapsFragment extends Fragment
                     }
                 }
             });
-        } else
+        }
+        else
         {
             // A local method to request required permissions;
             // See https://developer.android.com/training/permissions/requesting
@@ -263,11 +292,13 @@ public class GmapsFragment extends Fragment
                     {
                         LatLng currentLatLng = new LatLng(location.getLatitude(), location.getLongitude());
                         focusOnLocation(mMap, currentLatLng);
-                    } else
+                    }
+                    else
                     {
                         // Handle location not available
                     }
-                } else
+                }
+                else
                 {
                     // Handle location request error
                 }
