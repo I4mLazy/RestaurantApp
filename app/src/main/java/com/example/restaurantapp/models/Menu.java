@@ -15,9 +15,7 @@ public class Menu
     private List<String> tags;
     private String restaurantID;
 
-    public Menu()
-    {
-    }
+    public Menu() {}
 
     public Menu(String menuID, String name, String description, String imageURL, Timestamp timeCreated,
                 List<MenuItem> items, List<String> tags, String restaurantID, String type)

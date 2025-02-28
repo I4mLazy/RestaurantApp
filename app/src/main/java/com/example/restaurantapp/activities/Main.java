@@ -16,6 +16,9 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.example.restaurantapp.R;
+import com.example.restaurantapp.fragments.DiscoveryFragment;
+import com.example.restaurantapp.fragments.GmapsFragment;
+import com.example.restaurantapp.fragments.ProfileFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import android.Manifest;
@@ -51,6 +54,10 @@ public class Main extends AppCompatActivity
             {
                 replaceFragment(new ProfileFragment());
             }
+            if (itemId == R.id.Discovery)
+            {
+                replaceFragment(new DiscoveryFragment());
+            }
             return true;
         });
         requestLocationPermission();
@@ -59,7 +66,7 @@ public class Main extends AppCompatActivity
     private void replaceFragment(Fragment fragment)
     {
         FragmentManager fragmentManager = getSupportFragmentManager();
-        fragmentManager.beginTransaction().replace(R.id.frameLayout, fragment).setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN).commit();
+        fragmentManager.beginTransaction().replace(R.id.fragmentContainer, fragment).setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN).commit();
     }
 
     private void requestLocationPermission()
@@ -80,8 +87,7 @@ public class Main extends AppCompatActivity
                         .setNegativeButton("Cancel", null)
                         .create()
                         .show();
-            }
-            else
+            } else
             {
                 // No explanation needed; request the permission
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
@@ -100,8 +106,7 @@ public class Main extends AppCompatActivity
             {
                 // Permission was granted.
                 // You can now use location-related features.
-            }
-            else
+            } else
             {
                 // Permission denied.
                 // You could disable location-related features, show an error message, etc.

@@ -1,14 +1,17 @@
 package com.example.restaurantapp.models;
 
+import com.google.android.gms.maps.model.LatLng;
 import com.google.firebase.Timestamp;
+import com.google.firebase.firestore.GeoPoint;
 
 import java.util.List;
+
 
 public class Restaurant
 {
     private String name;
     private String address;
-    private String location;
+    private GeoPoint location;
     private double rating;
     private String imageUrl;
     private String restaurantID;
@@ -22,7 +25,7 @@ public class Restaurant
     private Menu menu;
 
     public Restaurant() {}
-    public Restaurant(String name, String address, String location, double rating, String imageUrl, String restaurantID,
+    public Restaurant(String name, String address, GeoPoint location, double rating, String imageUrl, String restaurantID,
                       BusinessHours businessHours, Timestamp createdAt, ContactInfo contactInfo, boolean reservable,
                       List<String> type, List<String> tags, int priceLevel, Menu menu)
     {
@@ -41,6 +44,7 @@ public class Restaurant
         this.priceLevel = priceLevel;
         this.menu = menu;
     }
+
 
     public String getName()
     {
@@ -62,12 +66,12 @@ public class Restaurant
         this.address = address;
     }
 
-    public String getLocation()
+    public GeoPoint getLocation()
     {
         return location;
     }
 
-    public void setLocation(String location)
+    public void setLocation(GeoPoint location)
     {
         this.location = location;
     }

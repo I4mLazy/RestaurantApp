@@ -19,10 +19,12 @@ public class MenuItem
     private List<String> allergens;
     private Boolean isSpecialOffer;
     private int orderIndex;
+    private int maxSelection;
 
+    public MenuItem(){}
     public MenuItem(String name, String description, double price, String imageURL, String itemID, String menuID,
                     String category, List<Option> options, List<RequiredCustomization> requiredCustomizations,
-                    Boolean availability, String status, List<String> allergens, Boolean isSpecialOffer, int orderIndex)
+                    Boolean availability, String status, List<String> allergens, Boolean isSpecialOffer, int orderIndex, int maxSelection)
     {
         this.name = name;
         this.description = description;
@@ -38,6 +40,7 @@ public class MenuItem
         this.allergens = allergens;
         this.isSpecialOffer = isSpecialOffer;
         this.orderIndex = orderIndex;
+        this.maxSelection = maxSelection;
     }
 
     public String getName()
@@ -180,19 +183,27 @@ public class MenuItem
         this.orderIndex = orderIndex;
     }
 
+    public void setMaxSelection(int maxSelection)
+    {
+        this.maxSelection = maxSelection;
+    }
+
+    public int getMaxSelection()
+    {
+        return maxSelection;
+    }
+
     public static class Option
     {
         private String name; // The name of the option (e.g., "Extra Toppings")
         private String description; // A brief description of the option
-        private List<com.example.restaurantapp.models.Option.OptionValue> values; // The possible values for this option
-        private int maxSelection; // Maximum number of selections allowed (if applicable)
+        private double price; // The price of this option
 
-        public Option(String name, String description, List<com.example.restaurantapp.models.Option.OptionValue> values, int maxSelection)
+        public Option(String name, String description, double price, int maxSelection)
         {
             this.name = name;
             this.description = description;
-            this.values = values;
-            this.maxSelection = maxSelection;
+            this.price = price;
         }
 
         public String getName()
@@ -215,57 +226,14 @@ public class MenuItem
             this.description = description;
         }
 
-        public List<com.example.restaurantapp.models.Option.OptionValue> getValues()
+        public double getPrice()
         {
-            return values;
+            return price;
         }
 
-        public void setValues(List<com.example.restaurantapp.models.Option.OptionValue> values)
+        public void setPrice(double price)
         {
-            this.values = values;
-        }
-
-        public int getMaxSelection()
-        {
-            return maxSelection;
-        }
-
-        public void setMaxSelection(int maxSelection)
-        {
-            this.maxSelection = maxSelection;
-        }
-
-        public static class OptionValue
-        {
-            private String name; // Name of the option value (e.g., "Extra Cheese")
-            private double additionalPrice; // Additional price for this option value
-
-            public OptionValue(String name, double additionalPrice)
-            {
-                this.name = name;
-                this.additionalPrice = additionalPrice;
-            }
-
-            public String getName()
-            {
-                return name;
-            }
-
-            public void setName(String name)
-            {
-                this.name = name;
-            }
-
-            public double getAdditionalPrice()
-            {
-                return additionalPrice;
-            }
-
-            public void setAdditionalPrice(double additionalPrice)
-            {
-                this.additionalPrice = additionalPrice;
-            }
-
+            this.price = price;
         }
     }
 
@@ -273,15 +241,15 @@ public class MenuItem
     {
         private String name;
         private String description;
-        private List<Option> options;
-        private boolean isRequired;
+        private List<Option> options; // Now a list of Option objects
+        private int maxSelection; // Maximum number of selections allowed
 
-        public RequiredCustomization(String name, String description, List<Option> options, boolean isRequired)
+        public RequiredCustomization(String name, String description, List<Option> options, int maxSelection)
         {
             this.name = name;
             this.description = description;
             this.options = options;
-            this.isRequired = isRequired;
+            this.maxSelection = maxSelection;
         }
 
         public String getName()
@@ -314,14 +282,14 @@ public class MenuItem
             this.options = options;
         }
 
-        public boolean isRequired()
+        public int getMaxSelection()
         {
-            return isRequired;
+            return maxSelection;
         }
 
-        public void setRequired(boolean required)
+        public void setMaxSelection(int maxSelection)
         {
-            isRequired = required;
+            this.maxSelection = maxSelection;
         }
     }
 }

@@ -1,4 +1,4 @@
-package com.example.restaurantapp.activities;
+package com.example.restaurantapp.fragments;
 
 import android.os.Bundle;
 import android.text.TextUtils;

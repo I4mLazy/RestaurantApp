@@ -1,4 +1,4 @@
-package com.example.restaurantapp.activities;
+package com.example.restaurantapp.fragments;
 
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 
@@ -24,7 +24,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.restaurantapp.BuildConfig;
 import com.example.restaurantapp.R;
-import com.example.restaurantapp.adapters.RestaurantAdapter;
+import com.example.restaurantapp.adapters.RestaurantSearchResultsAdapter;
 import com.example.restaurantapp.models.Restaurant;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.location.CurrentLocationRequest;
@@ -45,6 +45,7 @@ import com.google.android.libraries.places.api.model.PlaceLikelihood;
 import com.google.android.libraries.places.api.net.FindCurrentPlaceRequest;
 import com.google.android.libraries.places.api.net.FindCurrentPlaceResponse;
 import com.google.android.libraries.places.api.net.PlacesClient;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -59,9 +60,11 @@ public class GmapsFragment extends Fragment
     private GoogleMap mMap;
     private FusedLocationProviderClient fusedLocationClient;
     private TextView noResultsTextView;
-    private RestaurantAdapter restaurantAdapter;
+    private RestaurantSearchResultsAdapter restaurantSearchResultsAdapter;
     private RecyclerView recyclerView;
-
+    private BottomSheetBehavior<View> bottomSheetBehavior;
+    private View bottomSheet;
+    private View bottomSheetContainer;
 
     public GmapsFragment()
     {
@@ -75,6 +78,14 @@ public class GmapsFragment extends Fragment
         PlacesClient placesClient = Places.createClient(requireContext());
 
         View view = inflater.inflate(R.layout.fragment_gmaps, container, false);
+
+        bottomSheet = view.findViewById(R.id.bottomSheetContainer);
+        bottomSheetContainer = view.findViewById(R.id.bottomSheetContainer);
+        bottomSheetBehavior = BottomSheetBehavior.from(bottomSheetContainer);
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+        bottomSheetBehavior.setPeekHeight(1000);
+        bottomSheetBehavior.setHideable(true);
+
         SupportMapFragment supportMapFragment = SupportMapFragment.newInstance(
                 new GoogleMapOptions().mapId(getResources().getString(R.string.map_id)));
         getChildFragmentManager().beginTransaction()
@@ -96,13 +107,14 @@ public class GmapsFragment extends Fragment
     public void onViewCreated(View view, Bundle savedInstanceState)
     {
         super.onViewCreated(view, savedInstanceState);
-        noResultsTextView = getView().findViewById(R.id.noResultsTextView);
-        recyclerView = getView().findViewById(R.id.searchResultsRecyclerView);
-        recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        restaurantAdapter = new RestaurantAdapter(new ArrayList<>());
-        recyclerView.setAdapter(restaurantAdapter);
 
-        searchView = getView().findViewById(R.id.searchBar);
+        noResultsTextView = view.findViewById(R.id.noResultsTextView);
+        recyclerView = view.findViewById(R.id.searchResultsRecyclerView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        restaurantSearchResultsAdapter = new RestaurantSearchResultsAdapter(new ArrayList<>(), requireActivity().getApplicationContext());
+        recyclerView.setAdapter(restaurantSearchResultsAdapter);
+
+        searchView = view.findViewById(R.id.searchBar);
         searchView.setOnClickListener(v -> searchView.setIconified(false));
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener()
         {
@@ -111,7 +123,6 @@ public class GmapsFragment extends Fragment
             {
                 performSearch(query);
                 InputMethodManager imm = (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-
                 if (imm != null)
                 {
                     imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
@@ -122,7 +133,7 @@ public class GmapsFragment extends Fragment
             @Override
             public boolean onQueryTextChange(String newText)
             {
-                updateSearchSuggestions(newText);
+                //updateSearchSuggestions(newText);
                 return true;
             }
         });
@@ -159,16 +170,18 @@ public class GmapsFragment extends Fragment
     {
         if (results.isEmpty())
         {
-            // Show a no results message if no matches found
             noResultsTextView.setVisibility(View.VISIBLE);
             noResultsTextView.setText("No results found");
             recyclerView.setVisibility(View.GONE);
-        }
-        else
+            bottomSheet.setVisibility(View.VISIBLE);
+            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+        } else
         {
-            restaurantAdapter.updateData(results);
             noResultsTextView.setVisibility(View.GONE);
             recyclerView.setVisibility(View.VISIBLE);
+            restaurantSearchResultsAdapter.updateData(results);
+            bottomSheet.setVisibility(View.VISIBLE);
+            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
         }
     }
 
@@ -178,11 +191,11 @@ public class GmapsFragment extends Fragment
         {
             recyclerView.setVisibility(View.GONE);
             noResultsTextView.setVisibility(View.GONE);
+            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
             return;
         }
-
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("restaurants")
+        db.collection("Restaurants")
                 .orderBy("name")
                 .startAt(newText)
                 .endAt(newText + "\uf8ff")
@@ -196,25 +209,24 @@ public class GmapsFragment extends Fragment
                         Restaurant restaurant = document.toObject(Restaurant.class);
                         filteredList.add(restaurant);
                     }
-
                     if (filteredList.isEmpty())
                     {
                         recyclerView.setVisibility(View.GONE);
                         noResultsTextView.setVisibility(View.VISIBLE);
-                    }
-                    else
+                        bottomSheet.setVisibility(View.VISIBLE);
+                        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+                    } else
                     {
                         recyclerView.setVisibility(View.VISIBLE);
                         noResultsTextView.setVisibility(View.GONE);
-                        restaurantAdapter.updateData(filteredList);
+                        restaurantSearchResultsAdapter.updateData(filteredList);
+                        bottomSheet.setVisibility(View.VISIBLE);
+                        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
                     }
                 })
                 .addOnFailureListener(e ->
-                {
-                    Log.e("Search", "Error fetching search results", e);
-                });
+                        Log.e("Search", "Error fetching search results", e));
     }
-
 
     private void setCurrentLocation(PlacesClient placesClient)
     {
@@ -237,8 +249,7 @@ public class GmapsFragment extends Fragment
                         Log.i("CurrentLocation", String.format("Place '%s' has likelihood: %f", placeLikelihood.getPlace().getDisplayName(),
                                 placeLikelihood.getLikelihood()));
                     }
-                }
-                else
+                } else
                 {
                     Exception exception = task.getException();
                     if (exception instanceof ApiException)
@@ -248,18 +259,14 @@ public class GmapsFragment extends Fragment
                     }
                 }
             });
-        }
-        else
+        } else
         {
-            // A local method to request required permissions;
-            // See https://developer.android.com/training/permissions/requesting
-            //regetLocationPermission();
+            // Request permissions if needed
         }
     }
 
     private void setMapSettings(GoogleMap mMap, PlacesClient placesClient)
     {
-        //setSearchNearby(placesClient);
         setCurrentLocation(placesClient);
         setCurrentCameraPosition();
         mMap.getUiSettings().setCompassEnabled(true);
@@ -280,7 +287,8 @@ public class GmapsFragment extends Fragment
             CurrentLocationRequest currentLocationRequest = new CurrentLocationRequest.Builder()
                     .setDurationMillis(5000)
                     .setMaxUpdateAgeMillis(0)
-                    .setPriority(Priority.PRIORITY_HIGH_ACCURACY).build();
+                    .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
+                    .build();
 
             Task<Location> locationTask = fusedLocationClient.getCurrentLocation(currentLocationRequest, null);
             locationTask.addOnCompleteListener(task ->
@@ -293,23 +301,8 @@ public class GmapsFragment extends Fragment
                         LatLng currentLatLng = new LatLng(location.getLatitude(), location.getLongitude());
                         focusOnLocation(mMap, currentLatLng);
                     }
-                    else
-                    {
-                        // Handle location not available
-                    }
-                }
-                else
-                {
-                    // Handle location request error
                 }
             });
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
             return;
         }
     }
@@ -320,13 +313,12 @@ public class GmapsFragment extends Fragment
         {
             CameraPosition cameraPosition = new CameraPosition.Builder()
                     .target(latLng)
-                    .zoom(14) // Set the desired zoom level
+                    .zoom(14)
                     .build();
             mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
         }
     }
-
-    //private void setSearchNearby(PlacesClient placesClient)
+//private void setSearchNearby(PlacesClient placesClient)
     //{
     //    fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity().getApplicationContext());
     //    if (ActivityCompat.checkSelfPermission(requireActivity().getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(requireActivity().getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED)
