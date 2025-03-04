@@ -46,7 +46,6 @@ public class RestaurantDiscoveryAdapter extends RecyclerView.Adapter<RestaurantD
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType)
     {
-        // Note: Using discovery_restaurant_item.xml as the layout
         View view = LayoutInflater.from(context).inflate(R.layout.discovery_restaurant_item, parent, false);
         return new ViewHolder(view);
     }

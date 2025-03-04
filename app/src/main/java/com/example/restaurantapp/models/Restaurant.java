@@ -1,11 +1,9 @@
 package com.example.restaurantapp.models;
 
-import com.google.android.gms.maps.model.LatLng;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.GeoPoint;
 
 import java.util.List;
-
 
 public class Restaurant
 {
@@ -14,7 +12,6 @@ public class Restaurant
     private GeoPoint location;
     private double rating;
     private String imageUrl;
-    private String restaurantID;
     private BusinessHours businessHours;
     private Timestamp createdAt;
     private ContactInfo contactInfo;
@@ -22,19 +19,21 @@ public class Restaurant
     private List<String> type;
     private List<String> tags;
     private int priceLevel;
-    private Menu menu;
+    private String restaurantID;
 
-    public Restaurant() {}
-    public Restaurant(String name, String address, GeoPoint location, double rating, String imageUrl, String restaurantID,
+    public Restaurant()
+    {
+    }
+
+    public Restaurant(String name, String address, GeoPoint location, double rating, String imageUrl,
                       BusinessHours businessHours, Timestamp createdAt, ContactInfo contactInfo, boolean reservable,
-                      List<String> type, List<String> tags, int priceLevel, Menu menu)
+                      List<String> type, List<String> tags, int priceLevel, String restaurantID)
     {
         this.name = name;
         this.address = address;
         this.location = location;
         this.rating = rating;
         this.imageUrl = imageUrl;
-        this.restaurantID = restaurantID;
         this.businessHours = businessHours;
         this.createdAt = createdAt;
         this.contactInfo = contactInfo;
@@ -42,9 +41,10 @@ public class Restaurant
         this.type = type;
         this.tags = tags;
         this.priceLevel = priceLevel;
-        this.menu = menu;
+        this.restaurantID = restaurantID;
     }
 
+    // ... (Getters and setters) ...
 
     public String getName()
     {
@@ -94,16 +94,6 @@ public class Restaurant
     public void setImageUrl(String imageUrl)
     {
         this.imageUrl = imageUrl;
-    }
-
-    public String getRestaurantID()
-    {
-        return restaurantID;
-    }
-
-    public void setRestaurantID(String restaurantID)
-    {
-        this.restaurantID = restaurantID;
     }
 
     public BusinessHours getBusinessHours()
@@ -176,14 +166,13 @@ public class Restaurant
         this.priceLevel = priceLevel;
     }
 
-    public Menu getMenu()
+    public String getRestaurantID()
     {
-        return menu;
+        return restaurantID;
     }
 
-    public void setMenu(Menu menu)
+    public void setRestaurantID()
     {
-        this.menu = menu;
+        this.restaurantID = restaurantID;
     }
 }
-

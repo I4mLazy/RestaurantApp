@@ -29,7 +29,7 @@
             android:textStyle="bold"
             android:layout_marginTop="16dp" />
 
-        <!-- Restaurant Address -->
+        <!-- Restaurant Address (or Rating, adjust as desired) -->
         <TextView
             android:id="@+id/restaurantDetailRating"
             android:layout_width="wrap_content"
@@ -38,7 +38,7 @@
             android:text="Rating: 4.5"
             android:textSize="16sp" />
 
-        <!-- Restaurant Rating -->
+        <!-- Restaurant Tags (or Address) -->
         <TextView
             android:id="@+id/restaurantDetailTags"
             android:layout_width="wrap_content"
@@ -47,7 +47,7 @@
             android:text="Tags: Italian, Pizza, Pasta"
             android:textSize="16sp" />
 
-        <!-- Business Hours -->
+        <!-- Restaurant Address -->
         <TextView
             android:id="@+id/restaurantDetailAddress"
             android:layout_width="wrap_content"
@@ -56,6 +56,7 @@
             android:text="123 Main Street"
             android:textSize="16sp" />
 
+        <!-- Business Hours -->
         <TextView
             android:id="@+id/restaurantDetailBusinessHours"
             android:layout_width="wrap_content"
@@ -63,8 +64,6 @@
             android:text="Business Hours: 10:00 AM - 10:00 PM"
             android:textSize="16sp"
             android:layout_marginTop="8dp" />
-
-        <!-- Created At -->
 
         <!-- Contact Info -->
         <TextView
@@ -93,8 +92,6 @@
             android:textSize="16sp"
             android:layout_marginTop="8dp" />
 
-        <!-- Tags (list of strings) -->
-
         <!-- Price Level -->
         <TextView
             android:id="@+id/restaurantDetailPriceLevel"
@@ -104,13 +101,12 @@
             android:textSize="16sp"
             android:layout_marginTop="8dp" />
 
-        <!-- Menu (Placeholder for menu details) -->
-        <TextView
-            android:id="@+id/restaurantDetailMenu"
-            android:layout_width="wrap_content"
+        <!-- Menu Items RecyclerView (replacing the placeholder TextView) -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/menusRecyclerView"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Menu: (List of menu items...)"
-            android:textSize="16sp"
-            android:layout_marginTop="8dp" />
+            android:layout_marginTop="8dp"
+            android:nestedScrollingEnabled="false"/>
     </LinearLayout>
 </ScrollView>

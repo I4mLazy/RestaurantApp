@@ -6,37 +6,27 @@ import java.util.List;
 
 public class Menu
 {
-    private String menuID;
     private String name;
     private String description;
     private String imageURL;
     private Timestamp timeCreated;
-    private List<MenuItem> items;
     private List<String> tags;
     private String restaurantID;
+    private String menuID;
 
-    public Menu() {}
-
-    public Menu(String menuID, String name, String description, String imageURL, Timestamp timeCreated,
-                List<MenuItem> items, List<String> tags, String restaurantID, String type)
+    public Menu()
     {
-        this.menuID = menuID;
+    }
+
+    public Menu(String name, String description, String imageURL, Timestamp timeCreated,
+                List<String> tags, String restaurantID, String menuID)
+    {
         this.name = name;
         this.description = description;
         this.imageURL = imageURL;
         this.timeCreated = timeCreated;
-        this.items = items;
         this.tags = tags;
         this.restaurantID = restaurantID;
-    }
-
-    public String getMenuID()
-    {
-        return menuID;
-    }
-
-    public void setMenuID(String menuID)
-    {
         this.menuID = menuID;
     }
 
@@ -80,16 +70,6 @@ public class Menu
         this.timeCreated = timeCreated;
     }
 
-    public List<MenuItem> getItems()
-    {
-        return items;
-    }
-
-    public void setItems(List<MenuItem> items)
-    {
-        this.items = items;
-    }
-
     public List<String> getTags()
     {
         return tags;
@@ -110,19 +90,13 @@ public class Menu
         this.restaurantID = restaurantID;
     }
 
-
-    @Override
-    public String toString()
+    public String getMenuID()
     {
-        return "Menu{" +
-                "menuID='" + menuID + '\'' +
-                ", name='" + name + '\'' +
-                ", description='" + description + '\'' +
-                ", imageURL='" + imageURL + '\'' +
-                ", timeCreated=" + timeCreated +
-                ", items=" + items +
-                ", tags=" + tags +
-                ", restaurantID='" + restaurantID + '\'' +
-                '}';
+        return menuID;
+    }
+
+    public void setMenuID()
+    {
+        this.menuID = menuID;
     }
 }

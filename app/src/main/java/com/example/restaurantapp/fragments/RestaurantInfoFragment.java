@@ -1,6 +1,7 @@
 package com.example.restaurantapp.fragments;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,13 +10,22 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.restaurantapp.R;
+import com.example.restaurantapp.adapters.MenusAdapter;
+import com.example.restaurantapp.models.Menu;
 import com.example.restaurantapp.models.Restaurant;
 import com.example.restaurantapp.viewmodels.RestaurantSelectionViewModel;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class RestaurantInfoFragment extends Fragment
 {
@@ -24,8 +34,13 @@ public class RestaurantInfoFragment extends Fragment
     private TextView restaurantDetailName, restaurantDetailAddress, restaurantDetailRating,
             restaurantDetailBusinessHours, restaurantDetailContactInfo,
             restaurantDetailReservable, restaurantDetailType, restaurantDetailTags,
-            restaurantDetailPriceLevel, restaurantDetailMenu;
+            restaurantDetailPriceLevel;
+    // RecyclerView for menus
+    private RecyclerView menusRecyclerView;
+    private MenusAdapter menusAdapter;
+
     private RestaurantSelectionViewModel viewModel;
+    private FirebaseFirestore db = FirebaseFirestore.getInstance();
 
     public RestaurantInfoFragment()
     {
@@ -47,21 +62,25 @@ public class RestaurantInfoFragment extends Fragment
         restaurantDetailType = view.findViewById(R.id.restaurantDetailType);
         restaurantDetailTags = view.findViewById(R.id.restaurantDetailTags);
         restaurantDetailPriceLevel = view.findViewById(R.id.restaurantDetailPriceLevel);
-        restaurantDetailMenu = view.findViewById(R.id.restaurantDetailMenu);
+
+        // Initialize the RecyclerView for menus
+        menusRecyclerView = view.findViewById(R.id.menusRecyclerView);
+        menusRecyclerView.setLayoutManager(new LinearLayoutManager(getContext(), RecyclerView.VERTICAL, false));
+        menusAdapter = new MenusAdapter(new ArrayList<>(), getContext(), menu ->
+        {
+            Log.d("RestaurantInfoFragment", "Menu clicked: " + menu.getName());
+        });
+        menusRecyclerView.setAdapter(menusAdapter);
+
 
         viewModel = new ViewModelProvider(requireActivity()).get(RestaurantSelectionViewModel.class);
-        viewModel.getSelectedRestaurant().observe(getViewLifecycleOwner(), new Observer<Restaurant>()
+        viewModel.getSelectedRestaurant().observe(getViewLifecycleOwner(), restaurant ->
         {
-            @Override
-            public void onChanged(Restaurant restaurant)
+            if (restaurant != null)
             {
-                if (restaurant != null)
-                {
-                    bindRestaurantData(restaurant);
-                }
+                bindRestaurantData(restaurant);
             }
         });
-
         return view;
     }
 
@@ -84,8 +103,6 @@ public class RestaurantInfoFragment extends Fragment
                 (restaurant.getTags() != null && !restaurant.getTags().isEmpty() ? restaurant.getTags().toString() : "N/A"));
         int priceLevel = restaurant.getPriceLevel();
         restaurantDetailPriceLevel.setText("Price Level: " + (priceLevel > 0 ? priceLevel : "N/A"));
-        restaurantDetailMenu.setText("Menu: " +
-                (restaurant.getMenu() != null ? restaurant.getMenu().toString() : "N/A"));
 
         String imageUrl = restaurant.getImageUrl();
         if (imageUrl == null || imageUrl.isEmpty())
@@ -101,5 +118,39 @@ public class RestaurantInfoFragment extends Fragment
                     .error(R.drawable.image_placeholder)
                     .into(restaurantDetailImage);
         }
+        fetchMenus(restaurant);
     }
+
+
+    private void fetchMenus(Restaurant restaurant) {
+        String restaurantId = restaurant.getRestaurantID();
+        if (restaurantId == null || restaurantId.isEmpty()) {
+            Log.e("RestaurantInfoFragment", "Restaurant ID is null or empty for restaurant: " + restaurant.getName());
+            // Clear the adapter to avoid showing stale data.
+            menusAdapter.updateData(new ArrayList<>());
+            return;
+        }
+
+        DocumentReference restaurantRef = db.collection("Restaurants").document(restaurantId);
+        menusAdapter.setRestaurantReference(restaurantRef);
+
+        restaurantRef.collection("Menus").get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                List<Menu> menus = new ArrayList<>();
+                if (task.getResult() != null && !task.getResult().isEmpty()) {
+                    for (QueryDocumentSnapshot document : task.getResult()) {
+                        Menu menu = document.toObject(Menu.class);
+                        menus.add(menu);
+                    }
+                } else {
+                    Log.w("RestaurantInfoFragment", "No menus found for restaurant: " + restaurant.getName());
+                }
+                menusAdapter.updateData(menus);
+            } else {
+                Log.e("RestaurantInfoFragment", "Error fetching menus: ", task.getException());
+                menusAdapter.updateData(new ArrayList<>());
+            }
+        });
+    }
+
 }

@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/menuItemDetailScroll"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:id="@+id/menuItemDetailContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Menu Item Image -->
+        <ImageView
+            android:id="@+id/menuItemImage"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/image_placeholder" />
+
+        <!-- Menu Item Name -->
+        <TextView
+            android:id="@+id/menuItemName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Menu Item Name"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp" />
+
+        <!-- Menu Item Description -->
+        <TextView
+            android:id="@+id/menuItemDescription"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Detailed description of the menu item goes here."
+            android:textSize="16sp"
+            android:layout_marginTop="8dp" />
+
+        <!-- Price -->
+        <TextView
+            android:id="@+id/menuItemPrice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Price: $0.00"
+            android:textSize="18sp"
+            android:layout_marginTop="8dp" />
+
+        <!-- Options -->
+        <TextView
+            android:id="@+id/menuItemOptionsLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Options:"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp" />
+
+        <TextView
+            android:id="@+id/menuItemOptions"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Option 1, Option 2, Option 3"
+            android:textSize="16sp"
+            android:layout_marginTop="4dp" />
+
+        <!-- Required Customizations -->
+        <TextView
+            android:id="@+id/menuItemCustomizationsLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Customizations:"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp" />
+
+        <TextView
+            android:id="@+id/menuItemCustomizations"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Customization details here"
+            android:textSize="16sp"
+            android:layout_marginTop="4dp" />
+
+        <!-- Allergens -->
+        <TextView
+            android:id="@+id/menuItemAllergensLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Allergens:"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp" />
+
+        <TextView
+            android:id="@+id/menuItemAllergens"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="List allergens here"
+            android:textSize="16sp"
+            android:layout_marginTop="4dp" />
+
+        <!-- Special Offer -->
+        <TextView
+            android:id="@+id/menuItemSpecialOffer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Special Offer: No"
+            android:textSize="16sp"
+            android:layout_marginTop="16dp" />
+
+        <!-- Order Index -->
+        <TextView
+            android:id="@+id/menuItemOrderIndex"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Order Index: 0"
+            android:textSize="16sp"
+            android:layout_marginTop="8dp" />
+
+        <!-- Max Selection -->
+        <TextView
+            android:id="@+id/menuItemMaxSelection"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Max Selection: 0"
+            android:textSize="16sp"
+            android:layout_marginTop="8dp" />
+    </LinearLayout>
+</ScrollView>

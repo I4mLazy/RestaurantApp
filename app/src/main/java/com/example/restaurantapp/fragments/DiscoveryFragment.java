@@ -39,18 +39,14 @@ public class DiscoveryFragment extends Fragment
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState)
     {
-        // Inflate the fragment layout containing the RecyclerView
         View view = inflater.inflate(R.layout.fragment_discovery, container, false);
 
-        // Initialize the shared ViewModel
         viewModel = new ViewModelProvider(requireActivity()).get(RestaurantSelectionViewModel.class);
 
         restaurantRecyclerView = view.findViewById(R.id.restaurantRecyclerView);
         restaurantRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         restaurantRecyclerView.setVisibility(View.VISIBLE);
 
-        // Initialize the adapter with an empty list and set the click listener.
-        // When an item is clicked, store the restaurant in the ViewModel and replace the Activity's container.
         restaurantAdapter = new RestaurantDiscoveryAdapter(new ArrayList<>(), getContext(), restaurant ->
         {
             Log.d("DiscoveryFragment", "Item clicked: " + restaurant.getName());
