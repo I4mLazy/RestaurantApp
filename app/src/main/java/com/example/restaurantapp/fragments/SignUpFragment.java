@@ -28,20 +28,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class SignUpFragment extends Fragment
-{
+public class SignUpFragment extends Fragment {
 
     private EditText emailEditText, passwordEditText, confirmPasswordEditText;
     private Button signUpButton;
     private TextView signInRedirectTextView;
-
     private FirebaseAuth firebaseAuth;
 
-    public SignUpFragment() {}
+    public SignUpFragment() {
+    }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
-    {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_sign_up, container, false);
 
         firebaseAuth = FirebaseAuth.getInstance();
@@ -54,8 +52,7 @@ public class SignUpFragment extends Fragment
 
         signUpButton.setOnClickListener(v -> createAccount());
 
-        signInRedirectTextView.setOnClickListener(v ->
-        {
+        signInRedirectTextView.setOnClickListener(v -> {
             LoginFragment LoginFragment = new LoginFragment();
             FragmentTransaction transaction = requireActivity().getSupportFragmentManager().beginTransaction();
             transaction.replace(R.id.authentication_container, LoginFragment);
@@ -65,117 +62,128 @@ public class SignUpFragment extends Fragment
         return view;
     }
 
-    private void createAccount()
-    {
+    private void createAccount() {
         String email = emailEditText.getText().toString().trim();
         String password = passwordEditText.getText().toString().trim();
         String confirmPassword = confirmPasswordEditText.getText().toString().trim();
 
-        if (TextUtils.isEmpty(email))
-        {
+        if (TextUtils.isEmpty(email)) {
             emailEditText.setError("Email is required");
             return;
         }
-        if (TextUtils.isEmpty(password))
-        {
+        if (TextUtils.isEmpty(password)) {
             passwordEditText.setError("Password is required");
             return;
         }
-        if (TextUtils.isEmpty(confirmPassword))
-        {
+        if (TextUtils.isEmpty(confirmPassword)) {
             confirmPasswordEditText.setError("Confirm Password is required");
             return;
         }
-        if (!password.equals(confirmPassword))
-        {
+        if (!password.equals(confirmPassword)) {
             confirmPasswordEditText.setError("Passwords do not match");
             return;
         }
 
         firebaseAuth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener(getActivity(), task ->
-                {
-                    if (task.isSuccessful())
-                    {
+                .addOnCompleteListener(getActivity(), task -> {
+                    if (task.isSuccessful()) {
                         firebaseAuth.signInWithEmailAndPassword(email, password)
-                                .addOnCompleteListener(getActivity(), signInTask ->
-                                {
-                                    if (signInTask.isSuccessful())
-                                    {
+                                .addOnCompleteListener(getActivity(), signInTask -> {
+                                    if (signInTask.isSuccessful()) {
                                         FirebaseUser user = firebaseAuth.getCurrentUser();
-                                        if (user != null)
-                                        {
-                                            FirebaseFirestore db = FirebaseFirestore.getInstance();
+                                        if (user != null) {
                                             String userId = user.getUid();
-
-                                            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-                                            builder.setTitle("Choose a Username");
-
-                                            final EditText input = new EditText(getActivity());
-                                            input.setHint("Enter username");
-                                            builder.setView(input);
-
-                                            builder.setPositiveButton("OK", (dialog, which) ->
-                                            {
-                                                String username = input.getText().toString().trim();
-                                                if (TextUtils.isEmpty(username))
-                                                {
-                                                    username = email.split("@")[0];
-                                                }
-                                                saveUserData(email, username, userId, db);
-                                            });
-
-                                            builder.setNegativeButton("Cancel", (dialog, which) ->
-                                            {
-                                                String username = email.split("@")[0];
-                                                saveUserData(email, username, userId, db);
-                                            });
-
-                                            builder.show();
+                                            showNameDialog(user, email, userId);
                                         }
-                                    }
-                                    else
-                                    {
+                                    } else {
                                         Toast.makeText(getActivity(), "Sign-in failed: " + signInTask.getException().getMessage(), Toast.LENGTH_SHORT).show();
                                     }
                                 });
                         Toast.makeText(getActivity(), "Account Created Successfully", Toast.LENGTH_SHORT).show();
-                    }
-                    else
-                    {
+                    } else {
                         Toast.makeText(getActivity(), "Registration failed: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 });
     }
 
-    private void saveUserData(String email, String username, String userId, FirebaseFirestore db)
-    {
+    private void showNameDialog(FirebaseUser user, String email, String userId) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setTitle("Write your name");
+
+        final EditText nameInput = new EditText(getActivity());
+        nameInput.setHint("Enter name");
+        builder.setView(nameInput);
+
+        builder.setPositiveButton("OK", (dialog, which) -> {
+            String name = nameInput.getText().toString().trim();
+            if (TextUtils.isEmpty(name)) {
+                name = email.split("@")[0];  // Default to email prefix if empty
+            }
+            showPhoneNumberDialog(user, name, email, userId);
+        });
+
+        builder.setNegativeButton("Cancel", (dialog, which) -> {
+            String name = email.split("@")[0]; // Default to email prefix if canceled
+            showPhoneNumberDialog(user, name, email, userId);
+        });
+
+        AlertDialog alertDialog = builder.create();
+        alertDialog.setCancelable(false);
+        alertDialog.show();
+    }
+
+    private void showPhoneNumberDialog(FirebaseUser user, String name, String email, String userId) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setTitle("Enter your phone number");
+
+        final EditText phoneNumberInput = new EditText(getActivity());
+        phoneNumberInput.setHint("Phone number");
+        builder.setView(phoneNumberInput);
+
+        builder.setPositiveButton("OK", (dialog, which) -> {
+            String phoneNumber = phoneNumberInput.getText().toString().trim();
+            if (TextUtils.isEmpty(phoneNumber)) {
+                phoneNumber = "Not available";  // Fallback if no phone number entered
+            }
+
+            saveUserData(user, name, email, userId, phoneNumber);
+        });
+
+        builder.setNegativeButton("Cancel", (dialog, which) -> {
+            String phoneNumber = "Not available";  // Fallback if canceled
+            saveUserData(user, name, email, userId, phoneNumber);
+        });
+
+        AlertDialog alertDialog = builder.create();
+        alertDialog.setCancelable(false);
+        alertDialog.show();
+    }
+
+    private void saveUserData(FirebaseUser user, String name, String email, String userId, String phoneNumber) {
         Map<String, Object> userData = new HashMap<>();
         userData.put("email", email);
-        userData.put("username", username);
-        userData.put("profileImage", "default_image_url");
+        userData.put("name", name);
+        userData.put("phoneNumber", phoneNumber);
+        userData.put("profileImageUrl", "default_image_url");
         userData.put("address", "");
         userData.put("orderHistory", new ArrayList<String>());
         userData.put("createdAt", System.currentTimeMillis());
 
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection("Users")
                 .document(userId)
                 .set(userData, SetOptions.merge())
-                .addOnSuccessListener(aVoid ->
-                {
+                .addOnSuccessListener(aVoid -> {
                     Toast.makeText(getActivity(), "User data saved successfully!", Toast.LENGTH_SHORT).show();
                     navigateToMainActivity(firebaseAuth.getCurrentUser());
                 })
-                .addOnFailureListener(e ->
-                {
+                .addOnFailureListener(e -> {
                     Toast.makeText(getActivity(), "Error saving user data: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
 
-    private void navigateToMainActivity(FirebaseUser user)
-    {
-        if (user != null)
-        {
+    private void navigateToMainActivity(FirebaseUser user) {
+        if (user != null) {
             Intent intent = new Intent(getActivity(), Main.class);
             startActivity(intent);
             getActivity().finish();

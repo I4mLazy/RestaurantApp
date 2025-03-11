@@ -68,26 +68,47 @@ public class DiscoveryFragment extends Fragment
         return view;
     }
 
+    @Override
+    public void onResume()
+    {
+        super.onResume();
+        fetchAllRestaurants();
+    }
+
     private void fetchAllRestaurants()
     {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("Restaurants")
-                .orderBy("name")
-                .get()
-                .addOnSuccessListener(querySnapshot ->
-                {
-                    List<Restaurant> restaurantList = new ArrayList<>();
-                    for (QueryDocumentSnapshot document : querySnapshot)
+        try
+        {
+            Log.d("DiscoveryFragment", "Starting to fetch restaurants");
+
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+            db.collection("Restaurants")
+                    .orderBy("name")
+                    .get()
+                    .addOnSuccessListener(querySnapshot ->
                     {
-                        Restaurant restaurant = document.toObject(Restaurant.class);
-                        restaurantList.add(restaurant);
-                    }
-                    Log.d("DiscoveryFragment", "Fetched " + restaurantList.size() + " restaurants");
-                    restaurantAdapter.updateData(restaurantList);
-                })
-                .addOnFailureListener(e ->
-                {
-                    Log.e("Firestore", "Error fetching restaurants: ", e);
-                });
+                        List<Restaurant> restaurantList = new ArrayList<>();
+                        for (QueryDocumentSnapshot document : querySnapshot)
+                        {
+                            Restaurant restaurant = document.toObject(Restaurant.class);
+                            restaurantList.add(restaurant);
+                        }
+                        Log.d("DiscoveryFragment", "Fetched " + restaurantList.size() + " restaurants");
+                        if (restaurantList.isEmpty())
+                        {
+                            Log.w("DiscoveryFragment", "No restaurants found in Firestore");
+                            // Maybe show an empty state UI here
+                        }
+                        restaurantAdapter.updateData(restaurantList);
+                    })
+                    .addOnFailureListener(e ->
+                    {
+                        Log.e("Firestore", "Error fetching restaurants: ", e);
+                        // Show error state UI here
+                    });
+        } catch (Exception e)
+        {
+            Log.e("DiscoveryFragment", "Exception in fetchAllRestaurants", e);
+        }
     }
 }

@@ -20,8 +20,8 @@
         android:id="@+id/bottom_nav_menu"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        app:itemTextAppearanceActive="@android:style/TextAppearance.Material.Small"
+        app:itemTextAppearanceInactive="@android:style/TextAppearance.Material.Small"
         app:itemIconSize="24dp"
         app:menu="@menu/bottom_nav_menu" />
-    <!--style="@style/MyBottomNavStyle"-->
-
 </LinearLayout>

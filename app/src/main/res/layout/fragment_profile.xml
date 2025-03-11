@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/profileScrollView"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp">
@@ -9,58 +9,152 @@
         android:id="@+id/profileContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center_horizontal">
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
 
-        <!-- Profile Picture -->
-        <ImageView
-            android:id="@+id/profileImage"
+        <!-- Profile Picture (Editable) -->
+        <androidx.cardview.widget.CardView
             android:layout_width="120dp"
             android:layout_height="120dp"
-            android:src="@drawable/image_placeholder"
-            android:contentDescription="profile_image" />
+            android:layout_gravity="center"
+            android:layout_marginBottom="8dp"
+            app:cardCornerRadius="60dp"
+            app:cardElevation="4dp">
 
-        <!-- Profile Name -->
+            <ImageButton
+                android:id="@+id/editProfilePictureImageButton"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@android:color/transparent"
+                android:contentDescription="Edit Profile Picture"
+                android:scaleType="centerCrop"
+                android:src="@drawable/image_placeholder" />
+        </androidx.cardview.widget.CardView>
+
+        <!-- Edit Profile Picture Text -->
         <TextView
-            android:id="@+id/profileName"
+            android:id="@+id/editProfilePictureTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="User Name"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:layout_marginTop="16dp" />
+            android:layout_marginBottom="12dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:text="Edit Profile Picture"
+            android:textColor="@color/primary"
+            android:textSize="14sp"
+            android:textStyle="bold" />
 
-        <!-- Email (or other profile info) -->
-        <TextView
-            android:id="@+id/profileEmail"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="user@example.com"
-            android:textSize="16sp"
-            android:layout_marginTop="8dp" />
-
-        <!-- Edit Profile Button -->
-        <Button
-            android:id="@+id/editProfileButton"
+        <!-- Profile Name (Clickable for Editing) -->
+        <LinearLayout
+            android:id="@+id/editProfileNameContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Edit Profile"
-            android:layout_marginTop="24dp" />
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingVertical="8dp">
 
-        <!-- Settings Button -->
+            <TextView
+                android:id="@+id/profileName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="User Name"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:contentDescription="Edit Name"
+                android:src="@drawable/baseline_chevron_right_24" />
+        </LinearLayout>
+
+        <!-- Divider -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@android:color/darker_gray" />
+
+        <!-- Email (Clickable for Editing) -->
+        <LinearLayout
+            android:id="@+id/editProfileEmailContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingVertical="8dp">
+
+            <TextView
+                android:id="@+id/profileEmail"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="user@example.com"
+                android:textSize="16sp" />
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:contentDescription="Edit Email"
+                android:src="@drawable/baseline_chevron_right_24" />
+        </LinearLayout>
+
+        <!-- Divider -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@android:color/darker_gray" />
+
+        <!-- Phone (Clickable for Editing) -->
+        <LinearLayout
+            android:id="@+id/editProfilePhoneContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingVertical="8dp">
+
+            <TextView
+                android:id="@+id/profilePhone"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="+1234567890"
+                android:textSize="16sp" />
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:contentDescription="Edit Phone Number"
+                android:src="@drawable/baseline_chevron_right_24" />
+        </LinearLayout>
+
+        <!-- Divider -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@android:color/darker_gray" />
+
+        <!-- Buttons -->
         <Button
             android:id="@+id/settingsButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Settings"
-            android:layout_marginTop="16dp" />
+            android:layout_marginTop="16dp"
+            android:text="Settings" />
 
-        <!-- Logout Button -->
         <Button
             android:id="@+id/logoutButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Logout"
-            android:layout_marginTop="16dp" />
+            android:layout_marginTop="16dp"
+            android:text="Logout" />
+
     </LinearLayout>
 </ScrollView>
