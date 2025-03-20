@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:padding="16dp">
 
     <androidx.appcompat.widget.Toolbar
@@ -11,23 +11,32 @@
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorSurface"
         android:elevation="4dp"
-        app:title="Edit Profile"
-        app:navigationIcon="@drawable/baseline_arrow_back_24" />
+        app:navigationIcon="@drawable/baseline_arrow_back_24"
+        app:title="Edit Profile" />
 
-    <EditText
-        android:id="@+id/editText"
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/textInputLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Enter new value"
         android:layout_below="@id/toolbar"
-        android:layout_marginTop="16dp" />
+        android:layout_marginTop="16dp"
+        android:hint="Enter new value"
+        app:hintEnabled="true">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/editText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="phone" />
+
+    </com.google.android.material.textfield.TextInputLayout>
 
     <Button
         android:id="@+id/saveButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Save"
         android:layout_alignParentBottom="true"
-        android:layout_marginBottom="64dp" />
+        android:layout_marginBottom="64dp"
+        android:text="Save" />
 
 </RelativeLayout>

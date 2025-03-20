@@ -1,6 +1,7 @@
 package com.example.restaurantapp.fragments;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AlertDialog;
@@ -18,7 +19,7 @@ import android.widget.Toast;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.example.restaurantapp.R;
-import com.example.restaurantapp.activities.Main;
+import com.example.restaurantapp.activities.UserMainActivity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -28,19 +29,22 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class SignUpFragment extends Fragment {
+public class UserSignUpFragment extends Fragment
+{
 
     private EditText emailEditText, passwordEditText, confirmPasswordEditText;
     private Button signUpButton;
-    private TextView signInRedirectTextView;
+    private TextView signInRedirectTextView, restaurantSignUpTextView;
     private FirebaseAuth firebaseAuth;
 
-    public SignUpFragment() {
+    public UserSignUpFragment()
+    {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_sign_up, container, false);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
+    {
+        View view = inflater.inflate(R.layout.fragment_user_sign_up, container, false);
 
         firebaseAuth = FirebaseAuth.getInstance();
 
@@ -49,64 +53,89 @@ public class SignUpFragment extends Fragment {
         confirmPasswordEditText = view.findViewById(R.id.editTextConfirmPassword);
         signUpButton = view.findViewById(R.id.buttonSignUp);
         signInRedirectTextView = view.findViewById(R.id.textViewSignIn);
+        restaurantSignUpTextView = view.findViewById(R.id.textViewRestaurantSignUp);
 
         signUpButton.setOnClickListener(v -> createAccount());
 
-        signInRedirectTextView.setOnClickListener(v -> {
+        signInRedirectTextView.setOnClickListener(v ->
+        {
             LoginFragment LoginFragment = new LoginFragment();
             FragmentTransaction transaction = requireActivity().getSupportFragmentManager().beginTransaction();
             transaction.replace(R.id.authentication_container, LoginFragment);
             transaction.commit();
         });
 
+        restaurantSignUpTextView.setOnClickListener(v ->
+        {
+            RestaurantSignUpFragment restaurantFragment = new RestaurantSignUpFragment();
+            FragmentTransaction transaction = requireActivity().getSupportFragmentManager().beginTransaction();
+            transaction.replace(R.id.authentication_container, restaurantFragment);
+            transaction.addToBackStack(null);
+            transaction.commit();
+        });
+
+
         return view;
     }
 
-    private void createAccount() {
+    private void createAccount()
+    {
         String email = emailEditText.getText().toString().trim();
         String password = passwordEditText.getText().toString().trim();
         String confirmPassword = confirmPasswordEditText.getText().toString().trim();
 
-        if (TextUtils.isEmpty(email)) {
+        if(TextUtils.isEmpty(email))
+        {
             emailEditText.setError("Email is required");
             return;
         }
-        if (TextUtils.isEmpty(password)) {
+        if(TextUtils.isEmpty(password))
+        {
             passwordEditText.setError("Password is required");
             return;
         }
-        if (TextUtils.isEmpty(confirmPassword)) {
+        if(TextUtils.isEmpty(confirmPassword))
+        {
             confirmPasswordEditText.setError("Confirm Password is required");
             return;
         }
-        if (!password.equals(confirmPassword)) {
+        if(!password.equals(confirmPassword))
+        {
             confirmPasswordEditText.setError("Passwords do not match");
             return;
         }
 
         firebaseAuth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener(getActivity(), task -> {
-                    if (task.isSuccessful()) {
+                .addOnCompleteListener(getActivity(), task ->
+                {
+                    if(task.isSuccessful())
+                    {
                         firebaseAuth.signInWithEmailAndPassword(email, password)
-                                .addOnCompleteListener(getActivity(), signInTask -> {
-                                    if (signInTask.isSuccessful()) {
+                                .addOnCompleteListener(getActivity(), signInTask ->
+                                {
+                                    if(signInTask.isSuccessful())
+                                    {
                                         FirebaseUser user = firebaseAuth.getCurrentUser();
-                                        if (user != null) {
+                                        if(user != null)
+                                        {
                                             String userId = user.getUid();
-                                            showNameDialog(user, email, userId);
+                                            showNameDialog(email, userId);
                                         }
-                                    } else {
+                                    } else
+                                    {
                                         Toast.makeText(getActivity(), "Sign-in failed: " + signInTask.getException().getMessage(), Toast.LENGTH_SHORT).show();
                                     }
                                 });
                         Toast.makeText(getActivity(), "Account Created Successfully", Toast.LENGTH_SHORT).show();
-                    } else {
+                    } else
+                    {
                         Toast.makeText(getActivity(), "Registration failed: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 });
     }
 
-    private void showNameDialog(FirebaseUser user, String email, String userId) {
+    private void showNameDialog(String email, String userId)
+    {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setTitle("Write your name");
 
@@ -114,17 +143,20 @@ public class SignUpFragment extends Fragment {
         nameInput.setHint("Enter name");
         builder.setView(nameInput);
 
-        builder.setPositiveButton("OK", (dialog, which) -> {
+        builder.setPositiveButton("OK", (dialog, which) ->
+        {
             String name = nameInput.getText().toString().trim();
-            if (TextUtils.isEmpty(name)) {
+            if(TextUtils.isEmpty(name))
+            {
                 name = email.split("@")[0];  // Default to email prefix if empty
             }
-            showPhoneNumberDialog(user, name, email, userId);
+            showPhoneNumberDialog(name, email, userId);
         });
 
-        builder.setNegativeButton("Cancel", (dialog, which) -> {
+        builder.setNegativeButton("Cancel", (dialog, which) ->
+        {
             String name = email.split("@")[0]; // Default to email prefix if canceled
-            showPhoneNumberDialog(user, name, email, userId);
+            showPhoneNumberDialog(name, email, userId);
         });
 
         AlertDialog alertDialog = builder.create();
@@ -132,7 +164,8 @@ public class SignUpFragment extends Fragment {
         alertDialog.show();
     }
 
-    private void showPhoneNumberDialog(FirebaseUser user, String name, String email, String userId) {
+    private void showPhoneNumberDialog(String name, String email, String userId)
+    {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setTitle("Enter your phone number");
 
@@ -140,18 +173,21 @@ public class SignUpFragment extends Fragment {
         phoneNumberInput.setHint("Phone number");
         builder.setView(phoneNumberInput);
 
-        builder.setPositiveButton("OK", (dialog, which) -> {
+        builder.setPositiveButton("OK", (dialog, which) ->
+        {
             String phoneNumber = phoneNumberInput.getText().toString().trim();
-            if (TextUtils.isEmpty(phoneNumber)) {
+            if(TextUtils.isEmpty(phoneNumber))
+            {
                 phoneNumber = "Not available";  // Fallback if no phone number entered
             }
 
-            saveUserData(user, name, email, userId, phoneNumber);
+            saveUserData(name, email, userId, phoneNumber);
         });
 
-        builder.setNegativeButton("Cancel", (dialog, which) -> {
+        builder.setNegativeButton("Cancel", (dialog, which) ->
+        {
             String phoneNumber = "Not available";  // Fallback if canceled
-            saveUserData(user, name, email, userId, phoneNumber);
+            saveUserData(name, email, userId, phoneNumber);
         });
 
         AlertDialog alertDialog = builder.create();
@@ -159,7 +195,8 @@ public class SignUpFragment extends Fragment {
         alertDialog.show();
     }
 
-    private void saveUserData(FirebaseUser user, String name, String email, String userId, String phoneNumber) {
+    private void saveUserData(String name, String email, String userId, String phoneNumber)
+    {
         Map<String, Object> userData = new HashMap<>();
         userData.put("email", email);
         userData.put("name", name);
@@ -168,23 +205,41 @@ public class SignUpFragment extends Fragment {
         userData.put("address", "");
         userData.put("orderHistory", new ArrayList<String>());
         userData.put("createdAt", System.currentTimeMillis());
+        userData.put("userType", "user");
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection("Users")
                 .document(userId)
                 .set(userData, SetOptions.merge())
-                .addOnSuccessListener(aVoid -> {
+                .addOnSuccessListener(aVoid ->
+                {
+                    // Store userType in SharedPreferences
+                    saveUserTypeToPreferences();
+
                     Toast.makeText(getActivity(), "User data saved successfully!", Toast.LENGTH_SHORT).show();
                     navigateToMainActivity(firebaseAuth.getCurrentUser());
                 })
-                .addOnFailureListener(e -> {
+                .addOnFailureListener(e ->
+                {
                     Toast.makeText(getActivity(), "Error saving user data: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
 
-    private void navigateToMainActivity(FirebaseUser user) {
-        if (user != null) {
-            Intent intent = new Intent(getActivity(), Main.class);
+    private void saveUserTypeToPreferences()
+    {
+        SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("MyAppPrefs", getContext().MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        editor.putString("userType", "user");
+        editor.apply();
+    }
+
+
+    private void navigateToMainActivity(FirebaseUser user)
+    {
+        if(user != null)
+        {
+            Intent intent = new Intent(getActivity(), UserMainActivity.class);
             startActivity(intent);
             getActivity().finish();
         }

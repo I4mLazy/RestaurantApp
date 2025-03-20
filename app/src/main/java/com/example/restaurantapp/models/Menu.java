@@ -13,13 +13,13 @@ public class Menu
     private List<String> tags;
     private String restaurantID;
     private String menuID;
+    private int menuIndex;
 
-    public Menu()
-    {
+    public Menu() {
     }
 
     public Menu(String name, String description, String imageURL, Timestamp timeCreated,
-                List<String> tags, String restaurantID, String menuID)
+                List<String> tags, String restaurantID, String menuID, int menuIndex)
     {
         this.name = name;
         this.description = description;
@@ -28,6 +28,7 @@ public class Menu
         this.tags = tags;
         this.restaurantID = restaurantID;
         this.menuID = menuID;
+        this.menuIndex = menuIndex;
     }
 
     public String getName()
@@ -95,8 +96,18 @@ public class Menu
         return menuID;
     }
 
-    public void setMenuID()
+    public void setMenuID(String menuID)
     {
         this.menuID = menuID;
+    }
+
+    public int getMenuIndex()
+    {
+        return menuIndex;
+    }
+
+    public void setMenuIndex(int menuIndex)
+    {
+        this.menuIndex = menuIndex;
     }
 }

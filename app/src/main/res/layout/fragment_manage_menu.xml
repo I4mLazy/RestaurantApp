@@ -1,0 +1,459 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- Search Bar -->
+    <androidx.appcompat.widget.SearchView
+        android:id="@+id/searchBar"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_margin="16dp"
+        android:background="@drawable/rounded_search_bar_background"
+        android:gravity="center_vertical"
+        android:iconifiedByDefault="true"
+        android:paddingStart="16dp"
+        android:queryHint="Search items or menus" />
+
+    <!-- Scrollable layout for menus -->
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollViewMenus"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="80dp"
+        tools:ignore="SpeakableTextPresentCheck">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerViewMenus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:nestedScrollingEnabled="false"
+            android:overScrollMode="never"
+            android:paddingHorizontal="8dp"
+            android:scrollbars="vertical" />
+    </androidx.core.widget.NestedScrollView>
+
+
+    <!-- Floating Action Buttons -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ImageButton
+            android:id="@+id/btnCreateDiscount"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="180dp"
+            android:background="@drawable/floating_button_background"
+            android:contentDescription="Create Discount"
+            android:src="@drawable/baseline_discount_24" />
+
+        <ImageButton
+            android:id="@+id/btnSetOrder"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="110dp"
+            android:background="@drawable/floating_button_background"
+            android:contentDescription="Set Order"
+            android:src="@drawable/baseline_reorder_24" />
+
+        <ImageButton
+            android:id="@+id/btnAdd"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="40dp"
+            android:background="@drawable/floating_button_background"
+            android:contentDescription="Add Item or Menu"
+            android:src="@drawable/baseline_add_24" />
+
+        <Button
+            android:id="@+id/btnSaveOrder"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center"
+            android:layout_marginBottom="40dp"
+            android:background="@drawable/floating_button_background"
+            android:elevation="6dp"
+            android:minWidth="120dp"
+            android:padding="12dp"
+            android:text="Save Order"
+            android:visibility="gone"/>
+
+    </FrameLayout>
+
+    <!-- Item View -->
+    <RelativeLayout
+        android:id="@+id/itemViewOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#99000000"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:background="@drawable/box_background"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <TextView
+                android:id="@+id/itemViewName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/itemViewPrice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/itemViewDescription"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:paddingTop="8dp"
+                android:textColor="@android:color/darker_gray"
+                android:textSize="14sp"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/itemViewAvailability"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:paddingTop="4dp"
+                android:textColor="@android:color/holo_green_dark"
+                android:textSize="14sp"
+                android:visibility="gone" />
+
+            <Button
+                android:id="@+id/btnEditItem"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Edit Item" />
+
+            <Button
+                android:id="@+id/btnCloseItemView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Close" />
+        </LinearLayout>
+    </RelativeLayout>
+
+
+    <!-- Menu View -->
+    <RelativeLayout
+        android:id="@+id/menuViewOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#99000000"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:background="@drawable/box_background"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <TextView
+                android:id="@+id/menuViewName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/menuViewDescription"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:paddingTop="8dp"
+                android:textColor="@android:color/darker_gray"
+                android:textSize="14sp"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/menuItemCount"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:paddingTop="4dp"
+                android:textColor="@android:color/holo_blue_dark"
+                android:textSize="14sp"
+                android:visibility="gone" />
+
+            <Button
+                android:id="@+id/btnEditMenu"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Edit Menu" />
+
+            <Button
+                android:id="@+id/btnCloseMenuView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Close" />
+        </LinearLayout>
+    </RelativeLayout>
+
+
+    <!-- Edit Item Overlay -->
+    <RelativeLayout
+        android:id="@+id/itemEditOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#99000000"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:background="@drawable/box_background"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="Edit Item"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <Spinner
+                android:id="@+id/spinnerMenuSelection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp" />
+
+            <EditText
+                android:id="@+id/editItemName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Item Name"
+                android:inputType="text" />
+
+            <EditText
+                android:id="@+id/editItemPrice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Price"
+                android:inputType="numberDecimal" />
+
+            <!-- Added Item Description EditText -->
+            <EditText
+                android:id="@+id/editItemDescription"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="top"
+                android:hint="Description"
+                android:inputType="textMultiLine"
+                android:minLines="3"
+                android:scrollbars="vertical" />
+
+            <Button
+                android:id="@+id/btnSaveItem"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Save" />
+
+            <Button
+                android:id="@+id/btnCancelEdit"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Cancel" />
+
+            <Button
+                android:id="@+id/btnDeleteItem"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Delete Item"
+                android:textColor="@android:color/holo_red_dark" />
+        </LinearLayout>
+    </RelativeLayout>
+
+
+    <!-- Edit Menu Overlay -->
+    <RelativeLayout
+        android:id="@+id/menuEditOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#99000000"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:background="@drawable/box_background"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="Edit Menu"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/editMenuName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Menu Name"
+                android:inputType="text" />
+
+            <EditText
+                android:id="@+id/editMenuDescription"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Menu Description"
+                android:inputType="text" />
+
+            <Button
+                android:id="@+id/btnSaveMenu"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Save" />
+
+            <Button
+                android:id="@+id/btnCancelMenuEdit"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Cancel" />
+
+            <Button
+                android:id="@+id/btnDeleteMenu"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Delete Menu"
+                android:textColor="@android:color/holo_red_dark" />
+        </LinearLayout>
+    </RelativeLayout>
+
+    <!-- Add Item/Menu Choice -->
+    <RelativeLayout
+        android:id="@+id/addChoiceOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#99000000"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:background="@drawable/box_background"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <Button
+                android:id="@+id/btnChooseAddItem"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Add Item" />
+
+            <Button
+                android:id="@+id/btnChooseAddMenu"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Add Menu" />
+
+            <Button
+                android:id="@+id/btnCancelAddChoice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Cancel" />
+        </LinearLayout>
+    </RelativeLayout>
+
+    <!-- Discount Overlay -->
+    <RelativeLayout
+        android:id="@+id/discountOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#99000000"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:background="@drawable/box_background"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="Create Discount"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/editDiscountAmount"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Discount Amount"
+                android:inputType="numberDecimal" />
+
+            <Button
+                android:id="@+id/btnApplyDiscount"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Apply" />
+
+            <Button
+                android:id="@+id/btnCancelDiscount"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Cancel" />
+        </LinearLayout>
+    </RelativeLayout>
+
+    <!-- Loading Overlay -->
+    <RelativeLayout
+        android:id="@+id/loadingOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#99000000"
+        android:visibility="gone">
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true" />
+    </RelativeLayout>
+
+    <!-- No Results Found Text -->
+    <TextView
+        android:id="@+id/noResults"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="No results found"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
+
+</FrameLayout>

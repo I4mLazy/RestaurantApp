@@ -1,6 +1,8 @@
 package com.example.restaurantapp.fragments;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -18,7 +20,8 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.example.restaurantapp.R;
-import com.example.restaurantapp.activities.Main;
+import com.example.restaurantapp.activities.RestaurantMainActivity;
+import com.example.restaurantapp.activities.UserMainActivity;
 import com.google.android.gms.auth.api.identity.BeginSignInRequest;
 import com.google.android.gms.auth.api.identity.Identity;
 import com.google.android.gms.auth.api.identity.SignInClient;
@@ -27,6 +30,8 @@ import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 public class LoginFragment extends Fragment
 {
@@ -41,21 +46,20 @@ public class LoginFragment extends Fragment
     private SignInClient oneTapClient;
     private BeginSignInRequest signInRequest;
 
-
     private final ActivityResultLauncher<IntentSenderRequest> signInLauncher =
             registerForActivityResult(new ActivityResultContracts.StartIntentSenderForResult(), result ->
             {
-                if (result.getResultCode() == getActivity().RESULT_OK && result.getData() != null)
+                if(result.getResultCode() == requireActivity().RESULT_OK && result.getData() != null)
                 {
                     try
                     {
                         SignInCredential credential = oneTapClient.getSignInCredentialFromIntent(result.getData());
                         String idToken = credential.getGoogleIdToken();
-                        if (idToken != null)
+                        if(idToken != null)
                         {
                             firebaseAuthWithGoogle(idToken);
                         }
-                    } catch (Exception e)
+                    } catch(Exception e)
                     {
                         Log.e(TAG, "Google Sign-In failed", e);
                     }
@@ -64,7 +68,7 @@ public class LoginFragment extends Fragment
 
     public LoginFragment()
     {
-
+        // Required empty public constructor
     }
 
     @Override
@@ -107,7 +111,7 @@ public class LoginFragment extends Fragment
 
         textViewSignUp.setOnClickListener(v ->
         {
-            SignUpFragment signUpFragment = new SignUpFragment();
+            UserSignUpFragment signUpFragment = new UserSignUpFragment();
             FragmentTransaction transaction = requireActivity().getSupportFragmentManager().beginTransaction();
             transaction.replace(R.id.authentication_container, signUpFragment);
             transaction.commit();
@@ -121,7 +125,7 @@ public class LoginFragment extends Fragment
         String email = editTextEmail.getText().toString().trim();
         String password = editTextPassword.getText().toString().trim();
 
-        if (email.isEmpty() || password.isEmpty())
+        if(email.isEmpty() || password.isEmpty())
         {
             Toast.makeText(getContext(), "Please enter email and password", Toast.LENGTH_SHORT).show();
             return;
@@ -130,12 +134,11 @@ public class LoginFragment extends Fragment
         firebaseAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(requireActivity(), task ->
                 {
-                    if (task.isSuccessful())
+                    if(task.isSuccessful())
                     {
                         FirebaseUser user = firebaseAuth.getCurrentUser();
                         navigateToMainActivity(user);
-                    }
-                    else
+                    } else
                     {
                         Toast.makeText(getContext(), "Authentication failed", Toast.LENGTH_SHORT).show();
                     }
@@ -151,7 +154,7 @@ public class LoginFragment extends Fragment
                     {
                         // Start the intent sender for Google sign-in
                         signInLauncher.launch(new IntentSenderRequest.Builder(result.getPendingIntent().getIntentSender()).build());
-                    } catch (Exception e)
+                    } catch(Exception e)
                     {
                         Log.e(TAG, "Google Sign-In failed", e);
                     }
@@ -168,12 +171,11 @@ public class LoginFragment extends Fragment
         firebaseAuth.signInWithCredential(credential)
                 .addOnCompleteListener(requireActivity(), task ->
                 {
-                    if (task.isSuccessful())
+                    if(task.isSuccessful())
                     {
                         FirebaseUser user = firebaseAuth.getCurrentUser();
                         navigateToMainActivity(user);
-                    }
-                    else
+                    } else
                     {
                         Toast.makeText(getContext(), "Google Sign-In failed", Toast.LENGTH_SHORT).show();
                     }
@@ -182,13 +184,57 @@ public class LoginFragment extends Fragment
 
     private void navigateToMainActivity(FirebaseUser user)
     {
-        if (user != null)
+        if(user == null) return;
+
+        SharedPreferences prefs = requireActivity().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
+        String userType = prefs.getString("userType", null);
+
+        if(userType != null)
         {
-            // Assuming the Activity is handling the navigation to MainActivity
-            Intent intent = new Intent(getContext(), Main.class);
-            startActivity(intent);
-            requireActivity().finish();
+            // If userType is already stored, navigate instantly
+            launchMainActivity(userType);
+            return;
         }
+
+        // If userType is not stored, fetch from Firestore and save it
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        DocumentReference userRef = db.collection("Users").document(user.getUid());
+
+        userRef.get().addOnCompleteListener(task ->
+        {
+            if(task.isSuccessful() && task.getResult().exists())
+            {
+                String fetchedUserType = task.getResult().getString("userType");
+
+                if(fetchedUserType != null)
+                {
+                    // Store the fetched userType in SharedPreferences
+                    prefs.edit().putString("userType", fetchedUserType).apply();
+                    launchMainActivity(fetchedUserType);
+                } else
+                {
+                    Toast.makeText(getContext(), "Failed to determine user type", Toast.LENGTH_SHORT).show();
+                }
+            } else
+            {
+                Toast.makeText(getContext(), "Failed to fetch user type", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    // Launches the correct main activity instantly
+    private void launchMainActivity(String userType)
+    {
+        Intent intent;
+        if("restaurant".equals(userType))
+        {
+            intent = new Intent(getContext(), RestaurantMainActivity.class);
+        } else
+        {
+            intent = new Intent(getContext(), UserMainActivity.class);
+        }
+        startActivity(intent);
+        requireActivity().finish();
     }
 
     @Override
@@ -197,7 +243,7 @@ public class LoginFragment extends Fragment
         super.onStart();
         FirebaseUser currentUser = firebaseAuth.getCurrentUser();
         Log.e(TAG, "Current User: " + currentUser);
-        if (currentUser != null)
+        if(currentUser != null)
         {
             navigateToMainActivity(currentUser); // Navigate directly if logged in
         }

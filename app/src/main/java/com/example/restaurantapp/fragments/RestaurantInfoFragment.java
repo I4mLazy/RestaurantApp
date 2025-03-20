@@ -76,7 +76,7 @@ public class RestaurantInfoFragment extends Fragment
         viewModel = new ViewModelProvider(requireActivity()).get(RestaurantSelectionViewModel.class);
         viewModel.getSelectedRestaurant().observe(getViewLifecycleOwner(), restaurant ->
         {
-            if (restaurant != null)
+            if(restaurant != null)
             {
                 bindRestaurantData(restaurant);
             }
@@ -86,7 +86,7 @@ public class RestaurantInfoFragment extends Fragment
 
     private void bindRestaurantData(Restaurant restaurant)
     {
-        if (restaurant == null) return;
+        if(restaurant == null) return;
 
         restaurantDetailName.setText(restaurant.getName() != null ? restaurant.getName() : "N/A");
         restaurantDetailAddress.setText(restaurant.getAddress() != null ? restaurant.getAddress() : "N/A");
@@ -105,7 +105,7 @@ public class RestaurantInfoFragment extends Fragment
         restaurantDetailPriceLevel.setText("Price Level: " + (priceLevel > 0 ? priceLevel : "N/A"));
 
         String imageUrl = restaurant.getImageUrl();
-        if (imageUrl == null || imageUrl.isEmpty())
+        if(imageUrl == null || imageUrl.isEmpty())
         {
             Glide.with(requireContext())
                     .load(R.drawable.image_placeholder)
@@ -122,31 +122,44 @@ public class RestaurantInfoFragment extends Fragment
     }
 
 
-    private void fetchMenus(Restaurant restaurant) {
-        String restaurantId = restaurant.getRestaurantID();
-        if (restaurantId == null || restaurantId.isEmpty()) {
+    private void fetchMenus(Restaurant restaurant)
+    {
+        String restaurantID = restaurant.getRestaurantID();
+        if(restaurantID == null || restaurantID.isEmpty())
+        {
             Log.e("RestaurantInfoFragment", "Restaurant ID is null or empty for restaurant: " + restaurant.getName());
-            // Clear the adapter to avoid showing stale data.
             menusAdapter.updateData(new ArrayList<>());
             return;
         }
 
-        DocumentReference restaurantRef = db.collection("Restaurants").document(restaurantId);
+        DocumentReference restaurantRef = db.collection("Restaurants").document(restaurantID);
         menusAdapter.setRestaurantReference(restaurantRef);
 
-        restaurantRef.collection("Menus").get().addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
+        restaurantRef.collection("Menus").orderBy("menuIndex").get().addOnCompleteListener(task ->
+        {
+            if(task.isSuccessful())
+            {
                 List<Menu> menus = new ArrayList<>();
-                if (task.getResult() != null && !task.getResult().isEmpty()) {
-                    for (QueryDocumentSnapshot document : task.getResult()) {
+                if(task.getResult() != null && !task.getResult().isEmpty())
+                {
+                    for(QueryDocumentSnapshot document : task.getResult())
+                    {
                         Menu menu = document.toObject(Menu.class);
                         menus.add(menu);
                     }
-                } else {
+                } else
+                {
                     Log.w("RestaurantInfoFragment", "No menus found for restaurant: " + restaurant.getName());
                 }
-                menusAdapter.updateData(menus);
-            } else {
+
+                // **Attach adapter BEFORE updating data**
+                if(menusRecyclerView.getAdapter() == null)
+                {
+                    menusRecyclerView.setAdapter(menusAdapter);
+                    Log.d("RecyclerViewDebug", "Adapter attached after fetching menus.");
+                }
+            } else
+            {
                 Log.e("RestaurantInfoFragment", "Error fetching menus: ", task.getException());
                 menusAdapter.updateData(new ArrayList<>());
             }

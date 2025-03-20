@@ -26,7 +26,6 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class MenusAdapter extends RecyclerView.Adapter<MenusAdapter.ViewHolder>
 {
@@ -85,77 +84,88 @@ public class MenusAdapter extends RecyclerView.Adapter<MenusAdapter.ViewHolder>
 
         holder.itemView.setOnClickListener(v ->
         {
-            if (listener != null)
+            if(listener != null)
             {
                 listener.onMenuClick(menu);
             }
         });
 
-        if (restaurantRef != null)
+        // Clear any previous state
+        holder.itemsRecyclerView.setAdapter(null);
+        holder.itemsRecyclerView.setLayoutManager(null);
+
+        // Set tag on the RecyclerView to track which menu it belongs to
+        holder.itemsRecyclerView.setTag(menu.getMenuID());
+
+        // Set new layout manager and adapter
+        holder.itemsRecyclerView.setLayoutManager(new LinearLayoutManager(context));
+        MenuItemAdapter adapter = new MenuItemAdapter(new ArrayList<>(), context, menuItem ->
         {
-            fetchMenuItems(menu, holder.itemsRecyclerView);
+            if(context instanceof FragmentActivity)
+            {
+                MenuItemSelectionViewModel viewModel = new ViewModelProvider((FragmentActivity) context)
+                        .get(MenuItemSelectionViewModel.class);
+                viewModel.selectMenuItem(menuItem);
+
+                MenuItemFragment menuItemFragment = new MenuItemFragment();
+                ((FragmentActivity) context).getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragmentContainer, menuItemFragment)
+                        .addToBackStack(null)
+                        .commit();
+            } else
+            {
+                Log.e("MenusAdapter", "Context is not a FragmentActivity, cannot proceed with ViewModel.");
+            }
+        });
+        holder.itemsRecyclerView.setAdapter(adapter);
+
+        if(restaurantRef != null)
+        {
+            Log.d("MenusAdapter", "Starting fetch for menu: " + menu.getName() + " (ID: " + menu.getMenuID() + ")");
+            fetchMenuItems(menu, adapter);
         }
     }
 
-    private void fetchMenuItems(Menu menu, RecyclerView itemsRecyclerView) {
-        Log.e("MenusAdapter", "Fetching menu items for: " + menu.getName());
-        if (menu == null || restaurantRef == null) {
-            Log.e("MenusAdapter", "Menu or restaurant reference is null!");
+    private void fetchMenuItems(Menu menu, MenuItemAdapter adapter)
+    {
+        Log.d("MenusAdapter", "Fetching menu items for: " + menu.getName() + " (ID: " + menu.getMenuID() + ")");
+
+        if(restaurantRef == null)
+        {
+            Log.e("MenusAdapter", "Restaurant reference is null!");
             return;
         }
 
-        restaurantRef.collection("Menus").get().addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                boolean menuFound = false;
-                for (QueryDocumentSnapshot document : task.getResult()) {
-                    if (document.getId().equals(menu.getMenuID())) {
-                        menuFound = true;
-                        document.getReference().collection("MenuItems").get().addOnCompleteListener(task2 -> {
-                            if (task2.isSuccessful()) {
-                                List<MenuItem> menuItems = new ArrayList<>();
-                                for (QueryDocumentSnapshot document2 : task2.getResult()) {
-                                    menuItems.add(document2.toObject(MenuItem.class));
-                                }
-                                if (menuItems.isEmpty()) {
-                                    Log.w("MenusAdapter", "No menu items found for menu: " + menu.getName());
-                                }
-                                itemsRecyclerView.setLayoutManager(new LinearLayoutManager(context));
-                                itemsRecyclerView.setAdapter(new MenuItemAdapter(menuItems, context, menuItem -> {
-                                    // Handle the menu item click:
-                                    MenuItemSelectionViewModel viewModel = new ViewModelProvider((FragmentActivity) context)
-                                            .get(MenuItemSelectionViewModel.class);
-                                    viewModel.selectMenuItem(menuItem);
+        // Query the specific menu document
+        restaurantRef.collection("Menus").document(menu.getMenuID()).collection("Items")
+                .orderBy("orderIndex")
+                .get()
+                .addOnCompleteListener(task ->
+                {
+                    if(task.isSuccessful())
+                    {
+                        List<MenuItem> menuItems = new ArrayList<>();
+                        for(QueryDocumentSnapshot document : task.getResult())
+                        {
+                            menuItems.add(document.toObject(MenuItem.class));
+                        }
 
-                                    MenuItemFragment menuItemFragment = new MenuItemFragment();
-                                    ((FragmentActivity) context).getSupportFragmentManager().beginTransaction()
-                                            .replace(R.id.fragmentContainer, menuItemFragment)
-                                            .addToBackStack(null)
-                                            .commit();
-                                }));
-                            } else {
-                                Log.e("MenusAdapter", "Error getting menu items: ", task2.getException());
-                                // Set an empty adapter to avoid showing stale data.
-                                itemsRecyclerView.setLayoutManager(new LinearLayoutManager(context));
-                                itemsRecyclerView.setAdapter(new MenuItemAdapter(new ArrayList<>(), context, menuItem -> {
-                                    // Optionally handle clicks, if needed.
-                                }));
-                            }
-                        });
-                        break; // Exit loop once the matching menu is found.
+                        if(menuItems.isEmpty())
+                        {
+                            Log.w("MenusAdapter", "No menu items found for menu: " + menu.getName() + " (ID: " + menu.getMenuID() + ")");
+                        } else
+                        {
+                            Log.d("MenusAdapter", "Found " + menuItems.size() + " items for menu: " + menu.getName() + " (ID: " + menu.getMenuID() + ")");
+                        }
+
+                        // Update the adapter's data
+                        adapter.updateData(menuItems);
+                    } else
+                    {
+                        Log.e("MenusAdapter", "Error getting menu items for " + menu.getName() + ": ", task.getException());
                     }
-                }
-                if (!menuFound) {
-                    Log.w("MenusAdapter", "No matching menu document found for menu: " + menu.getName());
-                    // Update the RecyclerView with an empty adapter.
-                    itemsRecyclerView.setLayoutManager(new LinearLayoutManager(context));
-                    itemsRecyclerView.setAdapter(new MenuItemAdapter(new ArrayList<>(), context, menuItem -> {
-                        // Optionally handle clicks, if needed.
-                    }));
-                }
-            }
-        });
+                });
     }
-
 
     @Override
     public int getItemCount()

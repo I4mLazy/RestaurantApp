@@ -8,4 +8,5 @@
     <color name="gold">#FFDF00</color>
     <color name="gray">#9E9E9E</color>
     <color name="colorAccent">#FF5722</color>
+    <color name="black_overlay">#66000000</color>
 </resources>
