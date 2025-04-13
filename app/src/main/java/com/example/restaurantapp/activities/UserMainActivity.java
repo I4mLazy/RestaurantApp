@@ -33,7 +33,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-public class UserMainActivity extends AppCompatActivity {
+public class UserMainActivity extends AppCompatActivity
+{
 
     private static final String TAG = "UserMainActivity";
     private BottomNavigationView bottomNavMenu;
@@ -48,7 +49,8 @@ public class UserMainActivity extends AppCompatActivity {
     private ActivityResultLauncher<String> requestSinglePermissionLauncher;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_user_main);
@@ -62,11 +64,13 @@ public class UserMainActivity extends AppCompatActivity {
         // Handle back press with the new API
         setupBackPressHandler();
 
-        if (savedInstanceState == null) {
+        if(savedInstanceState == null)
+        {
             // First time initialization - load the default fragment directly
             loadFragment(new DiscoveryFragment(), DISCOVERY_FRAGMENT_TAG);
             currentFragmentTag = DISCOVERY_FRAGMENT_TAG;
-        } else {
+        } else
+        {
             // Restore current fragment from saved state
             currentFragmentTag = savedInstanceState.getString("currentFragmentTag", DISCOVERY_FRAGMENT_TAG);
         }
@@ -81,26 +85,32 @@ public class UserMainActivity extends AppCompatActivity {
         requestRequiredPermissions();
     }
 
-    private void setupPermissionLaunchers() {
+    private void setupPermissionLaunchers()
+    {
         // For multiple permissions (Android 13+)
         requestMultiplePermissionsLauncher = registerForActivityResult(
                 new ActivityResultContracts.RequestMultiplePermissions(),
-                result -> {
+                result ->
+                {
                     StringBuilder grantedPermissions = new StringBuilder();
                     StringBuilder deniedPermissions = new StringBuilder();
 
-                    for (Map.Entry<String, Boolean> entry : result.entrySet()) {
-                        if (entry.getValue()) {
-                            if (grantedPermissions.length() > 0) grantedPermissions.append(", ");
+                    for(Map.Entry<String, Boolean> entry : result.entrySet())
+                    {
+                        if(entry.getValue())
+                        {
+                            if(grantedPermissions.length() > 0) grantedPermissions.append(", ");
                             grantedPermissions.append(getPermissionFriendlyName(entry.getKey()));
-                        } else {
-                            if (deniedPermissions.length() > 0) deniedPermissions.append(", ");
+                        } else
+                        {
+                            if(deniedPermissions.length() > 0) deniedPermissions.append(", ");
                             deniedPermissions.append(getPermissionFriendlyName(entry.getKey()));
                         }
                     }
 
                     // Show appropriate feedback based on results
-                    if (deniedPermissions.length() > 0) {
+                    if(deniedPermissions.length() > 0)
+                    {
                         showPermissionFeedback(deniedPermissions.toString());
                     }
 
@@ -112,24 +122,28 @@ public class UserMainActivity extends AppCompatActivity {
         // For single permission requests
         requestSinglePermissionLauncher = registerForActivityResult(
                 new ActivityResultContracts.RequestPermission(),
-                isGranted -> {
+                isGranted ->
+                {
                     Log.d(TAG, "Single permission result: " + isGranted);
                     // Handle specific permission result if needed
                 }
         );
     }
 
-    private void setupBackPressHandler() {
-        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+    private void setupBackPressHandler()
+    {
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true)
+        {
             @Override
-            public void handleOnBackPressed() {
+            public void handleOnBackPressed()
+            {
                 // Always go to Discovery screen when back button is pressed
-                if (!(getSupportFragmentManager().findFragmentById(R.id.fragmentContainer) instanceof DiscoveryFragment)) {
+                if(!(getSupportFragmentManager().findFragmentById(R.id.fragmentContainer) instanceof DiscoveryFragment))
+                {
                     // Set the bottom navigation selection to Discovery
                     bottomNavMenu.setSelectedItemId(R.id.Discovery);
-                    // No need to call switchFragment here since setSelectedItemId will trigger
-                    // the listener which will call switchFragment
-                } else {
+                } else
+                {
                     // If already on Discovery, exit the app
                     setEnabled(false);
                     getOnBackPressedDispatcher().onBackPressed();
@@ -138,16 +152,21 @@ public class UserMainActivity extends AppCompatActivity {
         });
     }
 
-    private void setupBottomNavigation() {
-        bottomNavMenu.setOnItemSelectedListener(item -> {
+    private void setupBottomNavigation()
+    {
+        bottomNavMenu.setOnItemSelectedListener(item ->
+        {
             int itemId = item.getItemId();
-            if (itemId == R.id.Gmaps) {
+            if(itemId == R.id.Gmaps)
+            {
                 switchFragment(GMAPS_FRAGMENT_TAG);
                 return true;
-            } else if (itemId == R.id.Profile) {
+            } else if(itemId == R.id.Profile)
+            {
                 switchFragment(PROFILE_FRAGMENT_TAG);
                 return true;
-            } else if (itemId == R.id.Discovery) {
+            } else if(itemId == R.id.Discovery)
+            {
                 switchFragment(DISCOVERY_FRAGMENT_TAG);
                 return true;
             }
@@ -156,30 +175,38 @@ public class UserMainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onSaveInstanceState(@NonNull Bundle outState) {
+    protected void onSaveInstanceState(@NonNull Bundle outState)
+    {
         super.onSaveInstanceState(outState);
         outState.putString("currentFragmentTag", currentFragmentTag);
     }
 
-    private void updateBottomNavFromTag(String tag) {
-        if (GMAPS_FRAGMENT_TAG.equals(tag)) {
+    private void updateBottomNavFromTag(String tag)
+    {
+        if(GMAPS_FRAGMENT_TAG.equals(tag))
+        {
             bottomNavMenu.setSelectedItemId(R.id.Gmaps);
-        } else if (PROFILE_FRAGMENT_TAG.equals(tag)) {
+        } else if(PROFILE_FRAGMENT_TAG.equals(tag))
+        {
             bottomNavMenu.setSelectedItemId(R.id.Profile);
-        } else {
+        } else
+        {
             bottomNavMenu.setSelectedItemId(R.id.Discovery);
         }
     }
 
-    private void switchFragment(String fragmentTag) {
+    private void switchFragment(String fragmentTag)
+    {
         // Check if we're already on this fragment
-        if (fragmentTag.equals(currentFragmentTag)) {
+        if(fragmentTag.equals(currentFragmentTag))
+        {
             return;
         }
 
         // Create the fragment based on the tag
         Fragment fragment;
-        switch (fragmentTag) {
+        switch(fragmentTag)
+        {
             case GMAPS_FRAGMENT_TAG:
                 fragment = new GmapsFragment();
                 break;
@@ -195,7 +222,8 @@ public class UserMainActivity extends AppCompatActivity {
         loadFragment(fragment, fragmentTag);
     }
 
-    private void loadFragment(Fragment fragment, String tag) {
+    private void loadFragment(Fragment fragment, String tag)
+    {
         // Update current fragment tag
         currentFragmentTag = tag;
 
@@ -209,38 +237,47 @@ public class UserMainActivity extends AppCompatActivity {
                 .commit();
     }
 
-    private void requestRequiredPermissions() {
+    private void requestRequiredPermissions()
+    {
         List<String> permissionsToRequest = new ArrayList<>();
 
         // Add location permissions
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
-                PackageManager.PERMISSION_GRANTED) {
+        if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
+                PackageManager.PERMISSION_GRANTED)
+        {
             permissionsToRequest.add(Manifest.permission.ACCESS_FINE_LOCATION);
             permissionsToRequest.add(Manifest.permission.ACCESS_COARSE_LOCATION);
         }
 
         // Add notification permission for Android 13+
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
-                    PackageManager.PERMISSION_GRANTED) {
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+        {
+            if(ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
+                    PackageManager.PERMISSION_GRANTED)
+            {
                 permissionsToRequest.add(Manifest.permission.POST_NOTIFICATIONS);
             }
         }
 
         // If we have permissions to request, check if rationale is needed
-        if (!permissionsToRequest.isEmpty()) {
+        if(!permissionsToRequest.isEmpty())
+        {
             boolean shouldShowRationale = false;
 
-            for (String permission : permissionsToRequest) {
-                if (ActivityCompat.shouldShowRequestPermissionRationale(this, permission)) {
+            for(String permission : permissionsToRequest)
+            {
+                if(ActivityCompat.shouldShowRequestPermissionRationale(this, permission))
+                {
                     shouldShowRationale = true;
                     break;
                 }
             }
 
-            if (shouldShowRationale) {
+            if(shouldShowRationale)
+            {
                 showPermissionRationale(permissionsToRequest);
-            } else {
+            } else
+            {
                 // Request permissions directly
                 requestMultiplePermissionsLauncher.launch(
                         permissionsToRequest.toArray(new String[0])
@@ -249,17 +286,21 @@ public class UserMainActivity extends AppCompatActivity {
         }
     }
 
-    private void showPermissionRationale(List<String> permissions) {
+    private void showPermissionRationale(List<String> permissions)
+    {
         boolean needsLocation = permissions.contains(Manifest.permission.ACCESS_FINE_LOCATION);
         boolean needsNotification = permissions.contains(Manifest.permission.POST_NOTIFICATIONS);
 
         StringBuilder message = new StringBuilder("This app needs ");
 
-        if (needsLocation && needsNotification) {
+        if(needsLocation && needsNotification)
+        {
             message.append("location permission to show nearby restaurants and notification permission for updates and promotions");
-        } else if (needsLocation) {
+        } else if(needsLocation)
+        {
             message.append("location permission to show nearby restaurants and provide navigation features");
-        } else if (needsNotification) {
+        } else if(needsNotification)
+        {
             message.append("notification permission to alert you about restaurant promotions, order updates, and reservation confirmations");
         }
 
@@ -279,19 +320,23 @@ public class UserMainActivity extends AppCompatActivity {
                 .show();
     }
 
-    private void showPermissionFeedback(String deniedPermissions) {
+    private void showPermissionFeedback(String deniedPermissions)
+    {
         Snackbar.make(
                 rootView,
                 "Limited functionality: " + deniedPermissions + " not available",
                 Snackbar.LENGTH_LONG
-        ).setAction("Settings", v -> {
+        ).setAction("Settings", v ->
+        {
             // Open app settings
             // Add intent to open settings if needed
         }).show();
     }
 
-    private String getPermissionFriendlyName(String permission) {
-        switch (permission) {
+    private String getPermissionFriendlyName(String permission)
+    {
+        switch(permission)
+        {
             case Manifest.permission.ACCESS_FINE_LOCATION:
             case Manifest.permission.ACCESS_COARSE_LOCATION:
                 return "Location";
@@ -302,14 +347,16 @@ public class UserMainActivity extends AppCompatActivity {
         }
     }
 
-    private void notifyFragmentsAboutPermissionChanges(Map<String, Boolean> results) {
+    private void notifyFragmentsAboutPermissionChanges(Map<String, Boolean> results)
+    {
         // Get current fragment
         Fragment currentFragment = getSupportFragmentManager().findFragmentByTag(currentFragmentTag);
 
         // Check if the current fragment might need to know about permission changes
-        if (currentFragment instanceof GmapsFragment &&
+        if(currentFragment instanceof GmapsFragment &&
                 (results.containsKey(Manifest.permission.ACCESS_FINE_LOCATION) ||
-                        results.containsKey(Manifest.permission.ACCESS_COARSE_LOCATION))) {
+                        results.containsKey(Manifest.permission.ACCESS_COARSE_LOCATION)))
+        {
             // Notify the fragment of permission changes
             // This would require implementing a method in the GmapsFragment
             // For example: ((GmapsFragment)currentFragment).onLocationPermissionResult(results);

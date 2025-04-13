@@ -19,8 +19,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:contentDescription="tabLayout"
-            app:tabIndicatorColor="@color/colorAccent"
-            app:tabSelectedTextColor="@color/colorAccent"/>
+            app:tabIndicatorColor="@color/Orange"
+            app:tabSelectedTextColor="@color/Orange"/>
     </com.google.android.material.appbar.AppBarLayout>
 
     <!-- ViewPager2 for tab contents -->

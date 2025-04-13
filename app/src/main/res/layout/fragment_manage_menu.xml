@@ -84,7 +84,7 @@
             android:minWidth="120dp"
             android:padding="12dp"
             android:text="Save Order"
-            android:visibility="gone"/>
+            android:visibility="gone" />
 
     </FrameLayout>
 
@@ -103,6 +103,15 @@
             android:background="@drawable/box_background"
             android:orientation="vertical"
             android:padding="20dp">
+
+            <ImageView
+                android:id="@+id/itemViewImage"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:layout_gravity="center"
+                android:background="@drawable/image_placeholder"
+                android:scaleType="centerCrop"
+                android:src="@drawable/image_placeholder" />
 
             <TextView
                 android:id="@+id/itemViewName"
@@ -153,7 +162,6 @@
         </LinearLayout>
     </RelativeLayout>
 
-
     <!-- Menu View -->
     <RelativeLayout
         android:id="@+id/menuViewOverlay"
@@ -169,6 +177,15 @@
             android:background="@drawable/box_background"
             android:orientation="vertical"
             android:padding="20dp">
+
+            <ImageView
+                android:id="@+id/menuViewImage"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:layout_gravity="center"
+                android:background="@drawable/image_placeholder"
+                android:scaleType="centerCrop"
+                android:src="@drawable/image_placeholder" />
 
             <TextView
                 android:id="@+id/menuViewName"
@@ -212,7 +229,6 @@
         </LinearLayout>
     </RelativeLayout>
 
-
     <!-- Edit Item Overlay -->
     <RelativeLayout
         android:id="@+id/itemEditOverlay"
@@ -237,6 +253,27 @@
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
+            <ImageButton
+                android:id="@+id/editItemImage"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_gravity="center"
+                android:background="@drawable/image_placeholder"
+                android:scaleType="centerCrop"
+                android:src="@drawable/image_placeholder" />
+
+            <TextView
+                android:id="@+id/itemEditImageTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="Edit Image"
+                android:textSize="16sp"
+                android:textColor="@android:color/holo_blue_dark"
+                android:clickable="true"
+                android:focusable="true"
+                android:padding="8dp"/>
+
             <Spinner
                 android:id="@+id/spinnerMenuSelection"
                 android:layout_width="match_parent"
@@ -257,7 +294,6 @@
                 android:hint="Price"
                 android:inputType="numberDecimal" />
 
-            <!-- Added Item Description EditText -->
             <EditText
                 android:id="@+id/editItemDescription"
                 android:layout_width="match_parent"
@@ -289,7 +325,6 @@
         </LinearLayout>
     </RelativeLayout>
 
-
     <!-- Edit Menu Overlay -->
     <RelativeLayout
         android:id="@+id/menuEditOverlay"
@@ -313,6 +348,27 @@
                 android:text="Edit Menu"
                 android:textSize="18sp"
                 android:textStyle="bold" />
+
+            <ImageButton
+                android:id="@+id/editMenuImage"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_gravity="center"
+                android:background="@drawable/image_placeholder"
+                android:scaleType="centerCrop"
+                android:src="@drawable/image_placeholder" />
+
+            <TextView
+                android:id="@+id/menuEditImageTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="Edit Image"
+                android:textSize="16sp"
+                android:textColor="@android:color/holo_blue_dark"
+                android:clickable="true"
+                android:focusable="true"
+                android:padding="8dp"/>
 
             <EditText
                 android:id="@+id/editMenuName"
@@ -393,41 +449,186 @@
         android:background="#99000000"
         android:visibility="gone">
 
-        <LinearLayout
+        <ScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:background="@drawable/box_background"
-            android:orientation="vertical"
-            android:padding="20dp">
+            android:layout_centerInParent="true">
 
-            <TextView
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:text="Create Discount"
-                android:textSize="18sp"
-                android:textStyle="bold" />
+                android:orientation="vertical"
+                android:background="@drawable/box_background"
+                android:padding="20dp"
+                android:layout_margin="16dp">
 
-            <EditText
-                android:id="@+id/editDiscountAmount"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Discount Amount"
-                android:inputType="numberDecimal" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Create Discount"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:gravity="center" />
 
-            <Button
-                android:id="@+id/btnApplyDiscount"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Apply" />
+                <!-- Discount Type -->
+                <RadioGroup
+                    android:id="@+id/radioDiscountType"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="12dp">
 
-            <Button
-                android:id="@+id/btnCancelDiscount"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Cancel" />
-        </LinearLayout>
+                    <RadioButton
+                        android:id="@+id/radioPercentage"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="%" />
+
+                    <RadioButton
+                        android:id="@+id/radioFlat"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Flat" />
+                </RadioGroup>
+
+                <EditText
+                    android:id="@+id/editDiscountAmount"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Discount Amount"
+                    android:inputType="numberDecimal"
+                    android:layout_marginTop="8dp" />
+
+                <!-- Schedule Toggle -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Enable Schedule"
+                        android:layout_marginEnd="12dp" />
+
+                    <Switch
+                        android:id="@+id/switchEnableSchedule"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <!-- Apply To Section -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Apply Discount To:"
+                    android:textStyle="bold"
+                    android:layout_marginTop="16dp" />
+
+                <RadioGroup
+                    android:id="@+id/radioApplyScope"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <RadioButton
+                        android:id="@+id/radioApplyToMenuOrItem"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Apply to Menu or Item" />
+
+                    <RadioButton
+                        android:id="@+id/radioManualSelect"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Manually Select Items or Menus" />
+                </RadioGroup>
+
+                <Spinner
+                    android:id="@+id/spinnerDiscountMenu"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="10dp" />
+
+                <Spinner
+                    android:id="@+id/spinnerDiscountItem"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="10dp" />  <!-- Start hidden, will be shown later -->
+
+
+                <!-- Schedule Pickers -->
+                <LinearLayout
+                    android:id="@+id/layoutSchedule"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Start Date &amp; Time"
+                        android:textStyle="bold" />
+
+                    <DatePicker
+                        android:id="@+id/datePickerStart"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:calendarViewShown="true" />
+
+                    <TimePicker
+                        android:id="@+id/timePickerStart"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:timePickerMode="spinner"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="End Date &amp; Time"
+                        android:textStyle="bold"
+                        android:layout_marginTop="12dp" />
+
+                    <DatePicker
+                        android:id="@+id/datePickerEnd"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:calendarViewShown="true" />
+
+                    <TimePicker
+                        android:id="@+id/timePickerEnd"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:timePickerMode="spinner"/>
+                </LinearLayout>
+
+                <!-- Choose Button -->
+                <Button
+                    android:id="@+id/btnChooseForDiscount"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Choose Items/Menus"
+                    android:layout_marginTop="16dp" />
+
+                <!-- Apply / Cancel -->
+                <Button
+                    android:id="@+id/btnApplyDiscount"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Apply"
+                    android:layout_marginTop="12dp" />
+
+                <Button
+                    android:id="@+id/btnCancelDiscount"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Cancel"
+                    android:layout_marginTop="8dp" />
+            </LinearLayout>
+        </ScrollView>
     </RelativeLayout>
 
     <!-- Loading Overlay -->

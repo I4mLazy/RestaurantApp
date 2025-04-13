@@ -85,7 +85,7 @@
             android:resource="@drawable/baseline_notifications_24" /> <!-- Set color used with incoming notification messages -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_color"
-            android:resource="@color/colorAccent" /> <!-- Set notification channel for Android O and above -->
+            android:resource="@color/Orange" /> <!-- Set notification channel for Android O and above -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="@string/default_notification_channel_id" />

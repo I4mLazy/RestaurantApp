@@ -6,13 +6,14 @@
     android:padding="16dp">
 
     <TextView
+        android:id="@+id/SelectImageTextView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Select Profile Picture"
-        android:textSize="18sp"
-        android:textStyle="bold"
         android:gravity="center"
-        android:paddingBottom="10dp" />
+        android:paddingBottom="10dp"
+        android:text="Select Photo"
+        android:textSize="18sp"
+        android:textStyle="bold" />
 
     <Button
         android:id="@+id/btn_take_photo"

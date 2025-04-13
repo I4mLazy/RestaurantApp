@@ -14,7 +14,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.restaurantapp.R;
 import com.example.restaurantapp.adapters.RestaurantDiscoveryAdapter;
-import com.example.restaurantapp.fragments.RestaurantDetailsFragment;
 import com.example.restaurantapp.models.Restaurant;
 import com.example.restaurantapp.viewmodels.RestaurantSelectionViewModel;
 import com.google.firebase.firestore.FirebaseFirestore;

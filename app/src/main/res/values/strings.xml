@@ -3,6 +3,6 @@
     <string name="map_id">f540640b6b17a6b8</string>
     <string name="default_web_client_id">625550119074-if9om96imfe32bm57mn24s0vq15qu8sj.apps.googleusercontent.com</string>
     <string name="default_notification_channel_id">fcm_default_channel</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="percent_off_format">-%d%%</string>
+    <string name="amount_off_format">$%d OFF</string>
 </resources>

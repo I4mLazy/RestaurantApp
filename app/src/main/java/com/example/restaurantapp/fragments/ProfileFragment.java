@@ -259,9 +259,18 @@ public class ProfileFragment extends Fragment
                     String imageUrl = documentSnapshot.getString("profileImageUrl");
 
                     // Update UI
-                    profileName.setText(name);
-                    profilePhone.setText(phone);
-                    profileEmail.setText(email);
+                    if(name != null)
+                    {
+                        profileName.setText(name);
+                    }
+                    if(phone != null)
+                    {
+                        profilePhone.setText(phone);
+                    }
+                    if(email != null)
+                    {
+                        profileEmail.setText(email);
+                    }
 
                     // Load profile image if exists
                     if(imageUrl != null && !imageUrl.isEmpty())
@@ -463,7 +472,11 @@ public class ProfileFragment extends Fragment
         }
 
         // Create and configure new dialog
-        View bottomSheetView = getLayoutInflater().inflate(R.layout.bottom_sheet_profile_picture, null);
+        View bottomSheetView = getLayoutInflater().inflate(R.layout.bottom_sheet_image, null);
+
+        TextView selectImageTextview = bottomSheetView.findViewById(R.id.SelectImageTextView);
+        selectImageTextview.setText("Select Profile Picture");
+
         bottomSheetDialog = new BottomSheetDialog(requireContext());
         bottomSheetDialog.setContentView(bottomSheetView);
 
@@ -607,7 +620,6 @@ public class ProfileFragment extends Fragment
                                         requireActivity().getContentResolver(), imageUri);
                                 bitmap = fixImageOrientation(imageUri, bitmap);
                                 editProfilePictureImageButton.setImageBitmap(bitmap);
-                                Log.d(TAG, "Image set from gallery.");
 
                                 // Upload to Firebase
                                 uploadImageToFirebase(bitmap);
@@ -739,30 +751,11 @@ public class ProfileFragment extends Fragment
         {
             // Read EXIF data to determine orientation
             ExifInterface exif = null;
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+            try(InputStream inputStream = requireContext().getContentResolver().openInputStream(imageUri))
             {
-                try(InputStream inputStream = requireContext().getContentResolver().openInputStream(imageUri))
+                if(inputStream != null)
                 {
-                    if(inputStream != null)
-                    {
-                        exif = new ExifInterface(inputStream);
-                    }
-                }
-            } else
-            {
-                // For older Android versions
-                String[] filePathColumn = {MediaStore.Images.Media.DATA};
-                Cursor cursor = requireContext().getContentResolver().query(
-                        imageUri, filePathColumn, null, null, null);
-                if(cursor != null && cursor.moveToFirst())
-                {
-                    int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
-                    String filePath = cursor.getString(columnIndex);
-                    cursor.close();
-                    if(filePath != null)
-                    {
-                        exif = new ExifInterface(filePath);
-                    }
+                    exif = new ExifInterface(inputStream);
                 }
             }
 
