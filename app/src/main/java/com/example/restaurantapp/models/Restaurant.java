@@ -4,6 +4,7 @@ import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.GeoPoint;
 
 import java.util.List;
+import java.util.Map;
 
 public class Restaurant
 {
@@ -11,29 +12,34 @@ public class Restaurant
     private String address;
     private GeoPoint location;
     private double rating;
-    private String imageUrl;
+    private String imageURL;
     private BusinessHours businessHours;
     private Timestamp createdAt;
-    private ContactInfo contactInfo;
     private boolean reservable;
-    private List<String> type;
+    private String type;
     private List<String> tags;
     private int priceLevel;
     private String restaurantID;
+    private String description;
+    private Timestamp lastUpdated;
+    private boolean offersPickup;
+    private Map<String, String> contactInfo;
+
 
     public Restaurant()
     {
     }
 
-    public Restaurant(String name, String address, GeoPoint location, double rating, String imageUrl,
-                      BusinessHours businessHours, Timestamp createdAt, ContactInfo contactInfo, boolean reservable,
-                      List<String> type, List<String> tags, int priceLevel, String restaurantID)
+    public Restaurant(String name, String address, GeoPoint location, double rating, String imageURL,
+                      BusinessHours businessHours, Timestamp createdAt, boolean reservable, String type,
+                      List<String> tags, int priceLevel, String restaurantID, String description,
+                      Timestamp lastUpdated, boolean offersPickup, Map<String, String> contactInfo)
     {
         this.name = name;
         this.address = address;
         this.location = location;
         this.rating = rating;
-        this.imageUrl = imageUrl;
+        this.imageURL = imageURL;
         this.businessHours = businessHours;
         this.createdAt = createdAt;
         this.contactInfo = contactInfo;
@@ -42,6 +48,9 @@ public class Restaurant
         this.tags = tags;
         this.priceLevel = priceLevel;
         this.restaurantID = restaurantID;
+        this.description = description;
+        this.lastUpdated = lastUpdated;
+        this.offersPickup = offersPickup;
     }
 
     // ... (Getters and setters) ...
@@ -86,14 +95,14 @@ public class Restaurant
         this.rating = rating;
     }
 
-    public String getImageUrl()
+    public String getImageURL()
     {
-        return imageUrl;
+        return imageURL;
     }
 
-    public void setImageUrl(String imageUrl)
+    public void setImageURL(String imageURL)
     {
-        this.imageUrl = imageUrl;
+        this.imageURL = imageURL;
     }
 
     public BusinessHours getBusinessHours()
@@ -116,16 +125,6 @@ public class Restaurant
         this.createdAt = createdAt;
     }
 
-    public ContactInfo getContactInfo()
-    {
-        return contactInfo;
-    }
-
-    public void setContactInfo(ContactInfo contactInfo)
-    {
-        this.contactInfo = contactInfo;
-    }
-
     public boolean isReservable()
     {
         return reservable;
@@ -136,12 +135,12 @@ public class Restaurant
         this.reservable = reservable;
     }
 
-    public List<String> getType()
+    public String getType()
     {
         return type;
     }
 
-    public void setType(List<String> type)
+    public void setType(String type)
     {
         this.type = type;
     }
@@ -174,5 +173,45 @@ public class Restaurant
     public void setRestaurantID()
     {
         this.restaurantID = restaurantID;
+    }
+
+    public String getDescription()
+    {
+        return description;
+    }
+
+    public void setDescription(String description)
+    {
+        this.description = description;
+    }
+
+    public Timestamp getLastUpdated()
+    {
+        return lastUpdated;
+    }
+
+    public void setLastUpdated(Timestamp lastUpdated)
+    {
+        this.lastUpdated = lastUpdated;
+    }
+
+    public boolean isOffersPickup()
+    {
+        return offersPickup;
+    }
+
+    public void setOffersPickup(boolean offersPickup)
+    {
+        this.offersPickup = offersPickup;
+    }
+
+    public Map<String, String> getContactInfo()
+    {
+        return contactInfo;
+    }
+
+    public void setContactInfo(Map<String, String> contactInfo)
+    {
+        this.contactInfo = contactInfo;
     }
 }

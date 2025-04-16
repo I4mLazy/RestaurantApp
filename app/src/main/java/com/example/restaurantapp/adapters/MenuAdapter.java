@@ -168,7 +168,6 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.MenuViewHolder
             txtMenuName.setText(menu.getName());
 
             // Load image with Glide and set placeholder if URL is empty
-            Log.d("MenuAdapter", "Menu Image URL: " + menu.getImageURL());
             String imageUrl = menu.getImageURL();
             if(imageUrl != null && !imageUrl.isEmpty())
             {

@@ -186,7 +186,7 @@ public class LoginFragment extends Fragment
     {
         if(user == null) return;
 
-        SharedPreferences prefs = requireActivity().getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
+        SharedPreferences prefs = requireActivity().getSharedPreferences("FeedMe", Context.MODE_PRIVATE);
         String userType = prefs.getString("userType", null);
 
         if(userType != null)

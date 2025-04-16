@@ -72,9 +72,9 @@ public class RestaurantSearchResultsAdapter extends RecyclerView.Adapter<Restaur
             holder.distanceTextView.setText("N/A");
         }
         // Load restaurant image from URL using Glide
-        Glide.with(context).load(restaurant.getImageUrl())  // Assuming `getImageUrl()` returns the image link
-                .placeholder(R.drawable.image_placeholder)  // Placeholder while loading
-                .error(R.drawable.image_placeholder)  // Fallback if the image fails
+        Glide.with(context).load(restaurant.getImageURL())
+                .placeholder(R.drawable.image_placeholder)
+                .error(R.drawable.image_placeholder)
                 .into(holder.restaurantImage);
     }
 

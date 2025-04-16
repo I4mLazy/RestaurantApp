@@ -30,7 +30,7 @@
             android:layout_height="wrap_content"
             android:nestedScrollingEnabled="false"
             android:overScrollMode="never"
-            android:paddingHorizontal="8dp"
+            android:paddingHorizontal="16dp"
             android:scrollbars="vertical" />
     </androidx.core.widget.NestedScrollView>
 

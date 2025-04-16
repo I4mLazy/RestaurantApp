@@ -244,7 +244,7 @@ public class RestaurantSignUpFragment extends Fragment
         restaurantData.put("name", name);
         restaurantData.put("address", address);
         restaurantData.put("phoneNumber", phone);
-        restaurantData.put("ownerId", user.getUid()); // Link owner to restaurant
+        restaurantData.put("ownerID", user.getUid()); // Link owner to restaurant
 
         // User data update (link user to restaurant)
         Map<String, Object> userData = new HashMap<>();
@@ -275,7 +275,7 @@ public class RestaurantSignUpFragment extends Fragment
 
     private void saveUserTypeToPreferences()
     {
-        SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("MyAppPrefs", getContext().MODE_PRIVATE);
+        SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("FeedMe", getContext().MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
 
         editor.putString("userType", "restaurant");

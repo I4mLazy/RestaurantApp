@@ -51,7 +51,7 @@ public class RestaurantSettingsFragment extends Fragment
 
                         // Clear shared preferences
                         SharedPreferences sharedPreferences = requireActivity()
-                                .getSharedPreferences("MyAppPrefs", FragmentActivity.MODE_PRIVATE);
+                                .getSharedPreferences("FeedMe", FragmentActivity.MODE_PRIVATE);
                         SharedPreferences.Editor editor = sharedPreferences.edit();
                         editor.clear();
                         editor.apply();

@@ -145,21 +145,29 @@ public class MenuItemAdapter extends RecyclerView.Adapter<MenuItemAdapter.ItemVi
 
                         // Round the final price for display
                         currentPrice = Math.max(currentPrice, 0); // Prevent negative price
-
-                        // Update UI with the final price
-                        itemPrice.setText(String.format("$%.2f", currentPrice)); // Display final price
-                        oldPrice.setVisibility(View.VISIBLE);
-                        oldPrice.setText(String.format("$%.2f", originalPrice)); // Display original price
-                        discountBadge.setVisibility(View.VISIBLE);
-
-                        // Display the total discount in the badge
-                        if(hasPercentageDiscount)
+                        if(originalPrice > currentPrice)
                         {
-                            double percentageDiscount = (originalPrice - currentPrice) / originalPrice * 100;
-                            discountBadge.setText(itemView.getContext().getString(R.string.percent_off_format, (int) percentageDiscount));
-                        } else
+                            // Update UI with the final price
+                            itemPrice.setText(String.format("$%.2f", currentPrice)); // Display final price
+                            oldPrice.setVisibility(View.VISIBLE);
+                            oldPrice.setText(String.format("$%.2f", originalPrice)); // Display original price
+                            discountBadge.setVisibility(View.VISIBLE);
+
+                            // Display the total discount in the badge
+                            if(hasPercentageDiscount)
+                            {
+                                double percentageDiscount = (originalPrice - currentPrice) / originalPrice * 100;
+                                discountBadge.setText(itemView.getContext().getString(R.string.percent_off_format, (int) percentageDiscount));
+                            } else
+                            {
+                                discountBadge.setText(itemView.getContext().getString(R.string.amount_off_format, (int) totalDiscount));
+                            }
+                        }
+
+                        if(currentPrice == 0)
                         {
-                            discountBadge.setText(itemView.getContext().getString(R.string.amount_off_format, (int) totalDiscount));
+                            discountBadge.setVisibility(View.VISIBLE);
+                            discountBadge.setText(itemView.getContext().getString(R.string.free));
                         }
                     });
 

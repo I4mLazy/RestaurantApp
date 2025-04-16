@@ -5,4 +5,10 @@
     <string name="default_notification_channel_id">fcm_default_channel</string>
     <string name="percent_off_format">-%d%%</string>
     <string name="amount_off_format">$%d OFF</string>
+    <string name="free">FREE</string>
+    <string-array name="restaurant_types">
+        <item>Restaurant</item>
+        <item>Cafe</item>
+        <item>Bar</item>
+    </string-array>
 </resources>

@@ -1,26 +1,23 @@
 package com.example.restaurantapp.fragments;
 
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-
-import androidx.activity.OnBackPressedCallback;
-import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.appcompat.widget.SearchView;
-
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.activity.OnBackPressedCallback;
+import androidx.annotation.NonNull;
+import androidx.appcompat.widget.SearchView;
+import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.restaurantapp.R;
@@ -30,54 +27,45 @@ import com.example.restaurantapp.models.MenuItem;
 import com.example.restaurantapp.models.Restaurant;
 import com.example.restaurantapp.viewmodels.MenuItemSelectionViewModel;
 import com.example.restaurantapp.viewmodels.RestaurantViewModel;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class RestaurantInfoFragment extends Fragment
+public class UselessFragment extends Fragment
 {
 
     private ImageView restaurantDetailImage;
     private TextView restaurantDetailName, restaurantDetailAddress, restaurantDetailRating,
             restaurantDetailBusinessHours, restaurantDetailContactInfo, restaurantDetailReservable,
             restaurantDetailType, restaurantDetailTags, restaurantDetailPriceLevel, noResults;
-    private Button restaurantDetailEditButton, openReservationOverlayButton;
     private SearchView searchBar;
     private ProgressBar progressBar;
+    // RecyclerView for menus
     private RecyclerView recyclerViewMenus;
     private MenuAdapter menuAdapter;
     private List<Menu> menuList = new ArrayList<>();
     private List<MenuItem> menuItemList = new ArrayList<>();
     private String restaurantID;
-    int containerID;
 
     private RestaurantViewModel viewModel;
+    private FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-    private FirebaseFirestore db;
-    private FirebaseAuth auth;
-    private FirebaseUser currentUser;
-
-    public RestaurantInfoFragment()
+    public UselessFragment()
     {
         // Required empty public constructor
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState)
     {
-        View view = inflater.inflate(R.layout.fragment_restaurant_info, container, false);
-
-        restaurantDetailImage = view.findViewById(R.id.restaurantDetailLogo);
-
+        View view = inflater.inflate(R.layout.fragment_useless, container, false);
+        restaurantDetailImage = view.findViewById(R.id.restaurantDetailImage);
         restaurantDetailName = view.findViewById(R.id.restaurantDetailName);
         restaurantDetailAddress = view.findViewById(R.id.restaurantDetailAddress);
         restaurantDetailRating = view.findViewById(R.id.restaurantDetailRating);
@@ -88,196 +76,67 @@ public class RestaurantInfoFragment extends Fragment
         restaurantDetailTags = view.findViewById(R.id.restaurantDetailTags);
         restaurantDetailPriceLevel = view.findViewById(R.id.restaurantDetailPriceLevel);
         noResults = view.findViewById(R.id.noResults);
-
-        restaurantDetailEditButton = view.findViewById(R.id.restaurantDetailEditButton);
-        openReservationOverlayButton = view.findViewById(R.id.openReserveOverlayButton);
-
         searchBar = view.findViewById(R.id.searchBar);
         progressBar = view.findViewById(R.id.progressBar);
 
+        // Initialize the RecyclerView for menus
         recyclerViewMenus = view.findViewById(R.id.menusRecyclerView);
+        recyclerViewMenus.setLayoutManager(new LinearLayoutManager(getContext(), RecyclerView.VERTICAL, false));
 
-        db = FirebaseFirestore.getInstance();
-        auth = FirebaseAuth.getInstance();
-        currentUser = auth.getCurrentUser();
-
-        if(currentUser != null)
+        viewModel = new ViewModelProvider(requireActivity()).get(RestaurantViewModel.class);
+        viewModel.getCurrentRestaurant().observe(getViewLifecycleOwner(), restaurant ->
         {
-            db = FirebaseFirestore.getInstance();
-            db.collection("Users").document(currentUser.getUid())
-                    .get()
-                    .addOnSuccessListener(documentSnapshot ->
-                    {
-                        if(documentSnapshot.exists())
-                        {
-                            SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("FeedMe", Context.MODE_PRIVATE);
-
-                            String userType = sharedPreferences.getString("userType", "user");
-                            if("restaurant".equals(userType))
-                            {
-                                restaurantDetailEditButton.setVisibility(View.VISIBLE);
-                                openReservationOverlayButton.setVisibility(View.GONE);
-                                restaurantID = documentSnapshot.getString("restaurantID");
-
-                                if(restaurantID != null && !restaurantID.isEmpty())
-                                {
-                                    // Fetch restaurant data directly
-                                    db.collection("Restaurants").document(restaurantID).get()
-                                            .addOnSuccessListener(restaurantSnapshot ->
-                                            {
-                                                if(restaurantSnapshot.exists())
-                                                {
-                                                    Restaurant restaurant = restaurantSnapshot.toObject(Restaurant.class);
-
-                                                    // Bind restaurant data
-                                                    bindRestaurantData(restaurant);
-
-                                                    // Setup menu
-                                                    setupMenuItems(restaurantID);
-                                                } else
-                                                {
-                                                    Toast.makeText(getContext(), "Restaurant not found", Toast.LENGTH_SHORT).show();
-                                                }
-                                            })
-                                            .addOnFailureListener(e ->
-                                            {
-                                                Toast.makeText(getContext(), "Failed to load restaurant: " + e.getMessage(),
-                                                        Toast.LENGTH_SHORT).show();
-                                            });
-                                } else
-                                {
-                                    Toast.makeText(getContext(), "No restaurant assigned to user", Toast.LENGTH_SHORT).show();
-                                }
-                            } else if("user".equals(userType))
-                            {
-                                restaurantDetailEditButton.setVisibility(View.GONE);
-                                openReservationOverlayButton.setVisibility(View.VISIBLE);
-                                viewModel = new ViewModelProvider(requireActivity()).get(RestaurantViewModel.class);
-                                viewModel.getCurrentRestaurant().observe(getViewLifecycleOwner(), restaurant ->
-                                {
-                                    if(restaurant != null)
-                                    {
-                                        restaurantID = Objects.requireNonNull(viewModel.getCurrentRestaurant().getValue()).getRestaurantID();
-                                        bindRestaurantData(restaurant);
-                                    }
-                                });
-
-                                setupMenuItems(restaurantID);
-
-                                requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(),
-                                        new OnBackPressedCallback(true)
-                                        {
-                                            @Override
-                                            public void handleOnBackPressed()
-                                            {
-                                                requireActivity().getSupportFragmentManager().popBackStack();
-                                            }
-                                        });
-                            } else
-                            {
-                                Toast.makeText(getContext(), "User type doesn't exist", Toast.LENGTH_SHORT).show();
-                            }
-                        } else
-                        {
-                            Toast.makeText(getContext(), "User document doesn't exist", Toast.LENGTH_SHORT).show();
-                        }
-                    })
-                    .addOnFailureListener(e ->
-                    {
-                        Toast.makeText(getContext(), "Failed to retrieve user data: " + e.getMessage(),
-                                Toast.LENGTH_SHORT).show();
-                    });
-        } else
-        {
-            Toast.makeText(getContext(), "No user is currently signed in", Toast.LENGTH_SHORT).show();
-        }
-
-        restaurantDetailEditButton.setOnClickListener(v ->
-        {
-            db.collection("Restaurants").document(restaurantID).get()
-                    .addOnSuccessListener(restaurantSnapshot ->
-                    {
-                        if (restaurantSnapshot.exists())
-                        {
-                            Restaurant restaurant = restaurantSnapshot.toObject(Restaurant.class);
-                            if (restaurant != null)
-                            {
-                                viewModel = new ViewModelProvider(requireActivity()).get(RestaurantViewModel.class);
-                                viewModel.setCurrentRestaurant(restaurant);
-
-                                EditRestaurantInfoFragment editRestaurantInfoFragment = new EditRestaurantInfoFragment();
-                                getActivity().getSupportFragmentManager().beginTransaction()
-                                        .replace(containerID, editRestaurantInfoFragment)
-                                        .commit();
-                            }
-                            else
-                            {
-                                Log.e("EditButton", "Restaurant object was null");
-                            }
-                        }
-                        else
-                        {
-                            Log.e("EditButton", "Restaurant snapshot does not exist");
-                        }
-                    })
-                    .addOnFailureListener(e ->
-                    {
-                        Log.e("EditButton", "Failed to fetch restaurant", e);
-                    });
+            if(restaurant != null)
+            {
+                bindRestaurantData(restaurant);
+            }
         });
 
-        return view;
-    }
+        restaurantID = viewModel.getCurrentRestaurant().getValue().getRestaurantID();
 
-    private void setupMenuItems(String restaurantID)
-    {
-        MenuItemSelectionViewModel menuItemSelectionViewModel = new ViewModelProvider(requireActivity())
-                .get(MenuItemSelectionViewModel.class);
-        db = FirebaseFirestore.getInstance();
-        db.collection("Users").document(currentUser.getUid())
-                .get()
-                .addOnSuccessListener(documentSnapshot ->
-                {
-                    if(documentSnapshot.exists())
+        if(restaurantID != null && !restaurantID.isEmpty())
+        {
+            MenuItemSelectionViewModel menuItemSelectionViewModel = new ViewModelProvider(requireActivity()).get(MenuItemSelectionViewModel.class);
+
+            menuAdapter = new MenuAdapter(menuList, menu ->
+            {
+            },
+                    item ->
                     {
-                        String userType = documentSnapshot.getString("userType");
-                        if("restaurant".equals(userType))
-                        {
-                            containerID = R.id.fragment_container;
-                        } else if("user".equals(userType))
-                        {
-                            containerID = R.id.fragmentContainer;
-                        }
+                        Log.d("RestaurantInfoFragment", "Clicked on item: " + item.getName());
+
+                        menuItemSelectionViewModel.selectMenuItem(item);
+
+                        // Create new fragment instance and pass data if needed
+                        MenuItemFragment menuItemFragment = new MenuItemFragment();
+                        getActivity().getSupportFragmentManager().beginTransaction()
+                                .replace(R.id.fragmentContainer, menuItemFragment)
+                                .addToBackStack(null)
+                                .commit();
+                    },
+                    restaurantID
+            );
+
+            recyclerViewMenus.setAdapter(menuAdapter);
+            loadMenuData();
+        } else
+        {
+            Toast.makeText(getContext(), "No restaurant assigned to user", Toast.LENGTH_SHORT).show();
+        }
+
+        setUpSearchBar();
+
+        requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(),
+                new OnBackPressedCallback(true)
+                {
+                    @Override
+                    public void handleOnBackPressed()
+                    {
+                        requireActivity().getSupportFragmentManager().popBackStack();
                     }
                 });
-
-        menuAdapter = new MenuAdapter(
-                menuList,
-                menu ->
-                {
-                    // Menu click handler (empty)
-                },
-                item ->
-                {
-                    Log.d("RestaurantOverviewFragment", "Clicked on item: " + item.getName());
-
-                    menuItemSelectionViewModel.selectMenuItem(item);
-
-                    // Create new fragment instance and pass data if needed
-                    MenuItemFragment menuItemFragment = new MenuItemFragment();
-                    getActivity().getSupportFragmentManager().beginTransaction()
-                            .replace(containerID, menuItemFragment)
-                            .commit();
-                },
-                restaurantID
-        );
-
-        // Set adapter after initialization
-        recyclerViewMenus.setLayoutManager(new LinearLayoutManager(getContext()));
-        recyclerViewMenus.setAdapter(menuAdapter);
-        setUpSearchBar();
+        return view;
     }
-
 
     private void setUpSearchBar()
     {
@@ -304,49 +163,38 @@ public class RestaurantInfoFragment extends Fragment
     {
         if(restaurant == null) return;
 
-        // Name & Address
         restaurantDetailName.setText(restaurant.getName() != null ? restaurant.getName() : "N/A");
         restaurantDetailAddress.setText(restaurant.getAddress() != null ? restaurant.getAddress() : "N/A");
-
-        // Rating
         double rating = restaurant.getRating();
-        restaurantDetailRating.setText(rating > 0 ? "Rating: " + rating : "Rating: N/A");
-
-        // Business Hours
+        restaurantDetailRating.setText("Rating: " + (rating > 0 ? rating : "N/A"));
         restaurantDetailBusinessHours.setText("Hours: " +
                 (restaurant.getBusinessHours() != null ? restaurant.getBusinessHours().toString() : "N/A"));
-
-        // Contact Info
         restaurantDetailContactInfo.setText("Contact: " +
                 (restaurant.getContactInfo() != null ? restaurant.getContactInfo().toString() : "N/A"));
-
-        // Reservable
         restaurantDetailReservable.setText("Reservable: " + (restaurant.isReservable() ? "Yes" : "No"));
-
-        // Type
         restaurantDetailType.setText("Type: " +
-                (restaurant.getType() != null && !restaurant.getType().isEmpty() ? restaurant.getType() : "N/A"));
-
-        // Tags
+                (restaurant.getType() != null && !restaurant.getType().isEmpty() ? restaurant.getType().toString() : "N/A"));
         restaurantDetailTags.setText("Tags: " +
                 (restaurant.getTags() != null && !restaurant.getTags().isEmpty() ? restaurant.getTags().toString() : "N/A"));
-
-        // Price Level
         int priceLevel = restaurant.getPriceLevel();
         restaurantDetailPriceLevel.setText("Price Level: " + (priceLevel > 0 ? priceLevel : "N/A"));
 
-        // Image
         String imageUrl = restaurant.getImageURL();
-        Glide.with(requireContext())
-                .load(imageUrl != null && !imageUrl.isEmpty() ? imageUrl : R.drawable.image_placeholder)
-                .placeholder(R.drawable.image_placeholder)
-                .error(R.drawable.image_placeholder)
-                .into(restaurantDetailImage);
-
-        // Menu data
+        if(imageUrl == null || imageUrl.isEmpty())
+        {
+            Glide.with(requireContext())
+                    .load(R.drawable.image_placeholder)
+                    .into(restaurantDetailImage);
+        } else
+        {
+            Glide.with(requireContext())
+                    .load(imageUrl)
+                    .placeholder(R.drawable.image_placeholder)
+                    .error(R.drawable.image_placeholder)
+                    .into(restaurantDetailImage);
+        }
         loadMenuData();
     }
-
 
     private void loadMenuData()
     {
@@ -510,7 +358,7 @@ public class RestaurantInfoFragment extends Fragment
             menuAdapter.setCurrentSearchQuery(lowerQuery);
             menuAdapter.setFilterData(menuMatchIds, itemMatchMenuIds);
 
-            // Show a "No results" message if no matches found
+            //Show a "No results" message if no matches found
             if(menuMatchIds.isEmpty() && itemMatchMenuIds.isEmpty())
             {
                 // Display a "No results found" message
