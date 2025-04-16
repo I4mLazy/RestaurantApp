@@ -71,7 +71,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.Time;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
@@ -127,6 +126,7 @@ public class ManageMenuFragment extends Fragment
     private boolean imageEdited = false;
     private boolean newItem = false;
     private boolean newMenu = false;
+    boolean deleteMode = false;
     private Uri photoUri;
     private Bitmap bitmap;
     private UploadTask currentUploadTask;
@@ -173,8 +173,6 @@ public class ManageMenuFragment extends Fragment
                                         },
                                         restaurantID
                                 );
-
-                                recyclerViewMenus.setAdapter(menuAdapter);
 
                                 recyclerViewMenus.setLayoutManager(new LinearLayoutManager(getContext()));
                                 recyclerViewMenus.setAdapter(menuAdapter);
@@ -502,7 +500,7 @@ public class ManageMenuFragment extends Fragment
                     setSpinnerSelection(menuIDs.get(0));
 
                     // Set up adapter
-                    ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(),
+                    ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(),
                             android.R.layout.simple_spinner_dropdown_item, menuNames);
                     spinner.setAdapter(adapter);
                 })
@@ -990,6 +988,7 @@ public class ManageMenuFragment extends Fragment
         } else
         {
             newItem = true;
+            showLoading(true);
             if(imageEdited)
             {
                 uploadImageToFirebase(bitmap);
@@ -1055,8 +1054,9 @@ public class ManageMenuFragment extends Fragment
         List<String> menuIDs = (List<String>) spinnerMenuSelection.getTag();
         String selectedMenuID = menuIDs.get(spinnerMenuSelection.getSelectedItemPosition());
 
-        boolean isMovingMenus = !currentMenuItem.getMenuID().equals(selectedMenuID);
         String currentMenuID = currentMenuItem.getMenuID();
+        boolean isMovingMenus = !selectedMenuID.equals(currentMenuID);
+
 
         if(isMovingMenus)
         {
@@ -1121,9 +1121,11 @@ public class ManageMenuFragment extends Fragment
                         Toast.makeText(getContext(), "Item updated successfully", Toast.LENGTH_SHORT).show();
                         loadMenuData();
                         filterResults(searchBar.getQuery().toString());
+                        showLoading(false);
                     })
                     .addOnFailureListener(e ->
                     {
+                        showLoading(false);
                         Toast.makeText(getContext(), "Failed to update item: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     });
         }
@@ -1209,9 +1211,11 @@ public class ManageMenuFragment extends Fragment
                         menuItemList.add(newItem);
                         loadMenuData();
                         filterResults(searchBar.getQuery().toString());
+                        showLoading(false);
                     })
                     .addOnFailureListener(e ->
                     {
+                        showLoading(false);
                         Toast.makeText(getContext(), "Failed to add item: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     });
         });
@@ -1282,6 +1286,7 @@ public class ManageMenuFragment extends Fragment
             }
         } else
         {
+            showLoading(true);
             newMenu = true;
             if(imageEdited)
             {
@@ -1320,15 +1325,15 @@ public class ManageMenuFragment extends Fragment
                 .set(currentMenu)
                 .addOnSuccessListener(aVoid ->
                 {
-                    progressBar.setVisibility(View.GONE);
                     Toast.makeText(getContext(), "Menu updated successfully", Toast.LENGTH_SHORT).show();
                     loadMenuData();
                     filterResults(searchBar.getQuery().toString());
                     loadMenusForSpinner(spinnerMenuSelection);
+                    showLoading(false);
                 })
                 .addOnFailureListener(e ->
                 {
-                    progressBar.setVisibility(View.GONE);
+                    showLoading(false);
                     Toast.makeText(getContext(), "Failed to update menu: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
 
@@ -1382,7 +1387,6 @@ public class ManageMenuFragment extends Fragment
         menuRef.set(newMenu)
                 .addOnSuccessListener(aVoid ->
                 {
-                    progressBar.setVisibility(View.GONE);
                     Toast.makeText(getContext(), "Menu added successfully", Toast.LENGTH_SHORT).show();
                     menuList.add(newMenu);
                     filteredMenus.add(newMenu);
@@ -1390,10 +1394,11 @@ public class ManageMenuFragment extends Fragment
                     loadMenuData();
                     filterResults(searchBar.getQuery().toString());
                     loadMenusForSpinner(spinnerMenuSelection);
+                    showLoading(false);
                 })
                 .addOnFailureListener(e ->
                 {
-                    progressBar.setVisibility(View.GONE);
+                    showLoading(false);
                     Toast.makeText(getContext(), "Failed to add menu: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
@@ -1412,7 +1417,8 @@ public class ManageMenuFragment extends Fragment
                 .setMessage("Are you sure you want to delete this item?")
                 .setPositiveButton("Delete", (dialog, which) ->
                 {
-                    deleteOldImage();
+                    deleteMode = true;
+                    deleteOldImage(null);
                     int index = item.getOrderIndex();
 
                     db.collection("Restaurants")
@@ -1475,7 +1481,8 @@ public class ManageMenuFragment extends Fragment
                                 // Execute batch deletion
                                 batch.commit().addOnSuccessListener(aVoid ->
                                 {
-                                    deleteOldImage();
+                                    deleteMode = true;
+                                    deleteOldImage(null);
                                     // Now delete the menu itself
                                     db.collection("Restaurants")
                                             .document(restaurantID)
@@ -1666,10 +1673,10 @@ public class ManageMenuFragment extends Fragment
         View bottomSheetView = getLayoutInflater().inflate(R.layout.bottom_sheet_image, null);
 
         TextView selectImageTextview = bottomSheetView.findViewById(R.id.SelectImageTextView);
-        if(currentType.equals("Menu"))
+        if("Menu".equals(currentType))
         {
             selectImageTextview.setText("Select Menu Image");
-        } else if(currentType.equals("MenuItem"))
+        } else if("MenuItem".equals(currentType))
         {
             selectImageTextview.setText("Select Item Image");
         }
@@ -1766,15 +1773,6 @@ public class ManageMenuFragment extends Fragment
                                 bitmap = MediaStore.Images.Media.getBitmap(
                                         requireActivity().getContentResolver(), photoUri);
                                 bitmap = fixImageOrientation(photoUri, bitmap);
-                                if(currentType.equals("Menu"))
-                                {
-                                    menuEditImage.setImageBitmap(bitmap);
-                                    imageEdited = true;
-                                } else if(currentType.equals("MenuItem"))
-                                {
-                                    itemEditImage.setImageBitmap(bitmap);
-                                    imageEdited = true;
-                                }
 
                                 // Update edit image
                                 updateEditImageWithCurrentImage(bitmap);
@@ -1824,15 +1822,6 @@ public class ManageMenuFragment extends Fragment
                                 bitmap = MediaStore.Images.Media.getBitmap(
                                         requireActivity().getContentResolver(), imageUri);
                                 bitmap = fixImageOrientation(imageUri, bitmap);
-                                if(currentType.equals("Menu"))
-                                {
-                                    menuEditImage.setImageBitmap(bitmap);
-                                    imageEdited = true;
-                                } else if(currentType.equals("MenuItem"))
-                                {
-                                    itemEditImage.setImageBitmap(bitmap);
-                                    imageEdited = true;
-                                }
 
                                 // Update edit image
                                 updateEditImageWithCurrentImage(bitmap);
@@ -1875,12 +1864,14 @@ public class ManageMenuFragment extends Fragment
 
     private void updateEditImageWithCurrentImage(Bitmap bitmap)
     {
-        if(currentType.equals("Menu"))
+        if("Menu".equals(currentType))
         {
             menuEditImage.setImageBitmap(bitmap);
-        } else if(currentType.equals("MenuItem"))
+            imageEdited = true;
+        } else if("MenuItem".equals(currentType))
         {
             itemEditImage.setImageBitmap(bitmap);
+            imageEdited = true;
         }
     }
 
@@ -1897,7 +1888,6 @@ public class ManageMenuFragment extends Fragment
             return;  // Fragment is no longer attached
         }
 
-        // Show a loading indicator
         Toast.makeText(requireContext(), "Uploading image...", Toast.LENGTH_SHORT).show();
 
         // Get the current user ID
@@ -1939,34 +1929,8 @@ public class ManageMenuFragment extends Fragment
                     if(isAdded() && getActivity() != null && !getActivity().isFinishing())
                     {
                         // Got the download URL, now update the user's Firestore document
-                        Log.d(TAG, "Called updateImageWithImageUrl with URL: " + downloadUri.toString());
-                        updateImageWithImageUrl(downloadUri.toString(), new OnImageURLUpdateCompleteListener()
-                        {
-                            @Override
-                            public void onImageURLImageUpdate(String imageURL)
-                            {
-                                if(currentType.equals("Menu"))
-                                {
-                                    if(newMenu)
-                                    {
-                                        proceedWithMenuSave(imageURL);
-                                    } else
-                                    {
-                                        proceedWithMenuUpdate(imageURL);
-                                    }
-
-                                } else if(currentType.equals("MenuItem"))
-                                {
-                                    if(newItem)
-                                    {
-                                        proceedWithItemSave(imageURL);
-                                    } else
-                                    {
-                                        proceedWithItemUpdate(imageURL);
-                                    }
-                                }
-                            }
-                        });
+                        Log.d(TAG, "Called deleteOldImage with URL: " + downloadUri.toString());
+                        deleteOldImage(downloadUri.toString());
                         Log.d(TAG, "Upload successful, URL: " + downloadUri.toString());
                     }
                 }).addOnFailureListener(e ->
@@ -2003,7 +1967,7 @@ public class ManageMenuFragment extends Fragment
     {
         String filename = "";
 
-        if(currentType.equals("Menu"))
+        if("Menu".equals(currentType))
         {
             if(newMenu)
             {
@@ -2034,7 +1998,7 @@ public class ManageMenuFragment extends Fragment
                 String menuID = currentMenu.getMenuID();
                 filename = "menu_images/" + menuID + "/" + UUID.randomUUID().toString() + ".jpg";
             }
-        } else if(currentType.equals("MenuItem"))
+        } else if("MenuItem".equals(currentType))
         {
             if(newItem)
             {
@@ -2118,72 +2082,17 @@ public class ManageMenuFragment extends Fragment
         }
     }
 
-    private void updateImageWithImageUrl(String imageUrl,
-                                         final OnImageURLUpdateCompleteListener listener)
-    {
-        DocumentReference typeRef = null;
-        if(currentType.equals("Menu"))
-        {
-            typeRef = db.collection("Restaurants").document(restaurantID)
-                    .collection("Menus").document(currentMenu.getMenuID());
-        } else if(currentType.equals("MenuItem"))
-        {
-            typeRef = db.collection("Restaurants").document(restaurantID)
-                    .collection("Menus").document(currentMenuItem.getMenuID())
-                    .collection("Items").document(currentMenuItem.getItemID());
-        }
-
-        // Delete the old profile image before updating to the new one
-        deleteOldImage();
-
-        // Update the imageURL field
-        Map<String, Object> updates = new HashMap<>();
-        updates.put("imageURL", imageUrl);
-
-        Log.d(TAG, "Attempting to update imageURL with value: " + imageUrl);
-
-        typeRef.update(updates)
-                .addOnSuccessListener(aVoid ->
-                {
-                    if(isAdded() && getActivity() != null && !getActivity().isFinishing())
-                    {
-                        Toast.makeText(requireContext(),
-                                "Image updated successfully", Toast.LENGTH_SHORT).show();
-                        Log.d(TAG, "Image updated successfully");
-                        if(listener != null)
-                        {
-                            listener.onImageURLImageUpdate(imageUrl);
-                        }
-                    }
-                })
-                .addOnFailureListener(e ->
-                {
-                    if(isAdded() && getActivity() != null && !getActivity().isFinishing())
-                    {
-                        Log.e(TAG, "Error updating image with image URL", e);
-                        Toast.makeText(requireContext(),
-                                "Failed to update image: " + e.getMessage(),
-                                Toast.LENGTH_SHORT).show();
-                    }
-                });
-    }
-
-    public interface OnImageURLUpdateCompleteListener
-    {
-        void onImageURLImageUpdate(String imageUrl);
-    }
-
-    private void deleteOldImage()
+    private void deleteOldImage(String newImageURL)
     {
         FirebaseUser currentUser = auth.getCurrentUser();
         if(currentUser != null)
         {
             DocumentReference typeRef = null;
-            if(currentType.equals("Menu"))
+            if("Menu".equals(currentType))
             {
                 typeRef = db.collection("Restaurants").document(restaurantID)
                         .collection("Menus").document(currentMenu.getMenuID());
-            } else if(currentType.equals("MenuItem"))
+            } else if("MenuItem".equals(currentType))
             {
                 typeRef = db.collection("Restaurants").document(restaurantID)
                         .collection("Menus").document(currentMenuItem.getMenuID())
@@ -2197,35 +2106,55 @@ public class ManageMenuFragment extends Fragment
             {
                 if(documentSnapshot.exists())
                 {
-                    String oldImageUrl = documentSnapshot.getString("imageURL");
+                    String oldImageURL = documentSnapshot.getString("imageURL");
 
                     // Only proceed if there's an old image URL and it's different from the new one
-                    if(oldImageUrl != null && !oldImageUrl.isEmpty())
+                    if(oldImageURL != null && !oldImageURL.isEmpty())
                     {
-                        try
+                        if(!newImageURL.equals(oldImageURL))
                         {
-                            // Get the path after "/o/" and before "?"
-                            String urlPath = oldImageUrl.split("/o/")[1];
-                            if(urlPath.contains("?"))
+
+                            try
                             {
-                                urlPath = urlPath.split("\\?")[0];
+                                // Get the path after "/o/" and before "?"
+                                String urlPath = oldImageURL.split("/o/")[1];
+                                if(urlPath.contains("?"))
+                                {
+                                    urlPath = urlPath.split("\\?")[0];
+                                }
+
+                                // Decode the URL-encoded path
+                                String decodedPath = java.net.URLDecoder.decode(urlPath, "UTF-8");
+
+                                // Create a reference to the old file and delete it
+                                StorageReference oldImageRef = storage.getReference().child(decodedPath);
+                                oldImageRef.delete().addOnSuccessListener(aVoid ->
+                                {
+                                    Log.d(TAG, "Old image deleted successfully");
+                                    if(deleteMode)
+                                    {
+                                        deleteMode = false;
+                                    } else
+                                    {
+                                        updateImageWithImageUrl(newImageURL);
+                                    }
+                                }).addOnFailureListener(e ->
+                                {
+                                    Log.e(TAG, "Error deleting old image", e);
+                                });
+                            } catch(Exception e)
+                            {
+                                Log.e(TAG, "Error parsing old image URL: " + oldImageURL, e);
                             }
-
-                            // Decode the URL-encoded path
-                            String decodedPath = java.net.URLDecoder.decode(urlPath, "UTF-8");
-
-                            // Create a reference to the old file and delete it
-                            StorageReference oldImageRef = storage.getReference().child(decodedPath);
-                            oldImageRef.delete().addOnSuccessListener(aVoid ->
-                            {
-                                Log.d(TAG, "Old image deleted successfully");
-                            }).addOnFailureListener(e ->
-                            {
-                                Log.e(TAG, "Error deleting old image", e);
-                            });
-                        } catch(Exception e)
+                        }
+                    } else
+                    {
+                        if(deleteMode)
                         {
-                            Log.e(TAG, "Error parsing old image URL: " + oldImageUrl, e);
+                            deleteMode = false;
+                        } else
+                        {
+                            updateImageWithImageUrl(newImageURL);
                         }
                     }
                 }
@@ -2234,6 +2163,68 @@ public class ManageMenuFragment extends Fragment
                 Log.e(TAG, "Error fetching user document to delete old image", e);
             });
         }
+    }
+
+    private void updateImageWithImageUrl(String imageURL)
+    {
+        DocumentReference typeRef = null;
+        if("Menu".equals(currentType))
+        {
+            typeRef = db.collection("Restaurants").document(restaurantID)
+                    .collection("Menus").document(currentMenu.getMenuID());
+        } else if("MenuItem".equals(currentType))
+        {
+            typeRef = db.collection("Restaurants").document(restaurantID)
+                    .collection("Menus").document(currentMenuItem.getMenuID())
+                    .collection("Items").document(currentMenuItem.getItemID());
+        }
+
+        // Update the imageURL field
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("imageURL", imageURL);
+
+        Log.d(TAG, "Attempting to update imageURL with value: " + imageURL);
+
+        typeRef.update(updates)
+                .addOnSuccessListener(aVoid ->
+                {
+                    if(isAdded() && getActivity() != null && !getActivity().isFinishing())
+                    {
+                        Toast.makeText(requireContext(),
+                                "Image updated successfully", Toast.LENGTH_SHORT).show();
+                        Log.d(TAG, "Image updated successfully");
+                        if("Menu".equals(currentType))
+                        {
+                            if(newMenu)
+                            {
+                                proceedWithMenuSave(imageURL);
+                            } else
+                            {
+                                proceedWithMenuUpdate(imageURL);
+                            }
+
+                        } else if("MenuItem".equals(currentType))
+                        {
+                            if(newItem)
+                            {
+                                proceedWithItemSave(imageURL);
+                            } else
+                            {
+                                proceedWithItemUpdate(imageURL);
+                            }
+                        }
+                    }
+                })
+                .addOnFailureListener(e ->
+                {
+                    if(isAdded() && getActivity() != null && !getActivity().isFinishing())
+                    {
+                        Log.e(TAG, "Error updating image with image URL", e);
+                        Toast.makeText(requireContext(),
+                                "Failed to update image: " + e.getMessage(),
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 
     private void applyDiscount()

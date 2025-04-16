@@ -1,5 +1,7 @@
 package com.example.restaurantapp.fragments;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -28,8 +30,6 @@ public class MenuItemFragment extends Fragment
     private TextView menuItemOptions;
     private TextView menuItemCustomizations;
     private TextView menuItemAllergens;
-    private TextView menuItemSpecialOffer;
-    private TextView menuItemOrderIndex;
     private TextView menuItemMaxSelection;
 
     private MenuItemSelectionViewModel viewModel;
@@ -76,16 +76,32 @@ public class MenuItemFragment extends Fragment
             }
         });
 
+        SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("FeedMe", Context.MODE_PRIVATE);
 
-        requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(),
-                new OnBackPressedCallback(true)
+        String userType = sharedPreferences.getString("userType", "user");
+
+        requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(), new OnBackPressedCallback(true)
+        {
+            @Override
+            public void handleOnBackPressed()
+            {
+                RestaurantInfoFragment restaurantInfoFragment = new RestaurantInfoFragment();
+                if("restaurant".equals(userType))
                 {
-                    @Override
-                    public void handleOnBackPressed()
-                    {
-                        requireActivity().getSupportFragmentManager().popBackStack();
-                    }
-                });
+                    getActivity().getSupportFragmentManager().beginTransaction()
+                            .replace(R.id.fragment_container, restaurantInfoFragment)
+                            .commit();
+                } else if("user".equals(userType))
+                {
+                    getActivity().getSupportFragmentManager().beginTransaction()
+                            .replace(R.id.fragmentContainer, restaurantInfoFragment)
+                            .commit();
+                }
+
+
+                setEnabled(false);
+            }
+        });
     }
 
     private void populateViews(MenuItem menuItem)

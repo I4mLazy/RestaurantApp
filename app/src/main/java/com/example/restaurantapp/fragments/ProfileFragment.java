@@ -76,7 +76,6 @@ public class ProfileFragment extends Fragment
     }
 
     //TODO: CHANGE THE WAY EMAIL IS CHANGED!!! CURRENTLY ONLY CHANGES IT IN FIREBASE!!!
-    //TODO: CHANGE PFP UPLOAD TO ASYNC TASK INSTEAD OF CANCELLING
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
@@ -190,7 +189,7 @@ public class ProfileFragment extends Fragment
 
                         // Clear shared preferences
                         SharedPreferences sharedPreferences = requireActivity()
-                                .getSharedPreferences("MyAppPrefs", FragmentActivity.MODE_PRIVATE);
+                                .getSharedPreferences("FeedMe", FragmentActivity.MODE_PRIVATE);
                         SharedPreferences.Editor editor = sharedPreferences.edit();
                         editor.clear();
                         editor.apply();

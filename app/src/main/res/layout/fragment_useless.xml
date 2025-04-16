@@ -15,9 +15,9 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- Restaurant Logo -->
+            <!-- Restaurant Image -->
             <ImageView
-                android:id="@+id/restaurantDetailLogo"
+                android:id="@+id/restaurantDetailImage"
                 android:layout_width="match_parent"
                 android:layout_height="250dp"
                 android:scaleType="centerCrop"
@@ -33,7 +33,7 @@
                 android:textSize="24sp"
                 android:textStyle="bold" />
 
-            <!-- Restaurant Rating -->
+            <!-- Restaurant Address (or Rating, adjust as desired) -->
             <TextView
                 android:id="@+id/restaurantDetailRating"
                 android:layout_width="wrap_content"
@@ -42,7 +42,7 @@
                 android:text="Rating: 4.5"
                 android:textSize="16sp" />
 
-            <!-- Restaurant Tags -->
+            <!-- Restaurant Tags (or Address) -->
             <TextView
                 android:id="@+id/restaurantDetailTags"
                 android:layout_width="wrap_content"
@@ -78,7 +78,7 @@
                 android:text="Contact: (123) 456-7890, info@example.com"
                 android:textSize="16sp" />
 
-            <!-- Reservable Info -->
+            <!-- Reservable -->
             <TextView
                 android:id="@+id/restaurantDetailReservable"
                 android:layout_width="wrap_content"
@@ -87,7 +87,7 @@
                 android:text="Reservable: Yes"
                 android:textSize="16sp" />
 
-            <!-- Type of Restaurant -->
+            <!-- Type (list of strings) -->
             <TextView
                 android:id="@+id/restaurantDetailType"
                 android:layout_width="wrap_content"
@@ -105,47 +105,7 @@
                 android:text="Price Level: 3"
                 android:textSize="16sp" />
 
-            <!-- Description -->
-            <TextView
-                android:id="@+id/restaurantDetailDescription"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Description: A cozy place to enjoy classic Italian dishes."
-                android:textSize="16sp" />
-
-            <!-- Offers Pickup -->
-            <TextView
-                android:id="@+id/restaurantDetailOffersPickup"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Offers Pickup: Yes"
-                android:textSize="16sp" />
-
-            <!-- Edit Button -->
-            <Button
-                android:id="@+id/restaurantDetailEditButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                android:layout_marginTop="16dp"
-                android:text="Edit Menu"
-                android:textSize="16sp"
-                android:visibility="gone" />
-
-            <!-- Reservation Button -->
-            <Button
-                android:id="@+id/openReserveOverlayButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                android:layout_marginTop="16dp"
-                android:text="Make a Reservation"
-                android:textSize="16sp"
-                android:visibility="gone" />
-
-            <!-- Search Bar (hidden by default) -->
+            <!-- Search Bar -->
             <androidx.appcompat.widget.SearchView
                 android:id="@+id/searchBar"
                 android:layout_width="match_parent"
@@ -156,26 +116,32 @@
                 android:iconifiedByDefault="true"
                 android:paddingStart="16dp"
                 android:queryHint="Search items or menus"
-                android:visibility="gone"/>
-
-            <!-- RecyclerView for Menus -->
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/menusRecyclerView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:nestedScrollingEnabled="false"
-                android:overScrollMode="never" />
-
-            <!-- No Results Found Text -->
-            <TextView
-                android:id="@+id/noResults"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="No results found"
-                android:textSize="18sp"
-                android:textStyle="bold"
                 android:visibility="gone" />
+
+            <!-- Container for RecyclerView & No Results Message -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <!-- Menu Items RecyclerView -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/menusRecyclerView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:nestedScrollingEnabled="false"
+                    android:overScrollMode="never" />
+
+                <!-- No Results Found Text -->
+                <TextView
+                    android:id="@+id/noResults"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="No results found"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+            </FrameLayout>
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

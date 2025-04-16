@@ -23,6 +23,14 @@
           }
         },
         {
+          "client_id": "625550119074-knv1lorlnpteo79eb1rtf8lhkud9gtem.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.restaurantapp",
+            "certificate_hash": "a5d52703fe9dba350e520bbbae82cfc45795a009"
+          }
+        },
+        {
           "client_id": "625550119074-if9om96imfe32bm57mn24s0vq15qu8sj.apps.googleusercontent.com",
           "client_type": 3
         }

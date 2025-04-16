@@ -227,7 +227,7 @@ public class UserSignUpFragment extends Fragment
 
     private void saveUserTypeToPreferences()
     {
-        SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("MyAppPrefs", getContext().MODE_PRIVATE);
+        SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("FeedMe", getContext().MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
 
         editor.putString("userType", "user");

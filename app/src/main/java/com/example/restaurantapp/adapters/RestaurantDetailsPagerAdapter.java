@@ -5,7 +5,7 @@ import androidx.fragment.app.Fragment;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 
 import com.example.restaurantapp.fragments.OrderingFragment;
-import com.example.restaurantapp.fragments.RestaurantInfoFragment;
+import com.example.restaurantapp.fragments.UselessFragment;
 
 public class RestaurantDetailsPagerAdapter extends FragmentStateAdapter
 {
@@ -21,7 +21,7 @@ public class RestaurantDetailsPagerAdapter extends FragmentStateAdapter
     {
         if (position == 0)
         {
-            return new RestaurantInfoFragment();
+            return new UselessFragment();
         } else
         {
             return new OrderingFragment();

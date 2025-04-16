@@ -15,7 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.restaurantapp.R;
 import com.example.restaurantapp.adapters.RestaurantDiscoveryAdapter;
 import com.example.restaurantapp.models.Restaurant;
-import com.example.restaurantapp.viewmodels.RestaurantSelectionViewModel;
+import com.example.restaurantapp.viewmodels.RestaurantViewModel;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
@@ -27,7 +27,7 @@ public class DiscoveryFragment extends Fragment
 
     private RecyclerView restaurantRecyclerView;
     private RestaurantDiscoveryAdapter restaurantAdapter;
-    private RestaurantSelectionViewModel viewModel;
+    private RestaurantViewModel viewModel;
 
     public DiscoveryFragment()
     {
@@ -40,7 +40,7 @@ public class DiscoveryFragment extends Fragment
     {
         View view = inflater.inflate(R.layout.fragment_discovery, container, false);
 
-        viewModel = new ViewModelProvider(requireActivity()).get(RestaurantSelectionViewModel.class);
+        viewModel = new ViewModelProvider(requireActivity()).get(RestaurantViewModel.class);
 
         restaurantRecyclerView = view.findViewById(R.id.restaurantRecyclerView);
         restaurantRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -49,12 +49,12 @@ public class DiscoveryFragment extends Fragment
         restaurantAdapter = new RestaurantDiscoveryAdapter(new ArrayList<>(), getContext(), restaurant ->
         {
             Log.d("DiscoveryFragment", "Item clicked: " + restaurant.getName());
-            viewModel.selectRestaurant(restaurant);
-            RestaurantDetailsFragment detailsFragment = new RestaurantDetailsFragment();
+            viewModel.setCurrentRestaurant(restaurant);
+            RestaurantInfoFragment restaurantInfoFragment = new RestaurantInfoFragment();
             if (getActivity() != null)
             {
                 getActivity().getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.fragmentContainer, detailsFragment)
+                        .replace(R.id.fragmentContainer, restaurantInfoFragment)
                         .addToBackStack(null)
                         .commit();
                 Log.d("DiscoveryFragment", "Navigated to RestaurantDetailsFragment");

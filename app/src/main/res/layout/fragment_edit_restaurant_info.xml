@@ -1,0 +1,388 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:padding="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Basic Info Section -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:text="Basic Information"
+                android:textAppearance="?attr/textAppearanceHeadline6" />
+
+            <!-- Logo Picker with Camera Icon Overlay -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="200dp">
+
+                <ImageView
+                    android:id="@+id/editRestaurantLogo"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clickable="true"
+                    android:contentDescription="Restaurant Logo"
+                    android:focusable="true"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/image_placeholder"
+                    tools:ignore="SpeakableTextPresentCheck" />
+
+                <ImageView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_gravity="center"
+                    android:alpha="0.7"
+                    android:contentDescription="Tap to change logo"
+                    android:src="@drawable/baseline_camera_alt_24"
+                    app:tint="@color/white"
+                    tools:ignore="SpeakableTextPresentCheck" />
+            </FrameLayout>
+
+            <!-- Name -->
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:hint="Restaurant Name"
+                app:hintEnabled="true"
+                app:startIconDrawable="@drawable/baseline_store_24">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/editRestaurantName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textCapWords" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Description -->
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:hint="Description"
+                app:counterEnabled="true"
+                app:counterMaxLength="200"
+                app:startIconDrawable="@drawable/baseline_description_24">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/editRestaurantDescription"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="top"
+                    android:inputType="textMultiLine"
+                    android:minLines="3" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Category Section -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="8dp"
+                android:text="Category Details"
+                android:textAppearance="?attr/textAppearanceHeadline6" />
+
+            <!-- Tags -->
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Tags (comma-separated)"
+                app:startIconDrawable="@drawable/baseline_tag_24">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/editRestaurantTags"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Type Dropdown -->
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:hint="Restaurant Type"
+                app:startIconDrawable="@drawable/baseline_category_24">
+
+                <AutoCompleteTextView
+                    android:id="@+id/editRestaurantType"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="none"
+                    tools:text="Casual Dining" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Price Level Slider Section -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:text="Price Level"
+                    android:textAppearance="?attr/textAppearanceSubtitle1" />
+
+                <!-- Slider with discrete steps -->
+                <com.google.android.material.slider.Slider
+                    android:id="@+id/editRestaurantPriceLevel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:stepSize="1"
+                    android:value="1"
+                    android:valueFrom="1"
+                    android:valueTo="4" />
+
+                <!-- Price indicator labels -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="$"
+                        android:textAlignment="center"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="$$"
+                        android:textAlignment="center"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="$$$"
+                        android:textAlignment="center"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="$$$$"
+                        android:textAlignment="center"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <!-- Price level descriptions -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Budget"
+                        android:textAlignment="center"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Moderate"
+                        android:textAlignment="center"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Expensive"
+                        android:textAlignment="center"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Fine Dining"
+                        android:textAlignment="center"
+                        android:textSize="12sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Contact Section -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="8dp"
+                android:text="Contact Information"
+                android:textAppearance="?attr/textAppearanceHeadline6" />
+
+            <!-- Address -->
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Address"
+                app:startIconDrawable="@drawable/baseline_location_on_24">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/editRestaurantAddress"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPostalAddress" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Business Hours -->
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:hint="Business Hours"
+                app:startIconDrawable="@drawable/baseline_access_time_24">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/editRestaurantHours"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Phone Number -->
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:hint="Phone Number"
+                app:prefixText="+"
+                app:startIconDrawable="@drawable/baseline_phone_24">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/editRestaurantPhone"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="phone" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Email -->
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:hint="Email Address"
+                app:startIconDrawable="@drawable/baseline_email_24">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/editRestaurantEmail"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textEmailAddress" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Service Options Section -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="8dp"
+                android:text="Service Options"
+                android:textAppearance="?attr/textAppearanceHeadline6" />
+
+            <!-- Switches -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/editRestaurantReservable"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="8dp"
+                    android:text="Accepts Reservations" />
+
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/editRestaurantOffersPickup"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="8dp"
+                    android:text="Offers Pickup" />
+
+            </LinearLayout>
+
+            <!-- Buttons -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="16dp"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/cancelButton"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:layout_weight="1"
+                    android:text="Cancel" />
+
+                <Button
+                    android:id="@+id/saveButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Save Changes" />
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Loading Overlay -->
+    <FrameLayout
+        android:id="@+id/loadingOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#80000000"
+        android:visibility="gone">
+
+        <ProgressBar
+            android:id="@+id/saveProgressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="48dp"
+            android:text="Saving changes..."
+            android:textColor="@color/white" />
+    </FrameLayout>
+</FrameLayout>
