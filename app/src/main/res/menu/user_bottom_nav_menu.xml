@@ -10,6 +10,13 @@
 
     <item
         android:visible="true"
+        android:id="@+id/Reservations"
+        android:title="Reservations"
+        android:icon="@drawable/baseline_calendar_month_24"
+        />
+
+    <item
+        android:visible="true"
         android:id="@+id/Discovery"
         android:title="Discovery"
         android:icon="@drawable/baseline_explore_24"

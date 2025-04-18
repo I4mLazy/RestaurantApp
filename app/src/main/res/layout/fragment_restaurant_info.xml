@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -156,7 +157,7 @@
                 android:iconifiedByDefault="true"
                 android:paddingStart="16dp"
                 android:queryHint="Search items or menus"
-                android:visibility="gone"/>
+                android:visibility="gone" />
 
             <!-- RecyclerView for Menus -->
             <androidx.recyclerview.widget.RecyclerView
@@ -179,6 +180,160 @@
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
+
+    <!-- Reservation Overlay -->
+    <FrameLayout
+        android:id="@+id/reservationOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/scrim_background"
+        android:clickable="true"
+        android:contentDescription="Reservation dialog"
+        android:elevation="8dp"
+        android:focusable="true"
+        android:visibility="gone">
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginHorizontal="16dp"
+            android:background="@drawable/box_background"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="6dp">
+
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:fillViewport="true">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="8dp">
+
+                    <!-- Header -->
+                    <TextView
+                        android:id="@+id/reservationTitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:paddingBottom="4dp"
+                        android:text="Make a Reservation"
+                        android:textAppearance="?attr/textAppearanceHeadline6" />
+
+                    <!-- Date Picker -->
+                    <DatePicker
+                        android:id="@+id/datePickerReservation"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginVertical="2dp"
+                        android:calendarViewShown="false"
+                        android:datePickerMode="spinner" />
+
+                    <!-- Time Picker (Number Pickers) -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginVertical="2dp"
+                        android:gravity="center"
+                        android:orientation="horizontal">
+
+                        <NumberPicker
+                            android:id="@+id/hour_picker"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="8dp"
+                            android:gravity="center"
+                            android:orientation="horizontal" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:layout_marginEnd="8dp"
+                            android:gravity="center_vertical"
+                            android:text=":"
+                            android:textSize="24sp" />
+
+                        <NumberPicker
+                            android:id="@+id/minute_picker"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:orientation="horizontal" />
+                    </LinearLayout>
+
+
+                    <!-- Number of Guests -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/guestAmountInputLayout"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginVertical="2dp"
+                        android:hint="Number of Guests"
+                        app:counterEnabled="true"
+                        app:counterMaxLength="2"
+                        app:helperText="Maximum 99 people">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/guestAmountEditText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="number"
+                            android:maxLength="2"
+                            android:maxLines="1" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- Special Requests -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/specialRequestsInputLayout"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginVertical="2dp"
+                        android:hint="Special Requests (Optional)">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/specialRequestsEditText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textMultiLine"
+                            android:maxLines="3" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- Buttons -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:gravity="end"
+                        android:orientation="horizontal"> <!-- Reduced top margin -->
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/cancelReservationButton"
+                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:contentDescription="Cancel reservation"
+                            android:text="Cancel" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/confirmReservationButton"
+                            style="@style/Widget.MaterialComponents.Button"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="4dp"
+                            android:contentDescription="Confirm reservation"
+                            android:text="Reserve" />
+                    </LinearLayout>
+                </LinearLayout>
+            </ScrollView>
+        </androidx.cardview.widget.CardView>
+    </FrameLayout>
+
 
     <!-- Progress Bar in the Center -->
     <ProgressBar

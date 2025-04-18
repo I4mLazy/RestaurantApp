@@ -21,6 +21,8 @@ import com.example.restaurantapp.R;
 import com.example.restaurantapp.fragments.DiscoveryFragment;
 import com.example.restaurantapp.fragments.GmapsFragment;
 import com.example.restaurantapp.fragments.ProfileFragment;
+import com.example.restaurantapp.fragments.ReservationsTabLayoutFragment;
+import com.example.restaurantapp.fragments.UpcomingReservationsFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -41,7 +43,9 @@ public class UserMainActivity extends AppCompatActivity
     private final String DISCOVERY_FRAGMENT_TAG = "discovery_fragment";
     private final String GMAPS_FRAGMENT_TAG = "gmaps_fragment";
     private final String PROFILE_FRAGMENT_TAG = "profile_fragment";
+    private final String RESERVATIONS_TAB_LAYOUT_FRAGMENT_TAG = "reservations_tab_layout_fragment";
     private String currentFragmentTag = DISCOVERY_FRAGMENT_TAG;
+
     private View rootView;
 
     // For Android 13+ permissions
@@ -169,6 +173,10 @@ public class UserMainActivity extends AppCompatActivity
             {
                 switchFragment(DISCOVERY_FRAGMENT_TAG);
                 return true;
+            } else if(itemId == R.id.Reservations)
+            {
+                switchFragment(RESERVATIONS_TAB_LAYOUT_FRAGMENT_TAG);
+                return true;
             }
             return false;
         });
@@ -189,6 +197,9 @@ public class UserMainActivity extends AppCompatActivity
         } else if(PROFILE_FRAGMENT_TAG.equals(tag))
         {
             bottomNavMenu.setSelectedItemId(R.id.Profile);
+        } else if(RESERVATIONS_TAB_LAYOUT_FRAGMENT_TAG.equals(tag))
+        {
+            bottomNavMenu.setSelectedItemId(R.id.Reservations);
         } else
         {
             bottomNavMenu.setSelectedItemId(R.id.Discovery);
@@ -212,6 +223,9 @@ public class UserMainActivity extends AppCompatActivity
                 break;
             case PROFILE_FRAGMENT_TAG:
                 fragment = new ProfileFragment();
+                break;
+            case RESERVATIONS_TAB_LAYOUT_FRAGMENT_TAG:
+                fragment = new ReservationsTabLayoutFragment();
                 break;
             case DISCOVERY_FRAGMENT_TAG:
             default:

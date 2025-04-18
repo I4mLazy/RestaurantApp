@@ -24,6 +24,7 @@ public class Restaurant
     private Timestamp lastUpdated;
     private boolean offersPickup;
     private Map<String, String> contactInfo;
+    private int maxCapacity;
 
 
     public Restaurant()
@@ -33,7 +34,7 @@ public class Restaurant
     public Restaurant(String name, String address, GeoPoint location, double rating, String imageURL,
                       BusinessHours businessHours, Timestamp createdAt, boolean reservable, String type,
                       List<String> tags, int priceLevel, String restaurantID, String description,
-                      Timestamp lastUpdated, boolean offersPickup, Map<String, String> contactInfo)
+                      Timestamp lastUpdated, boolean offersPickup, Map<String, String> contactInfo, int maxCapacity)
     {
         this.name = name;
         this.address = address;
@@ -51,6 +52,7 @@ public class Restaurant
         this.description = description;
         this.lastUpdated = lastUpdated;
         this.offersPickup = offersPickup;
+        this.maxCapacity = maxCapacity;
     }
 
     // ... (Getters and setters) ...
@@ -213,5 +215,15 @@ public class Restaurant
     public void setContactInfo(Map<String, String> contactInfo)
     {
         this.contactInfo = contactInfo;
+    }
+
+    public int getMaxCapacity()
+    {
+        return maxCapacity;
+    }
+
+    public void setMaxCapacity(int maxCapacity)
+    {
+        this.maxCapacity = maxCapacity;
     }
 }

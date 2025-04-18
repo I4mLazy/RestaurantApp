@@ -17,9 +17,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.DatePicker;
+import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.NumberPicker;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.TimePicker;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
@@ -30,16 +35,24 @@ import com.example.restaurantapp.models.MenuItem;
 import com.example.restaurantapp.models.Restaurant;
 import com.example.restaurantapp.viewmodels.MenuItemSelectionViewModel;
 import com.example.restaurantapp.viewmodels.RestaurantViewModel;
+import com.google.android.material.button.MaterialButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class RestaurantInfoFragment extends Fragment
@@ -50,9 +63,14 @@ public class RestaurantInfoFragment extends Fragment
             restaurantDetailBusinessHours, restaurantDetailContactInfo, restaurantDetailReservable,
             restaurantDetailType, restaurantDetailTags, restaurantDetailPriceLevel, noResults;
     private Button restaurantDetailEditButton, openReservationOverlayButton;
+    private EditText guestAmountEditText, specialRequestsEditText;
+    private MaterialButton cancelReservationButton, confirmReservationButton;
+    private DatePicker datePicker;
+    private NumberPicker hourPicker, minutePicker;
     private SearchView searchBar;
     private ProgressBar progressBar;
     private RecyclerView recyclerViewMenus;
+    private FrameLayout reservationOverlay;
     private MenuAdapter menuAdapter;
     private List<Menu> menuList = new ArrayList<>();
     private List<MenuItem> menuItemList = new ArrayList<>();
@@ -91,11 +109,22 @@ public class RestaurantInfoFragment extends Fragment
 
         restaurantDetailEditButton = view.findViewById(R.id.restaurantDetailEditButton);
         openReservationOverlayButton = view.findViewById(R.id.openReserveOverlayButton);
+        cancelReservationButton = view.findViewById(R.id.cancelReservationButton);
+        confirmReservationButton = view.findViewById(R.id.confirmReservationButton);
+
+        datePicker = view.findViewById(R.id.datePickerReservation);
+        hourPicker = view.findViewById(R.id.hour_picker);
+        minutePicker = view.findViewById(R.id.minute_picker);
+
+        guestAmountEditText = view.findViewById(R.id.guestAmountEditText);
+        specialRequestsEditText = view.findViewById(R.id.specialRequestsEditText);
 
         searchBar = view.findViewById(R.id.searchBar);
         progressBar = view.findViewById(R.id.progressBar);
 
         recyclerViewMenus = view.findViewById(R.id.menusRecyclerView);
+
+        reservationOverlay = view.findViewById(R.id.reservationOverlay);
 
         db = FirebaseFirestore.getInstance();
         auth = FirebaseAuth.getInstance();
@@ -131,9 +160,21 @@ public class RestaurantInfoFragment extends Fragment
 
                                                     // Bind restaurant data
                                                     bindRestaurantData(restaurant);
-
                                                     // Setup menu
                                                     setupMenuItems(restaurantID);
+
+                                                    restaurantDetailEditButton.setOnClickListener(v ->
+                                                    {
+
+                                                        viewModel = new ViewModelProvider(requireActivity()).get(RestaurantViewModel.class);
+                                                        viewModel.setCurrentRestaurant(restaurant);
+
+                                                        EditRestaurantInfoFragment editRestaurantInfoFragment = new EditRestaurantInfoFragment();
+                                                        getActivity().getSupportFragmentManager().beginTransaction()
+                                                                .replace(containerID, editRestaurantInfoFragment)
+                                                                .commit();
+
+                                                    });
                                                 } else
                                                 {
                                                     Toast.makeText(getContext(), "Restaurant not found", Toast.LENGTH_SHORT).show();
@@ -158,11 +199,25 @@ public class RestaurantInfoFragment extends Fragment
                                     if(restaurant != null)
                                     {
                                         restaurantID = Objects.requireNonNull(viewModel.getCurrentRestaurant().getValue()).getRestaurantID();
+                                        // Bind restaurant data
                                         bindRestaurantData(restaurant);
+                                        // Setup menu
+                                        setupMenuItems(restaurantID);
+                                        // Inside your overlay click listener
+                                        openReservationOverlayButton.setOnClickListener(v ->
+                                                setupReservationOverlay());
+
+
+                                        cancelReservationButton.setOnClickListener(v ->
+                                                reservationOverlay.setVisibility(View.GONE));
+
+                                        confirmReservationButton.setOnClickListener(v ->
+                                        {
+                                            validateReservationAndSave(restaurant);
+                                        });
                                     }
                                 });
 
-                                setupMenuItems(restaurantID);
 
                                 requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(),
                                         new OnBackPressedCallback(true)
@@ -188,43 +243,10 @@ public class RestaurantInfoFragment extends Fragment
                                 Toast.LENGTH_SHORT).show();
                     });
         } else
+
         {
             Toast.makeText(getContext(), "No user is currently signed in", Toast.LENGTH_SHORT).show();
         }
-
-        restaurantDetailEditButton.setOnClickListener(v ->
-        {
-            db.collection("Restaurants").document(restaurantID).get()
-                    .addOnSuccessListener(restaurantSnapshot ->
-                    {
-                        if (restaurantSnapshot.exists())
-                        {
-                            Restaurant restaurant = restaurantSnapshot.toObject(Restaurant.class);
-                            if (restaurant != null)
-                            {
-                                viewModel = new ViewModelProvider(requireActivity()).get(RestaurantViewModel.class);
-                                viewModel.setCurrentRestaurant(restaurant);
-
-                                EditRestaurantInfoFragment editRestaurantInfoFragment = new EditRestaurantInfoFragment();
-                                getActivity().getSupportFragmentManager().beginTransaction()
-                                        .replace(containerID, editRestaurantInfoFragment)
-                                        .commit();
-                            }
-                            else
-                            {
-                                Log.e("EditButton", "Restaurant object was null");
-                            }
-                        }
-                        else
-                        {
-                            Log.e("EditButton", "Restaurant snapshot does not exist");
-                        }
-                    })
-                    .addOnFailureListener(e ->
-                    {
-                        Log.e("EditButton", "Failed to fetch restaurant", e);
-                    });
-        });
 
         return view;
     }
@@ -524,6 +546,226 @@ public class RestaurantInfoFragment extends Fragment
             }
         }
     }
+
+    private void setupReservationOverlay()
+    {
+        // Show the overlay
+        reservationOverlay.setVisibility(View.VISIBLE);
+
+        // Clear any previous input
+        guestAmountEditText.setText("");  // Clear guest amount
+        specialRequestsEditText.setText("");  // Clear special requests
+
+        // Get current date and time
+        Calendar calendar = Calendar.getInstance();
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+        int minute = calendar.get(Calendar.MINUTE);
+
+        // Round up the minute to the next 15-minute interval
+        if(minute > 45)
+        {
+            hour++;
+            minute = 0;  // Round up to the next hour
+        } else if(minute > 30)
+        {
+            minute = 45;
+        } else if(minute > 15)
+        {
+            minute = 30;
+        } else if(minute > 0)
+        {
+            minute = 15;
+        }
+
+        // Set up DatePicker to restrict dates to the next year
+        Calendar minDate = Calendar.getInstance();
+        minDate.add(Calendar.DAY_OF_YEAR, 1); // Set the minimum date to tomorrow (not today)
+
+        Calendar maxDate = Calendar.getInstance();
+        maxDate.add(Calendar.YEAR, 1); // Set the maximum date to one year from today
+
+        datePicker.setMinDate(minDate.getTimeInMillis());
+        datePicker.setMaxDate(maxDate.getTimeInMillis());
+
+        // Set available hours (24-hour format)
+        hourPicker.setMinValue(0);
+        hourPicker.setMaxValue(23);
+        hourPicker.setValue(hour);  // Set the current hour
+
+        // Set available minutes (only 00, 15, 30, 45)
+        int[] minuteValues = {0, 15, 30, 45};
+
+        int minuteIndex = (minute / 15);  // Move to the next 15-minute block
+        if(minuteIndex == minuteValues.length - 1)
+        {
+            minuteIndex = 0;  // If it's at 45, wrap around to 00
+        }
+
+        minutePicker.setMinValue(0);
+        minutePicker.setMaxValue(minuteValues.length - 1);  // Only 4 options
+        minutePicker.setDisplayedValues(new String[]{"00", "15", "30", "45"});
+        minutePicker.setValue(minuteIndex); // Set the current minute (rounded)
+
+        // Ensure wrapping of minute values
+        minutePicker.setOnValueChangedListener((picker, oldVal, newVal) ->
+        {
+            int newMinute = minuteValues[newVal];
+            // Adjust the value if needed, but no other values should be shown
+            if(newMinute == 0 && oldVal == 3)
+            {
+                hourPicker.setValue(hourPicker.getValue() + 1); // Wrap hour on 00
+            }
+        });
+    }
+
+    private void validateReservationAndSave(Restaurant restaurant)
+    {
+        showLoading(true);
+
+        String guestAmountStr = guestAmountEditText.getText().toString().trim();
+        if(guestAmountStr.isEmpty())
+        {
+            guestAmountEditText.setError("Please enter number of guests");
+            showLoading(false);
+            return;
+        }
+
+        int guestAmount = Integer.parseInt(guestAmountStr);
+        if(guestAmount < 1)
+        {
+            guestAmountEditText.setError("Number of guests must be at least 1");
+            showLoading(false);
+            return;
+        }
+
+        // Get selected date and time
+        int selectedYear = datePicker.getYear();
+        int selectedMonth = datePicker.getMonth();
+        int selectedDay = datePicker.getDayOfMonth();
+        int selectedHour = hourPicker.getValue();
+        int selectedMinute = minutePicker.getValue() * 15;
+
+        Calendar selectedTime = Calendar.getInstance();
+        selectedTime.set(selectedYear, selectedMonth, selectedDay, selectedHour, selectedMinute, 0);
+        Date reservationDate = selectedTime.getTime();
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        // Step 1: Get restaurant's max capacity
+        int maxCapacity = restaurant.getMaxCapacity();
+        if(maxCapacity == 0)
+        {
+            saveReservation(reservationDate, selectedHour, selectedMinute, guestAmountStr);
+        } else
+        {
+            if(guestAmount > maxCapacity)
+            {
+                guestAmountEditText.setError("Exceeds restaurant's max capacity (" + maxCapacity + ")");
+                showLoading(false);
+                return;
+            }
+
+            // Step 2: Calculate buffer window
+            Calendar beforeWindow = (Calendar) selectedTime.clone();
+            beforeWindow.add(Calendar.MINUTE, -90);
+
+            Calendar afterWindow = (Calendar) selectedTime.clone();
+            afterWindow.add(Calendar.MINUTE, 90);
+
+            // Step 3: Fetch existing reservations in the window
+            db.collection("Restaurants")
+                    .document(restaurantID)
+                    .collection("Reservations")
+                    .whereGreaterThanOrEqualTo("date", beforeWindow.getTime())
+                    .whereLessThanOrEqualTo("date", afterWindow.getTime())
+                    .get()
+                    .addOnSuccessListener(querySnapshot ->
+                    {
+                        int totalGuestsInWindow = 0;
+                        for(DocumentSnapshot doc : querySnapshot.getDocuments())
+                        {
+                            if(!"Cancelled".equals(doc.getString("statue")))
+                            {
+                                String guestStr = doc.getString("guests");
+                                try
+                                {
+                                    totalGuestsInWindow += Integer.parseInt(guestStr);
+                                } catch(NumberFormatException e)
+                                {
+                                    Log.w("Validation", "Invalid guest number in reservation: " + guestStr);
+                                }
+                            }
+                        }
+
+                        if(totalGuestsInWindow + guestAmount > maxCapacity)
+                        {
+                            guestAmountEditText.setError("Not enough space at this time");
+                            showLoading(false);
+                            return;
+                        }
+
+                        //All checks passed — save reservation
+                        saveReservation(reservationDate, selectedHour, selectedMinute, guestAmountStr);
+                    });
+        }
+    }
+
+    private void saveReservation(Date reservationDate, int hour, int minute, String guestAmountStr)
+    {
+        String formattedTime = String.format("%02d:%02d", hour, minute);
+        String reservationID = UUID.randomUUID().toString();
+        String userID = currentUser.getUid();
+
+        Map<String, Object> reservationData = new HashMap<>();
+        reservationData.put("date", reservationDate);
+        reservationData.put("time", formattedTime);
+        reservationData.put("guests", guestAmountStr);
+        reservationData.put("specialRequests", specialRequestsEditText.getText().toString());
+        reservationData.put("restaurantID", restaurantID);
+        reservationData.put("reservationID", reservationID);
+        reservationData.put("userID", userID);
+
+
+        // Save to user's reservations
+        db.collection("Users").document(currentUser.getUid())
+                .collection("Reservations")
+                .document(reservationID).set(reservationData)
+                .addOnSuccessListener(docRef1 ->
+                {
+                    // Fetch name and phone from user's document
+                    db.collection("Users").document(currentUser.getUid())
+                            .get()
+                            .addOnSuccessListener(documentSnapshot ->
+                            {
+                                if(documentSnapshot.exists())
+                                {
+                                    String name = documentSnapshot.getString("username");
+                                    String phone = documentSnapshot.getString("phoneNumber");
+
+
+
+                                    if(name != null) reservationData.put("userName", name);
+                                    if(phone != null) reservationData.put("phoneNumber", phone);
+                                }
+
+                                // Save to restaurant's reservations
+                                db.collection("Restaurants").document(restaurantID)
+                                        .collection("Reservations")
+                                        .document(reservationID).set(reservationData)
+                                        .addOnSuccessListener(docRef2 ->
+                                        {
+                                            Log.d("Reservation", "Saved to both user and restaurant.");
+                                            showLoading(false);
+                                            reservationOverlay.setVisibility(View.GONE);
+                                            Toast.makeText(getContext(), "Reservation successfully created!", Toast.LENGTH_SHORT).show();
+                                        })
+                                        .addOnFailureListener(e -> Log.e("Reservation", "Error saving to restaurant", e));
+                            })
+                            .addOnFailureListener(e -> Log.e("Reservation", "Failed to fetch user info", e));
+                })
+                .addOnFailureListener(e -> Log.e("Reservation", "Error saving to user", e));
+    }
+
 
     private void showLoading(boolean isLoading)
     {

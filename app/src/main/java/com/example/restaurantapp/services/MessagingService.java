@@ -13,6 +13,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 
+import com.example.restaurantapp.models.Reservation;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.messaging.FirebaseMessagingService;
@@ -41,6 +42,33 @@ public class MessagingService extends FirebaseMessagingService
         sendRegistrationToServer(token);
     }
 
+    private void sendRegistrationToServer(String token)
+    {
+        // Save the token to Firestore under the user's document
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        if (auth.getCurrentUser() != null)
+        {
+            String userId = auth.getCurrentUser().getUid();
+            db.collection("Users").document(userId)
+                    .update("fcmToken", token)
+                    .addOnSuccessListener(aVoid -> Log.d("FCM", "Token saved successfully"))
+                    .addOnFailureListener(e -> Log.e("FCM", "Failed to save token", e));
+        }
+    }
+
+    private void sendCancellationNotification(Reservation reservation)
+    {
+        // Build the notification title and message
+        String title = "Reservation Cancelled";
+        String message = "Dear " + reservation.getUserName() + ", your reservation for " +
+                reservation.getGuests() + " guests on " +
+                reservation.getDate() + " at " + reservation.getTime() + " has been cancelled by the restaurant.";
+
+        // Send the notification to the user
+        sendNotification(title, message);
+    }
+
     private void sendNotification(String title, String messageBody)
     {
         Intent intent = new Intent(this, SettingsActivity.class);
@@ -62,7 +90,6 @@ public class MessagingService extends FirebaseMessagingService
         NotificationManager notificationManager =
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
-        // For Android Oreo and above, notification channels are required
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
         {
             NotificationChannel channel = new NotificationChannel(channelId,
@@ -73,20 +100,4 @@ public class MessagingService extends FirebaseMessagingService
 
         notificationManager.notify(0, notificationBuilder.build());
     }
-
-    private void sendRegistrationToServer(String token)
-    {
-        // Save the token to Firestore under the user's document
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        FirebaseAuth auth = FirebaseAuth.getInstance();
-        if (auth.getCurrentUser() != null)
-        {
-            String userId = auth.getCurrentUser().getUid();
-            db.collection("Users").document(userId)
-                    .update("fcmToken", token)
-                    .addOnSuccessListener(aVoid -> Log.d("FCM", "Token saved successfully"))
-                    .addOnFailureListener(e -> Log.e("FCM", "Failed to save token", e));
-        }
-    }
-
 }
