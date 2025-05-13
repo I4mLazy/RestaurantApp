@@ -15,7 +15,6 @@ public class MenuItem
     private List<Option> options;
     private List<RequiredCustomization> requiredCustomizations;
     private Boolean availability;
-    private String status;
     private List<String> allergens;
     private int orderIndex;
     private int maxSelection;
@@ -27,7 +26,7 @@ public class MenuItem
 
     public MenuItem(String name, String description, double price, String imageURL, String menuID, String restaurantID,
                     String category, List<Option> options, List<RequiredCustomization> requiredCustomizations,
-                    Boolean availability, String status, List<String> allergens, int orderIndex, int maxSelection, String itemID)
+                    Boolean availability, List<String> allergens, int orderIndex, int maxSelection, String itemID)
     {
         this.name = name;
         this.description = description;
@@ -39,7 +38,6 @@ public class MenuItem
         this.options = options;
         this.requiredCustomizations = requiredCustomizations;
         this.availability = availability;
-        this.status = status;
         this.allergens = allergens;
         this.orderIndex = orderIndex;
         this.maxSelection = maxSelection;
@@ -144,16 +142,6 @@ public class MenuItem
     public void setAvailability(Boolean availability)
     {
         this.availability = availability;
-    }
-
-    public String getStatus()
-    {
-        return status;
-    }
-
-    public void setStatus(String status)
-    {
-        this.status = status;
     }
 
     public List<String> getAllergens()

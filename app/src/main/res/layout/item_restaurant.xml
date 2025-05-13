@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- Restaurant Image with Loading Indicator -->
+        <!-- Restaurant Image with Navigate button-->
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="180dp">
@@ -24,8 +24,21 @@
                 android:layout_height="match_parent"
                 android:scaleType="centerCrop" />
 
-            <!-- Progress Bar (Loading Indicator) -->
+            <!-- Navigate Button -->
+            <ImageButton
+                android:id="@+id/navButton"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_gravity="bottom|end"
+                android:layout_margin="12dp"
+                android:background="@drawable/floating_button_background"
+                android:padding="12dp"
+                android:src="@drawable/baseline_assistant_navigation_24"
+                android:contentDescription="Navigate"
+                app:tint="@color/primary" />
         </FrameLayout>
+
+
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -37,36 +50,36 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
+                android:layout_marginBottom="4dp"
                 android:gravity="center_vertical"
-                android:layout_marginBottom="4dp">
+                android:orientation="horizontal">
 
                 <TextView
                     android:id="@+id/restaurantName"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:maxLines="1"
                     android:text="Restaurant Name"
                     android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:maxLines="1"
-                    android:ellipsize="end" />
+                    android:textStyle="bold" />
 
                 <ImageView
                     android:id="@+id/starIcon"
                     android:layout_width="16dp"
                     android:layout_height="16dp"
+                    android:layout_marginStart="4dp"
                     android:src="@drawable/baseline_star_rate_24"
-                    app:tint="@color/gold"
-                    android:layout_marginStart="4dp"/>
+                    app:tint="@color/gold" />
 
                 <TextView
                     android:id="@+id/restaurantRating"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="4.5"
-                    android:textSize="14sp"
-                    android:textColor="@color/black" />
+                    android:textColor="@color/black"
+                    android:textSize="14sp" />
             </LinearLayout>
 
             <!-- Category / Tags -->
@@ -75,8 +88,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Italian, Pizza, Pasta"
-                android:textSize="14sp"
-                android:textColor="@color/gray" />
+                android:textColor="@color/gray"
+                android:textSize="14sp" />
 
             <!-- Delivery Time / Distance -->
             <TextView

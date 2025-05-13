@@ -2,7 +2,9 @@ package com.example.restaurantapp.activities;
 
 import android.os.Bundle;
 
+import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.example.restaurantapp.R;
@@ -15,6 +17,7 @@ public class AuthenticationActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_authentication);
 
         if (savedInstanceState == null)

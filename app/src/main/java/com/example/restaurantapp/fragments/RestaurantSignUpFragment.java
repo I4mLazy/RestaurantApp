@@ -6,6 +6,7 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,9 +23,12 @@ import com.example.restaurantapp.activities.RestaurantMainActivity;
 import com.example.restaurantapp.activities.UserMainActivity;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
+import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.firestore.SetOptions;
 
 import java.io.BufferedReader;
@@ -240,11 +244,28 @@ public class RestaurantSignUpFragment extends Fragment
 
         // Restaurant data
         Map<String, Object> restaurantData = new HashMap<>();
+
+        Geocoder geocoder = new Geocoder(requireContext(), Locale.getDefault());
+        try
+        {
+            List<Address> locations = geocoder.getFromLocationName(address, 1);
+            if(locations != null && !locations.isEmpty())
+            {
+                Address loc = locations.get(0);
+                GeoPoint location = new GeoPoint(loc.getLatitude(), loc.getLongitude());
+                restaurantData.put("location", location);
+            }
+        } catch(IOException e)
+        {
+            Log.e("GEOCODER", "Failed to geocode address", e);
+        }
+
         restaurantData.put("restaurantID", restaurantId);
         restaurantData.put("name", name);
         restaurantData.put("address", address);
         restaurantData.put("phoneNumber", phone);
         restaurantData.put("ownerID", user.getUid()); // Link owner to restaurant
+        restaurantData.put("createdAt", FieldValue.serverTimestamp());
 
         // User data update (link user to restaurant)
         Map<String, Object> userData = new HashMap<>();

@@ -70,6 +70,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 public class EditRestaurantInfoFragment extends Fragment
@@ -77,7 +78,7 @@ public class EditRestaurantInfoFragment extends Fragment
 
     private ImageView editRestaurantLogo;
     private TextInputEditText editRestaurantName, editRestaurantDescription, editRestaurantTags,
-            editRestaurantAddress, editRestaurantHours, editRestaurantPhone, editRestaurantEmail;
+            editRestaurantAddress, editRestaurantHours, editRestaurantMaxCapacity, editRestaurantPhone, editRestaurantEmail;
     private AutoCompleteTextView editRestaurantType;
     private Slider editRestaurantPriceLevel;
     private SwitchMaterial editRestaurantReservable, editRestaurantOffersPickup;
@@ -122,6 +123,7 @@ public class EditRestaurantInfoFragment extends Fragment
         editRestaurantType = view.findViewById(R.id.editRestaurantType);
         editRestaurantAddress = view.findViewById(R.id.editRestaurantAddress);
         editRestaurantHours = view.findViewById(R.id.editRestaurantHours);
+        editRestaurantMaxCapacity = view.findViewById(R.id.editRestaurantMaxCapacity);
         editRestaurantPhone = view.findViewById(R.id.editRestaurantPhone);
         editRestaurantEmail = view.findViewById(R.id.editRestaurantEmail);
 
@@ -232,6 +234,8 @@ public class EditRestaurantInfoFragment extends Fragment
         editRestaurantAddress.setText(restaurant.getAddress() != null ? restaurant.getAddress() : "");
         //editRestaurantHours.setText(restaurant.getBusinessHours() != null ? restaurant.getBusinessHours() : "");
 
+        editRestaurantMaxCapacity.setText(String.valueOf(restaurant.getMaxCapacity()));
+
         Map<String, String> contactInfo = restaurant.getContactInfo();
 
         String phone = (contactInfo != null && contactInfo.get("phone") != null && !contactInfo.get("phone").isEmpty())
@@ -268,6 +272,9 @@ public class EditRestaurantInfoFragment extends Fragment
 
         String type = editRestaurantType.getText().toString().trim();
         int priceLevel = (int) editRestaurantPriceLevel.getValue();
+        String maxCapacityText = Objects.requireNonNull(editRestaurantMaxCapacity.getText()).toString().trim();
+        int maxCapacity = maxCapacityText.isEmpty() ? 0 : Integer.parseInt(maxCapacityText);
+
 
         String address = editRestaurantAddress.getText().toString().trim();
 
@@ -319,6 +326,12 @@ public class EditRestaurantInfoFragment extends Fragment
             hasError = true;
         }
 
+        if(maxCapacity <= 0)
+        {
+            Toast.makeText(requireContext(), "Max capacity must be greater than 0", Toast.LENGTH_SHORT).show();
+            hasError = true;
+        }
+
         if(email.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(email).matches())
         {
             editRestaurantEmail.setError("Invalid email address");
@@ -347,6 +360,7 @@ public class EditRestaurantInfoFragment extends Fragment
         restaurantMap.put("tags", tags);
         restaurantMap.put("type", type);
         restaurantMap.put("priceLevel", priceLevel);
+        restaurantMap.put("maxCapacity", maxCapacity);
         restaurantMap.put("address", address);
         restaurantMap.put("reservable", reservable);
         restaurantMap.put("offersPickup", offersPickup);
@@ -360,8 +374,8 @@ public class EditRestaurantInfoFragment extends Fragment
             if(locations != null && !locations.isEmpty())
             {
                 Address loc = locations.get(0);
-                GeoPoint geoPoint = new GeoPoint(loc.getLatitude(), loc.getLongitude());
-                restaurantMap.put("geoPoint", geoPoint);
+                GeoPoint location = new GeoPoint(loc.getLatitude(), loc.getLongitude());
+                restaurantMap.put("location", location);
             }
         } catch(IOException e)
         {
@@ -903,7 +917,7 @@ public class EditRestaurantInfoFragment extends Fragment
                     String oldImageURL = documentSnapshot.getString("imageURL");
 
                     // Only proceed if there's an old image URL and it's different from the new one
-                    if(oldImageURL != null && !oldImageURL.isEmpty()&& !newImageURL.equals(oldImageURL))
+                    if(oldImageURL != null && !oldImageURL.isEmpty() && !newImageURL.equals(oldImageURL))
                     {
                         try
                         {

@@ -2,6 +2,7 @@ package com.example.restaurantapp.fragments;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Paint;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -18,19 +19,20 @@ import androidx.lifecycle.ViewModelProvider;
 import com.bumptech.glide.Glide;
 import com.example.restaurantapp.R;
 import com.example.restaurantapp.models.MenuItem;
+import com.example.restaurantapp.utils.DiscountUtils;
 import com.example.restaurantapp.viewmodels.MenuItemSelectionViewModel;
 
 public class MenuItemFragment extends Fragment
 {
-
     private ImageView menuItemImage;
+    private TextView discountBadge;
     private TextView menuItemName;
     private TextView menuItemDescription;
     private TextView menuItemPrice;
-    private TextView menuItemOptions;
-    private TextView menuItemCustomizations;
+    private TextView menuItemOldPrice;
+    private TextView menuItemCategory;
     private TextView menuItemAllergens;
-    private TextView menuItemMaxSelection;
+    private TextView menuItemAvailability;
 
     private MenuItemSelectionViewModel viewModel;
 
@@ -43,35 +45,32 @@ public class MenuItemFragment extends Fragment
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState)
     {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_menu_item, container, false);
     }
 
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState)
     {
-        // Find all views safely
+        // Find views
         menuItemImage = view.findViewById(R.id.menuItemImage);
+        discountBadge = view.findViewById(R.id.discountBadge);
         menuItemName = view.findViewById(R.id.menuItemName);
         menuItemDescription = view.findViewById(R.id.menuItemDescription);
         menuItemPrice = view.findViewById(R.id.menuItemPrice);
-        menuItemOptions = view.findViewById(R.id.menuItemOptions);
-        menuItemCustomizations = view.findViewById(R.id.menuItemCustomizations);
+        menuItemOldPrice = view.findViewById(R.id.menuItemOldPrice);
+        menuItemCategory = view.findViewById(R.id.menuItemCategory);
         menuItemAllergens = view.findViewById(R.id.menuItemAllergens);
-        menuItemMaxSelection = view.findViewById(R.id.menuItemMaxSelection);
+        menuItemAvailability = view.findViewById(R.id.menuItemAvailability);
 
-        // Get the shared ViewModel
         viewModel = new ViewModelProvider(requireActivity()).get(MenuItemSelectionViewModel.class);
 
-        // Observe the selected MenuItem and update the UI safely
         viewModel.getSelectedMenuItem().observe(getViewLifecycleOwner(), menuItem ->
         {
             if(menuItem != null)
             {
-                populateViews(menuItem);
+                populateViews(menuItem, requireContext());
             } else
             {
-                // Optionally, show a default message if no item is selected
                 menuItemName.setText("No Menu Item Selected");
             }
         });
@@ -97,114 +96,73 @@ public class MenuItemFragment extends Fragment
                             .replace(R.id.fragmentContainer, restaurantInfoFragment)
                             .commit();
                 }
-
-
-                setEnabled(false);
             }
         });
     }
 
-    private void populateViews(MenuItem menuItem)
+    private void populateViews(MenuItem menuItem, Context context)
     {
-        // Menu item name
-        if(!TextUtils.isEmpty(menuItem.getName()))
+        // Name
+        menuItemName.setText(!TextUtils.isEmpty(menuItem.getName()) ? menuItem.getName() : "N/A");
+
+        // Description
+        menuItemDescription.setText(!TextUtils.isEmpty(menuItem.getDescription()) ? menuItem.getDescription() : "No description available.");
+
+        // Category
+        menuItemCategory.setText("Category: " + (!TextUtils.isEmpty(menuItem.getCategory()) ? menuItem.getCategory() : "N/A"));
+
+        // Availability
+        if(menuItem.getAvailability())
         {
-            menuItemName.setText(menuItem.getName());
+            menuItemAvailability.setText("Available");
+            menuItemAvailability.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
         } else
         {
-            menuItemName.setText("N/A");
+            menuItemAvailability.setText("Unavailable");
+            menuItemAvailability.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
         }
 
-        // Menu item description
-        if(!TextUtils.isEmpty(menuItem.getDescription()))
-        {
-            menuItemDescription.setText(menuItem.getDescription());
-        } else
-        {
-            menuItemDescription.setText("No description available.");
-        }
-
-        // Price
-        if(menuItem.getPrice() > 0)
-        {
-            menuItemPrice.setText("Price: $" + menuItem.getPrice());
-        } else
-        {
-            menuItemPrice.setText("Price: N/A");
-        }
-
-        // Options (if available, join names by comma)
-        if(menuItem.getOptions() != null && !menuItem.getOptions().isEmpty())
-        {
-            StringBuilder optionsBuilder = new StringBuilder();
-            for(MenuItem.Option option : menuItem.getOptions())
-            {
-                if(!TextUtils.isEmpty(option.getName()))
-                {
-                    if(optionsBuilder.length() > 0)
-                    {
-                        optionsBuilder.append(", ");
-                    }
-                    optionsBuilder.append(option.getName());
-                }
-            }
-            menuItemOptions.setText(optionsBuilder.toString());
-        } else
-        {
-            menuItemOptions.setText("None");
-        }
-
-        // Customizations (if available)
-        if(menuItem.getRequiredCustomizations() != null && !menuItem.getRequiredCustomizations().isEmpty())
-        {
-            StringBuilder customizationsBuilder = new StringBuilder();
-            for(MenuItem.RequiredCustomization customization : menuItem.getRequiredCustomizations())
-            {
-                if(!TextUtils.isEmpty(customization.getName()))
-                {
-                    if(customizationsBuilder.length() > 0)
-                    {
-                        customizationsBuilder.append("\n");
-                    }
-                    customizationsBuilder.append(customization.getName());
-                    if(!TextUtils.isEmpty(customization.getDescription()))
-                    {
-                        customizationsBuilder.append(": ").append(customization.getDescription());
-                    }
-                }
-            }
-            menuItemCustomizations.setText(customizationsBuilder.toString());
-        } else
-        {
-            menuItemCustomizations.setText("None");
-        }
-
-        // Allergens (if available)
+        // Allergens
         if(menuItem.getAllergens() != null && !menuItem.getAllergens().isEmpty())
         {
-            menuItemAllergens.setText(android.text.TextUtils.join(", ", menuItem.getAllergens()));
+            menuItemAllergens.setText(TextUtils.join(", ", menuItem.getAllergens()));
         } else
         {
             menuItemAllergens.setText("None");
         }
 
-        // Max selection
-        menuItemMaxSelection.setText("Max Selection: " + menuItem.getMaxSelection());
-
-        // Load image using Glide with fallback
-        String imageUrl = menuItem.getImageURL();
-        if(!TextUtils.isEmpty(imageUrl))
+        // Load image
+        if(!TextUtils.isEmpty(menuItem.getImageURL()))
         {
-            Glide.with(requireContext())
-                    .load(imageUrl)
+            Glide.with(context)
+                    .load(menuItem.getImageURL())
                     .placeholder(R.drawable.image_placeholder)
                     .error(R.drawable.image_placeholder)
                     .into(menuItemImage);
         } else
         {
-            Glide.with(requireContext())
+            Glide.with(context)
                     .load(R.drawable.image_placeholder)
                     .into(menuItemImage);
         }
+
+        // Discounts
+        DiscountUtils.applyActiveDiscounts(menuItem, context, (originalPrice, finalPrice, hasDiscount, isFree, badgeText) ->
+        {
+            if(hasDiscount)
+            {
+                menuItemPrice.setText(String.format("Price: $%.2f", finalPrice));
+                menuItemOldPrice.setVisibility(View.VISIBLE);
+                menuItemOldPrice.setText(String.format("$%.2f", originalPrice));
+                menuItemOldPrice.setPaintFlags(menuItemOldPrice.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG); // Strikethrough effect
+                discountBadge.setVisibility(View.VISIBLE);
+                discountBadge.setText(badgeText);
+            } else
+            {
+                menuItemPrice.setText(String.format("Price: $%.2f", originalPrice));
+                menuItemOldPrice.setVisibility(View.GONE);
+                discountBadge.setVisibility(View.GONE);
+            }
+        });
     }
 }

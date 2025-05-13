@@ -11,6 +11,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
@@ -22,6 +23,7 @@ import com.example.restaurantapp.fragments.ManageMenuFragment;
 import com.example.restaurantapp.fragments.ReservationsTabLayoutFragment;
 import com.example.restaurantapp.fragments.RestaurantSettingsFragment;
 import com.example.restaurantapp.fragments.RestaurantInfoFragment;
+import com.example.restaurantapp.utils.SettingsUtils;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -57,6 +59,7 @@ public class RestaurantMainActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
+        SettingsUtils.loadUserSettings(this);
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_restaurant_main);

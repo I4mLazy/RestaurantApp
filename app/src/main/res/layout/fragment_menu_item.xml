@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/menuItemDetailScroll"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -12,107 +11,118 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- Menu Item Image -->
-        <ImageView
-            android:id="@+id/menuItemImage"
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="200dp"
-            android:scaleType="centerCrop"
-            android:src="@drawable/image_placeholder" />
+            android:layout_height="200dp">
+
+            <!-- Menu Item Image -->
+            <ImageView
+                android:id="@+id/menuItemImage"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:src="@drawable/image_placeholder" />
+
+            <!-- Discount Badge (Top Right Corner) -->
+            <TextView
+                android:id="@+id/discountBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top|end"
+                android:layout_margin="4dp"
+                android:background="@drawable/discount_badge_background"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                android:text="-20%"
+                android:textColor="@android:color/white"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+        </FrameLayout>
+
+
 
         <!-- Menu Item Name -->
         <TextView
             android:id="@+id/menuItemName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
             android:text="Menu Item Name"
             android:textSize="24sp"
-            android:textStyle="bold"
-            android:layout_marginTop="16dp" />
+            android:textStyle="bold" />
 
         <!-- Menu Item Description -->
         <TextView
             android:id="@+id/menuItemDescription"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:text="Detailed description of the menu item goes here."
-            android:textSize="16sp"
-            android:layout_marginTop="8dp" />
+            android:textSize="16sp" />
 
-        <!-- Price -->
+        <!-- Price Row: Current Price + Old Price -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal"
+            android:gravity="start|center_vertical">
+
+            <TextView
+                android:id="@+id/menuItemPrice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Price: $0.00"
+                android:textSize="18sp" />
+
+            <TextView
+                android:id="@+id/menuItemOldPrice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:text="$0.00"
+                android:textColor="@android:color/darker_gray"
+                android:textSize="16sp"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <!-- Category -->
         <TextView
-            android:id="@+id/menuItemPrice"
+            android:id="@+id/menuItemCategory"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Price: $0.00"
-            android:textSize="18sp"
-            android:layout_marginTop="8dp" />
-
-        <!-- Options -->
-        <TextView
-            android:id="@+id/menuItemOptionsLabel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Options:"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginTop="16dp" />
-
-        <TextView
-            android:id="@+id/menuItemOptions"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Option 1, Option 2, Option 3"
-            android:textSize="16sp"
-            android:layout_marginTop="4dp" />
-
-        <!-- Required Customizations -->
-        <TextView
-            android:id="@+id/menuItemCustomizationsLabel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Customizations:"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginTop="16dp" />
-
-        <TextView
-            android:id="@+id/menuItemCustomizations"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Customization details here"
-            android:textSize="16sp"
-            android:layout_marginTop="4dp" />
+            android:layout_marginTop="8dp"
+            android:text="Category: Category Name"
+            android:textSize="16sp" />
 
         <!-- Allergens -->
         <TextView
             android:id="@+id/menuItemAllergensLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
             android:text="Allergens:"
             android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginTop="16dp" />
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/menuItemAllergens"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
             android:text="List allergens here"
-            android:textSize="16sp"
-            android:layout_marginTop="4dp" />
+            android:textSize="16sp" />
 
-        <!-- Special Offer -->
-
-        <!-- Order Index -->
-
-        <!-- Max Selection -->
+        <!-- Availability -->
         <TextView
-            android:id="@+id/menuItemMaxSelection"
+            android:id="@+id/menuItemAvailability"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Max Selection: 0"
-            android:textSize="16sp"
-            android:layout_marginTop="8dp" />
+            android:layout_marginTop="8dp"
+            android:text="Available"
+            android:textColor="@android:color/holo_green_dark"
+            android:textSize="16sp" />
+
     </LinearLayout>
 </ScrollView>

@@ -1,24 +1,23 @@
 package com.example.restaurantapp.activities;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Switch;
 import android.widget.Toast;
 
+import androidx.activity.EdgeToEdge;
 import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentTransaction;
 
@@ -48,7 +47,6 @@ public class SettingsActivity extends AppCompatActivity
     private DocumentReference userSettingsRef;
 
     // For notification permission
-    private static final String PREFS_NAME = "RestaurantAppPrefs";
     private static final String PREF_PERMISSION_REQUESTED = "notification_permission_requested";
     private ActivityResultLauncher<String> requestPermissionLauncher;
 
@@ -56,6 +54,7 @@ public class SettingsActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_settings);
 
         // Initialize Firebase instances
@@ -67,7 +66,7 @@ public class SettingsActivity extends AppCompatActivity
                 new ActivityResultContracts.RequestPermission(),
                 isGranted ->
                 {
-                    if (isGranted)
+                    if(isGranted)
                     {
                         // Permission granted, update UI and Firestore
                         notificationsSwitch.setChecked(true);
@@ -83,7 +82,7 @@ public class SettingsActivity extends AppCompatActivity
                 });
 
         // Check if user is logged in
-        if (mAuth.getCurrentUser() == null)
+        if(mAuth.getCurrentUser() == null)
         {
             // Redirect to login screen if not logged in
             Toast.makeText(this, "You must be logged in to access settings", Toast.LENGTH_SHORT).show();
@@ -116,13 +115,13 @@ public class SettingsActivity extends AppCompatActivity
         darkModeSwitch.setOnCheckedChangeListener((buttonView, isChecked) ->
         {
             // Only process if this change was user-initiated (not from loadUserSettings)
-            if (buttonView.isPressed())
+            if(buttonView.isPressed())
             {
-                // Update dark mode preference in Firestore
+                // Update dark mode preference in Firestore and locally
                 setDarkModePreference(isChecked);
 
                 // Apply dark mode change immediately
-                if (isChecked)
+                if(isChecked)
                 {
                     AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
                 } else
@@ -143,14 +142,14 @@ public class SettingsActivity extends AppCompatActivity
         notificationsSwitch.setOnCheckedChangeListener((buttonView, isChecked) ->
         {
             // Only process if this change was user-initiated (not from loadUserSettings)
-            if (buttonView.isPressed())
+            if(buttonView.isPressed())
             {
-                if (isChecked)
+                if(isChecked)
                 {
                     // Check if we need to request permission for Android 13+
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                    if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
                     {
-                        if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
+                        if(ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
                                 android.content.pm.PackageManager.PERMISSION_GRANTED)
                         {
 
@@ -177,18 +176,18 @@ public class SettingsActivity extends AppCompatActivity
         });
 
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user != null && user.getProviderData().size() > 1)
+        if(user != null && user.getProviderData().size() > 1)
         {
             boolean hasPassword = false;
-            for (UserInfo userInfo : user.getProviderData())
+            for(UserInfo userInfo : user.getProviderData())
             {
-                if (EmailAuthProvider.PROVIDER_ID.equals(userInfo.getProviderId()))
+                if(EmailAuthProvider.PROVIDER_ID.equals(userInfo.getProviderId()))
                 {
                     hasPassword = true;
                     break;
                 }
             }
-            if (hasPassword)
+            if(hasPassword)
             {
                 changePasswordButton.setVisibility(View.VISIBLE);
                 changePasswordButton.setOnClickListener(v ->
@@ -212,7 +211,7 @@ public class SettingsActivity extends AppCompatActivity
                 @Override
                 public void handleOnBackPressed()
                 {
-                    if (getSupportFragmentManager().getBackStackEntryCount() > 0)
+                    if(getSupportFragmentManager().getBackStackEntryCount() > 0)
                     {
                         getSupportFragmentManager().popBackStack();
                         findViewById(R.id.settingsScrollView).setVisibility(View.VISIBLE);
@@ -234,14 +233,14 @@ public class SettingsActivity extends AppCompatActivity
         userSettingsRef.get()
                 .addOnSuccessListener(documentSnapshot ->
                 {
-                    if (documentSnapshot.exists())
+                    if(documentSnapshot.exists())
                     {
                         // Retrieve settings from document
                         Boolean darkMode = documentSnapshot.getBoolean("dark_mode");
                         Boolean notifications = documentSnapshot.getBoolean("notifications");
 
                         // Set switches without triggering listeners
-                        if (darkMode != null)
+                        if(darkMode != null)
                         {
                             darkModeSwitch.setChecked(darkMode);
                             // Apply dark mode setting
@@ -250,10 +249,10 @@ public class SettingsActivity extends AppCompatActivity
                                     AppCompatDelegate.MODE_NIGHT_NO);
                         }
 
-                        if (notifications != null)
+                        if(notifications != null)
                         {
                             // For Android 13+, check if we have permission before setting checked state
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
                             {
                                 boolean hasPermission = ContextCompat.checkSelfPermission(this,
                                         Manifest.permission.POST_NOTIFICATIONS) ==
@@ -272,7 +271,7 @@ public class SettingsActivity extends AppCompatActivity
                         boolean defaultNotifications;
 
                         // For Android 13+, check permission status for default value
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
                         {
                             defaultNotifications = ContextCompat.checkSelfPermission(this,
                                     Manifest.permission.POST_NOTIFICATIONS) ==
@@ -309,9 +308,10 @@ public class SettingsActivity extends AppCompatActivity
                 });
     }
 
-    // Function to save the dark mode preference to Firestore
+    // Function to save the dark mode preference to Firestore and SharedPreferences
     private void setDarkModePreference(boolean isEnabled)
     {
+        // Save to Firestore
         userSettingsRef.update("dark_mode", isEnabled)
                 .addOnFailureListener(e ->
                 {
@@ -319,6 +319,12 @@ public class SettingsActivity extends AppCompatActivity
                             "Failed to update dark mode setting: " + e.getMessage(),
                             Toast.LENGTH_SHORT).show();
                 });
+
+        // Save locally using SharedPreferences
+        SharedPreferences sharedPreferences = getSharedPreferences("FeedMe", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean("darkMode", isEnabled);
+        editor.apply();
     }
 
     // Function to save the notification preference to Firestore
@@ -339,77 +345,27 @@ public class SettingsActivity extends AppCompatActivity
     // Function to request notification permission
     private void requestNotificationPermission()
     {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
         {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    Manifest.permission.POST_NOTIFICATIONS))
-            {
-
-                // Show explanation dialog
-                new AlertDialog.Builder(this)
-                        .setTitle("Notification Permission Needed")
-                        .setMessage("To receive restaurant promotions, order updates, and reservation confirmations, " +
-                                "please enable notifications.")
-                        .setPositiveButton("OK", (dialog, which) ->
-                                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS))
-                        .setNegativeButton("Cancel", (dialog, which) ->
-                        {
-                            // User declined explanation, keep notifications disabled
-                            notificationsSwitch.setChecked(false);
-                            setNotificationPreference(false);
-                        })
-                        .create()
-                        .show();
-            } else
-            {
-                // Check if we've requested permission before but user denied and checked "Don't ask again"
-                SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-                boolean permissionRequested = prefs.getBoolean(PREF_PERMISSION_REQUESTED, false);
-
-                if (permissionRequested)
-                {
-                    // User likely checked "Don't ask again", direct them to Settings
-                    new AlertDialog.Builder(this)
-                            .setTitle("Permission Required")
-                            .setMessage("Notifications permission is required for this feature. " +
-                                    "Please enable it in app settings.")
-                            .setPositiveButton("Settings", (dialog, which) ->
-                            {
-                                Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                                intent.setData(android.net.Uri.parse("package:" + getPackageName()));
-                                startActivity(intent);
-                            })
-                            .setNegativeButton("Cancel", (dialog, which) ->
-                            {
-                                // Keep notifications disabled
-                                notificationsSwitch.setChecked(false);
-                                setNotificationPreference(false);
-                            })
-                            .create()
-                            .show();
-                } else
-                {
-                    // First time requesting, or user didn't check "Don't ask again"
-                    requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
-
-                    // Mark that we've requested permission
-                    SharedPreferences.Editor editor = getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit();
-                    editor.putBoolean(PREF_PERMISSION_REQUESTED, true);
-                    editor.apply();
-                }
-            }
+            requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
+        } else
+        {
+            // Permissions not required before Android 13
+            setNotificationPreference(true);
+            notificationsSwitch.setChecked(true);
         }
     }
+
 
     // Function to update notification subscription with Firebase Cloud Messaging
     private void updateNotificationSubscription(boolean isSubscribed)
     {
-        if (isSubscribed)
+        if(isSubscribed)
         {
             FirebaseMessaging.getInstance().subscribeToTopic("app_notifications")
                     .addOnCompleteListener(task ->
                     {
-                        if (!task.isSuccessful())
+                        if(!task.isSuccessful())
                         {
                             Toast.makeText(SettingsActivity.this,
                                     "Failed to enable notifications",
@@ -421,7 +377,7 @@ public class SettingsActivity extends AppCompatActivity
             FirebaseMessaging.getInstance().unsubscribeFromTopic("app_notifications")
                     .addOnCompleteListener(task ->
                     {
-                        if (!task.isSuccessful())
+                        if(!task.isSuccessful())
                         {
                             Toast.makeText(SettingsActivity.this,
                                     "Failed to disable notifications",

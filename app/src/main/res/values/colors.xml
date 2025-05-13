@@ -2,12 +2,19 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="primary">#6200EE</color> <!-- A deep purple -->
-    <color name="secondary">#03DAC5</color> <!-- A light teal -->
+    <color name="primary">#CD6323</color>
+    <color name="primary_light">#E6844B</color>
+    <color name="secondary">#7E3B1A</color>
+    <color name="dark">#2D1106</color>
+    <color name="background">#080404</color>
+    <color name="surface">#1A0D08</color>
+    <color name="error">#E74C3C</color>
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#CCCCCC</color>
     <color name="transparent">#00000000</color>
     <color name="gold">#FFDF00</color>
     <color name="gray">#9E9E9E</color>
     <color name="black_overlay">#66000000</color>
     <color name="Orange">#FF5722</color>
-    <color name="scrim_background">#80000000</color>
+    <color name="reservation_overlay_background">#CC000000</color>
 </resources>

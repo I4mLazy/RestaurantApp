@@ -4,21 +4,33 @@ import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Rect;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.SearchView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -26,6 +38,7 @@ import com.example.restaurantapp.BuildConfig;
 import com.example.restaurantapp.R;
 import com.example.restaurantapp.adapters.RestaurantSearchResultsAdapter;
 import com.example.restaurantapp.models.Restaurant;
+import com.example.restaurantapp.viewmodels.RestaurantViewModel;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.location.CurrentLocationRequest;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -64,7 +77,11 @@ public class GmapsFragment extends Fragment
     private RecyclerView recyclerView;
     private BottomSheetBehavior<View> bottomSheetBehavior;
     private View bottomSheet;
-    private View bottomSheetContainer;
+    private RestaurantViewModel viewModel;
+    private boolean isNavigating = false;
+    private Handler handler = new Handler(Looper.getMainLooper());
+    private Runnable mapLoadRunnable;
+    private PlacesClient placesClient;
 
     public GmapsFragment()
     {
@@ -73,34 +90,28 @@ public class GmapsFragment extends Fragment
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
-        String apiKey = BuildConfig.MAPS_API_KEY;
-        Places.initializeWithNewPlacesApiEnabled(requireActivity().getApplicationContext(), apiKey);
-        PlacesClient placesClient = Places.createClient(requireContext());
 
         View view = inflater.inflate(R.layout.fragment_gmaps, container, false);
 
         bottomSheet = view.findViewById(R.id.bottomSheetContainer);
-        bottomSheetContainer = view.findViewById(R.id.bottomSheetContainer);
-        bottomSheetBehavior = BottomSheetBehavior.from(bottomSheetContainer);
+        bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
         bottomSheetBehavior.setPeekHeight(1000);
         bottomSheetBehavior.setHideable(true);
 
-        SupportMapFragment supportMapFragment = SupportMapFragment.newInstance(
-                new GoogleMapOptions().mapId(getResources().getString(R.string.map_id)));
-        getChildFragmentManager().beginTransaction()
-                .replace(R.id.mapContainer, supportMapFragment).commit();
-        supportMapFragment.getMapAsync(new OnMapReadyCallback()
-        {
-            @Override
-            public void onMapReady(@NonNull GoogleMap googleMap)
-            {
-                mMap = googleMap;
-                setMapSettings(mMap, placesClient);
-            }
-        });
-
         return view;
+    }
+
+    @Override
+    public void onDestroyView()
+    {
+        super.onDestroyView();
+        // Remove the delayed runnable if the fragment is destroyed before the delay finishes
+        handler.removeCallbacks(mapLoadRunnable);
+        if(placesClient != null)
+        {
+            placesClient = null;
+        }
     }
 
     @Override
@@ -111,7 +122,58 @@ public class GmapsFragment extends Fragment
         noResultsTextView = view.findViewById(R.id.noResultsTextView);
         recyclerView = view.findViewById(R.id.searchResultsRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        restaurantSearchResultsAdapter = new RestaurantSearchResultsAdapter(new ArrayList<>(), requireActivity().getApplicationContext());
+
+        // Create adapter with listener
+        viewModel = new ViewModelProvider(requireActivity()).get(RestaurantViewModel.class);
+        restaurantSearchResultsAdapter = new RestaurantSearchResultsAdapter(
+                new ArrayList<>(),
+                requireContext(),
+                new RestaurantSearchResultsAdapter.OnItemClickListener()
+                {
+                    @Override
+                    public void onItemClick(Restaurant restaurant)
+                    {
+                        Log.d("GmapsFragment", "Item clicked: " + restaurant.getName());
+                        viewModel.setCurrentRestaurant(restaurant);
+                        RestaurantInfoFragment restaurantInfoFragment = new RestaurantInfoFragment();
+                        if(getActivity() != null)
+                        {
+                            getActivity().getSupportFragmentManager().beginTransaction()
+                                    .replace(R.id.fragmentContainer, restaurantInfoFragment)
+                                    .addToBackStack(null)
+                                    .commit();
+                            Log.d("GmapsFragment", "Navigated to RestaurantDetailsFragment");
+                        }
+                    }
+
+                    @Override
+                    public void onNavigateClick(Restaurant restaurant)
+                    {
+                        if(restaurant.getLocation() == null || restaurant.getAddress() == null)
+                        {
+                            Log.e("GmapsFragment", "Restaurant location is null, cannot navigate.");
+                            return;  // If restaurant location is null, return early
+                        }
+
+                        if(!isNavigating)
+                        {
+                            isNavigating = true;
+                            // Open the navigation app
+                            openNavigationApp(restaurant.getAddress());
+                        } else
+                        {
+                            return;
+                        }
+
+                        // log the navigation action
+                        Log.d("GmapsFragment", "Navigation to: " + restaurant.getAddress());
+
+                        // Re-enable the button after a short delay (500ms)
+                        new Handler(Looper.getMainLooper()).postDelayed(() -> isNavigating = false, 500);
+                    }
+                }
+        );
+
         recyclerView.setAdapter(restaurantSearchResultsAdapter);
 
         searchView = view.findViewById(R.id.searchBar);
@@ -122,8 +184,9 @@ public class GmapsFragment extends Fragment
             public boolean onQueryTextSubmit(String query)
             {
                 performSearch(query);
-                InputMethodManager imm = (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                if (imm != null)
+                InputMethodManager imm = (InputMethodManager) requireContext()
+                        .getSystemService(Context.INPUT_METHOD_SERVICE);
+                if(imm != null)
                 {
                     imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
                 }
@@ -133,15 +196,29 @@ public class GmapsFragment extends Fragment
             @Override
             public boolean onQueryTextChange(String newText)
             {
-                //updateSearchSuggestions(newText);
+                // updateSearchSuggestions(newText);
                 return true;
             }
         });
+
+        String apiKey = BuildConfig.MAPS_API_KEY;
+        Places.initializeWithNewPlacesApiEnabled(requireActivity().getApplicationContext(), apiKey);
+        placesClient = Places.createClient(requireContext());
+
+        mapLoadRunnable = new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                loadMap(placesClient);
+            }
+        };
+        handler.postDelayed(mapLoadRunnable, 500);
     }
 
     private void performSearch(String query)
     {
-        if (!query.isEmpty())
+        if(!query.isEmpty())
         {
             FirebaseFirestore db = FirebaseFirestore.getInstance();
             db.collection("Restaurants")
@@ -152,7 +229,7 @@ public class GmapsFragment extends Fragment
                     .addOnSuccessListener(querySnapshot ->
                     {
                         List<Restaurant> results = new ArrayList<>();
-                        for (QueryDocumentSnapshot document : querySnapshot)
+                        for(QueryDocumentSnapshot document : querySnapshot)
                         {
                             Restaurant restaurant = document.toObject(Restaurant.class);
                             results.add(restaurant);
@@ -168,26 +245,29 @@ public class GmapsFragment extends Fragment
 
     private void updateSearchResults(List<Restaurant> results)
     {
-        if (results.isEmpty())
+        if(results.isEmpty())
         {
+            // Show no results text and hide the RecyclerView
             noResultsTextView.setVisibility(View.VISIBLE);
             noResultsTextView.setText("No results found");
             recyclerView.setVisibility(View.GONE);
-            bottomSheet.setVisibility(View.VISIBLE);
-            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
         } else
         {
+            // Update the RecyclerView with new data and show it
+            restaurantSearchResultsAdapter.updateData(results);
             noResultsTextView.setVisibility(View.GONE);
             recyclerView.setVisibility(View.VISIBLE);
-            restaurantSearchResultsAdapter.updateData(results);
-            bottomSheet.setVisibility(View.VISIBLE);
-            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
         }
+
+        // Show the bottom sheet (it will be visible regardless of results)
+        bottomSheet.setVisibility(View.VISIBLE);
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
     }
+
 
     private void updateSearchSuggestions(String newText)
     {
-        if (newText.isEmpty())
+        if(newText.isEmpty())
         {
             recyclerView.setVisibility(View.GONE);
             noResultsTextView.setVisibility(View.GONE);
@@ -204,12 +284,12 @@ public class GmapsFragment extends Fragment
                 .addOnSuccessListener(queryDocumentSnapshots ->
                 {
                     List<Restaurant> filteredList = new ArrayList<>();
-                    for (DocumentSnapshot document : queryDocumentSnapshots)
+                    for(DocumentSnapshot document : queryDocumentSnapshots)
                     {
                         Restaurant restaurant = document.toObject(Restaurant.class);
                         filteredList.add(restaurant);
                     }
-                    if (filteredList.isEmpty())
+                    if(filteredList.isEmpty())
                     {
                         recyclerView.setVisibility(View.GONE);
                         noResultsTextView.setVisibility(View.VISIBLE);
@@ -234,17 +314,17 @@ public class GmapsFragment extends Fragment
         Log.d("PlacesDebug", "Before FindCurrentPlaceRequest");
         FindCurrentPlaceRequest request = FindCurrentPlaceRequest.newInstance(placeFields);
         Log.d("PlacesDebug", "After FindCurrentPlaceRequest");
-        if (ContextCompat.checkSelfPermission(requireActivity().getApplicationContext(), ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
+        if(ContextCompat.checkSelfPermission(requireActivity().getApplicationContext(), ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
         {
             Log.d("PlacesDebug", "Before findCurrentPlace");
             Task<FindCurrentPlaceResponse> placeResponse = placesClient.findCurrentPlace(request);
             Log.d("PlacesDebug", "After findCurrentPlace");
             placeResponse.addOnCompleteListener(task ->
             {
-                if (task.isSuccessful())
+                if(task.isSuccessful())
                 {
                     FindCurrentPlaceResponse response = task.getResult();
-                    for (PlaceLikelihood placeLikelihood : response.getPlaceLikelihoods())
+                    for(PlaceLikelihood placeLikelihood : response.getPlaceLikelihoods())
                     {
                         Log.i("CurrentLocation", String.format("Place '%s' has likelihood: %f", placeLikelihood.getPlace().getDisplayName(),
                                 placeLikelihood.getLikelihood()));
@@ -252,7 +332,7 @@ public class GmapsFragment extends Fragment
                 } else
                 {
                     Exception exception = task.getException();
-                    if (exception instanceof ApiException)
+                    if(exception instanceof ApiException)
                     {
                         ApiException apiException = (ApiException) exception;
                         Log.e("NotFound", "Place not found: " + apiException.getStatusCode());
@@ -261,7 +341,51 @@ public class GmapsFragment extends Fragment
             });
         } else
         {
-            // Request permissions if needed
+            locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION);
+        }
+    }
+
+    private final ActivityResultLauncher<String> locationPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted ->
+            {
+                if(isGranted)
+                {
+                    Log.d("Permission", "Location permission granted.");
+                    setCurrentLocation(placesClient); // make sure this is accessible
+                } else
+                {
+                    Log.w("Permission", "Location permission denied.");
+                }
+            });
+
+
+    private void loadMap(PlacesClient placesClient)
+    {
+        SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.mapContainer);
+
+        // If the map fragment doesn't exist, create it
+        if(mapFragment == null)
+        {
+            final SupportMapFragment newMapFragment = SupportMapFragment.newInstance(
+                    new GoogleMapOptions().mapId(getResources().getString(R.string.map_id)));
+
+            FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
+            if(!getChildFragmentManager().isStateSaved())
+            {
+                transaction.replace(R.id.mapContainer, newMapFragment);
+                transaction.commit();
+            }
+
+            newMapFragment.getMapAsync(new OnMapReadyCallback()
+            {
+                @Override
+                public void onMapReady(@NonNull GoogleMap googleMap)
+                {
+                    mMap = googleMap;
+                    setMapSettings(mMap, placesClient);
+                    moveMapButtons(newMapFragment);
+                }
+            });
         }
     }
 
@@ -271,7 +395,7 @@ public class GmapsFragment extends Fragment
         setCurrentCameraPosition();
         mMap.getUiSettings().setCompassEnabled(true);
         mMap.getUiSettings().setZoomControlsEnabled(true);
-        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
+        if(ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
         {
             mMap.setMyLocationEnabled(true);
         }
@@ -279,10 +403,53 @@ public class GmapsFragment extends Fragment
         mMap.getUiSettings().setRotateGesturesEnabled(true);
     }
 
+    private void moveMapButtons(SupportMapFragment mapFragment)
+    {
+        View mapView = mapFragment.getView();
+        if(mapView != null)
+        {
+            // Move MyLocation button
+            View locationButton = mapView.findViewById(Integer.parseInt("2"));
+            RelativeLayout.LayoutParams locationParams = (RelativeLayout.LayoutParams) locationButton.getLayoutParams();
+            locationParams.addRule(RelativeLayout.ALIGN_PARENT_TOP, 0);
+            locationParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
+            locationParams.setMargins(0, 0, dpToPx(16), dpToPx(16));  // Right 16dp, Bottom 16dp
+            locationButton.setLayoutParams(locationParams);
+            locationButton.setScaleX(1.2f);
+            locationButton.setScaleY(1.2f);
+
+            // Move Zoom controls
+            View zoomControls = mapView.findViewById(Integer.parseInt("1"));
+            RelativeLayout.LayoutParams zoomParams = (RelativeLayout.LayoutParams) zoomControls.getLayoutParams();
+            zoomParams.addRule(RelativeLayout.ALIGN_PARENT_TOP, 0);
+            zoomParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
+            zoomParams.setMargins(0, 0, dpToPx(16), dpToPx(96));  // Slightly higher than MyLocation
+            zoomControls.setLayoutParams(zoomParams);
+            zoomControls.setScaleX(1.2f);
+            zoomControls.setScaleY(1.2f);
+
+            // Move Compass button lower (~80dp from top)
+            View compassButton = mapView.findViewById(Integer.parseInt("5"));
+            if(compassButton != null)
+            {
+                RelativeLayout.LayoutParams compassParams = (RelativeLayout.LayoutParams) compassButton.getLayoutParams();
+                compassParams.setMargins(0, dpToPx(80), dpToPx(16), 0);  // Top margin 80dp, Right 16dp
+                compassButton.setLayoutParams(compassParams);
+                compassButton.setScaleX(1.2f);
+                compassButton.setScaleY(1.2f);
+            }
+        }
+    }
+
+    private int dpToPx(int dp)
+    {
+        return Math.round(dp * getResources().getDisplayMetrics().density);
+    }
+
     private void setCurrentCameraPosition()
     {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity().getApplicationContext());
-        if (ActivityCompat.checkSelfPermission(requireActivity().getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(requireActivity().getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED)
+        if(ActivityCompat.checkSelfPermission(requireActivity().getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(requireActivity().getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED)
         {
             CurrentLocationRequest currentLocationRequest = new CurrentLocationRequest.Builder()
                     .setDurationMillis(5000)
@@ -293,23 +460,22 @@ public class GmapsFragment extends Fragment
             Task<Location> locationTask = fusedLocationClient.getCurrentLocation(currentLocationRequest, null);
             locationTask.addOnCompleteListener(task ->
             {
-                if (task.isSuccessful())
+                if(task.isSuccessful())
                 {
                     Location location = task.getResult();
-                    if (location != null)
+                    if(location != null)
                     {
                         LatLng currentLatLng = new LatLng(location.getLatitude(), location.getLongitude());
                         focusOnLocation(mMap, currentLatLng);
                     }
                 }
             });
-            return;
         }
     }
 
     private void focusOnLocation(GoogleMap mMap, LatLng latLng)
     {
-        if (mMap != null && latLng != null)
+        if(mMap != null && latLng != null)
         {
             CameraPosition cameraPosition = new CameraPosition.Builder()
                     .target(latLng)
@@ -318,51 +484,73 @@ public class GmapsFragment extends Fragment
             mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
         }
     }
+
+    // Helper to launch navigation
+    private void openNavigationApp(String address)
+    {
+        // The general geo URI that can be handled by multiple apps (including Maps and other navigation apps)
+        String uri = "geo:0,0?q=" + Uri.encode(address);
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
+
+        // Create chooser for available navigation apps
+        Intent chooserIntent = Intent.createChooser(intent, "Choose a Navigation App");
+
+        // Check if there's any app that can handle the intent
+        if(intent.resolveActivity(requireContext().getPackageManager()) != null)
+        {
+            startActivity(chooserIntent);  // This will show a prompt with apps like Google Maps, Waze, etc.
+        } else
+        {
+            // Fallback for no apps available
+            Toast.makeText(requireContext(), "No navigation apps available", Toast.LENGTH_SHORT).show();
+        }
+    }
+
 //private void setSearchNearby(PlacesClient placesClient)
-    //{
-    //    fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity().getApplicationContext());
-    //    if (ActivityCompat.checkSelfPermission(requireActivity().getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(requireActivity().getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED)
-    //    {
-    //        fusedLocationClient.getLastLocation()
-    //                .addOnSuccessListener(requireActivity(), location ->
-    //                {
-    //                    if (location != null)
-    //                    {
-    //                        LatLng center = new LatLng(location.getLatitude(), location.getLongitude());
-    //                        final List<Place.Field> placeFields = Arrays.asList(Place.Field.ID, Place.Field.DISPLAY_NAME);
-    //                        CircularBounds circle = CircularBounds.newInstance(center, /* radius = */ 5000);
-    //                        final List<String> includedTypes = Arrays.asList("restaurant", "cafe");
-    //                        final SearchNearbyRequest searchNearbyRequest =
-    //                                SearchNearbyRequest.builder(/* location restriction = */ circle, placeFields)
-    //                                        .setIncludedTypes(includedTypes)
-    //                                        .setMaxResultCount(10)
-    //                                        .build();
-    //                        placesClient.searchNearby(searchNearbyRequest)
-    //                                .addOnSuccessListener(response ->
-    //                                {
-    //                                    List<Place> places = response.getPlaces();
-    //                                    mMap.clear();
-    //                                    for (Place place : places)
-    //                                    {
-    //                                        LatLng placeLatLng = place.getLocation();
-    //                                        if (placeLatLng != null)
-    //                                        {
-    //                                            mMap.addMarker(new MarkerOptions()
-    //                                                    .position(placeLatLng)
-    //                                                  .title(place.getDisplayName()));
-    //                                        }
-    //                                }).addOnFailureListener(exception ->
-    //                                    }
-    //                                {
-    //                                    // Handle error
-    //                                    Log.e("SearchNearby", "Error searching nearby places", exception);
-    //                                });
-    //                    }
-    //                }).addOnFailureListener(exception ->
-    //                {
-    //                    // Handle error
-    //                    Log.e("GetLastLocation", "Error getting last location", exception);
-    //                });
-    //    }
-    //}
+//{
+//    fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity().getApplicationContext());
+//    if (ActivityCompat.checkSelfPermission(requireActivity().getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(requireActivity().getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED)
+//    {
+//        fusedLocationClient.getLastLocation()
+//                .addOnSuccessListener(requireActivity(), location ->
+//                {
+//                    if (location != null)
+//                    {
+//                        LatLng center = new LatLng(location.getLatitude(), location.getLongitude());
+//                        final List<Place.Field> placeFields = Arrays.asList(Place.Field.ID, Place.Field.DISPLAY_NAME);
+//                        CircularBounds circle = CircularBounds.newInstance(center, /* radius = */ 5000);
+//                        final List<String> includedTypes = Arrays.asList("restaurant", "cafe");
+//                        final SearchNearbyRequest searchNearbyRequest =
+//                                SearchNearbyRequest.builder(/* location restriction = */ circle, placeFields)
+//                                        .setIncludedTypes(includedTypes)
+//                                        .setMaxResultCount(10)
+//                                        .build();
+//                        placesClient.searchNearby(searchNearbyRequest)
+//                                .addOnSuccessListener(response ->
+//                                {
+//                                    List<Place> places = response.getPlaces();
+//                                    mMap.clear();
+//                                    for (Place place : places)
+//                                    {
+//                                        LatLng placeLatLng = place.getLocation();
+//                                        if (placeLatLng != null)
+//                                        {
+//                                            mMap.addMarker(new MarkerOptions()
+//                                                    .position(placeLatLng)
+//                                                  .title(place.getDisplayName()));
+//                                        }
+//                                }).addOnFailureListener(exception ->
+//                                    }
+//                                {
+//                                    // Handle error
+//                                    Log.e("SearchNearby", "Error searching nearby places", exception);
+//                                });
+//                    }
+//                }).addOnFailureListener(exception ->
+//                {
+//                    // Handle error
+//                    Log.e("GetLastLocation", "Error getting last location", exception);
+//                });
+//    }
+//}
 }

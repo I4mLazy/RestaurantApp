@@ -1,7 +1,9 @@
 package com.example.restaurantapp.fragments;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.activity.OnBackPressedCallback;
@@ -24,7 +26,6 @@ import android.widget.ImageView;
 import android.widget.NumberPicker;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.TimePicker;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
@@ -61,8 +62,8 @@ public class RestaurantInfoFragment extends Fragment
     private ImageView restaurantDetailImage;
     private TextView restaurantDetailName, restaurantDetailAddress, restaurantDetailRating,
             restaurantDetailBusinessHours, restaurantDetailContactInfo, restaurantDetailReservable,
-            restaurantDetailType, restaurantDetailTags, restaurantDetailPriceLevel, noResults;
-    private Button restaurantDetailEditButton, openReservationOverlayButton;
+            restaurantDetailType, restaurantDetailTags, restaurantDetailPriceLevel, restaurantDetailDescription, noResults;
+    private Button restaurantDetailEditButton, openReservationOverlayButton, navigateButton;
     private EditText guestAmountEditText, specialRequestsEditText;
     private MaterialButton cancelReservationButton, confirmReservationButton;
     private DatePicker datePicker;
@@ -105,10 +106,12 @@ public class RestaurantInfoFragment extends Fragment
         restaurantDetailType = view.findViewById(R.id.restaurantDetailType);
         restaurantDetailTags = view.findViewById(R.id.restaurantDetailTags);
         restaurantDetailPriceLevel = view.findViewById(R.id.restaurantDetailPriceLevel);
+        restaurantDetailDescription = view.findViewById(R.id.restaurantDetailDescription);
         noResults = view.findViewById(R.id.noResults);
 
         restaurantDetailEditButton = view.findViewById(R.id.restaurantDetailEditButton);
         openReservationOverlayButton = view.findViewById(R.id.openReserveOverlayButton);
+        navigateButton = view.findViewById(R.id.navigateButton);
         cancelReservationButton = view.findViewById(R.id.cancelReservationButton);
         confirmReservationButton = view.findViewById(R.id.confirmReservationButton);
 
@@ -145,7 +148,7 @@ public class RestaurantInfoFragment extends Fragment
                             if("restaurant".equals(userType))
                             {
                                 restaurantDetailEditButton.setVisibility(View.VISIBLE);
-                                openReservationOverlayButton.setVisibility(View.GONE);
+                                navigateButton.setVisibility(View.GONE);
                                 restaurantID = documentSnapshot.getString("restaurantID");
 
                                 if(restaurantID != null && !restaurantID.isEmpty())
@@ -192,7 +195,7 @@ public class RestaurantInfoFragment extends Fragment
                             } else if("user".equals(userType))
                             {
                                 restaurantDetailEditButton.setVisibility(View.GONE);
-                                openReservationOverlayButton.setVisibility(View.VISIBLE);
+                                navigateButton.setVisibility(View.VISIBLE);
                                 viewModel = new ViewModelProvider(requireActivity()).get(RestaurantViewModel.class);
                                 viewModel.getCurrentRestaurant().observe(getViewLifecycleOwner(), restaurant ->
                                 {
@@ -203,10 +206,10 @@ public class RestaurantInfoFragment extends Fragment
                                         bindRestaurantData(restaurant);
                                         // Setup menu
                                         setupMenuItems(restaurantID);
-                                        // Inside your overlay click listener
-                                        openReservationOverlayButton.setOnClickListener(v ->
-                                                setupReservationOverlay());
+                                        // Overlay click listener
 
+                                        navigateButton.setOnClickListener(v ->
+                                                openNavigationApp(restaurant.getAddress()));
 
                                         cancelReservationButton.setOnClickListener(v ->
                                                 reservationOverlay.setVisibility(View.GONE));
@@ -251,56 +254,6 @@ public class RestaurantInfoFragment extends Fragment
         return view;
     }
 
-    private void setupMenuItems(String restaurantID)
-    {
-        MenuItemSelectionViewModel menuItemSelectionViewModel = new ViewModelProvider(requireActivity())
-                .get(MenuItemSelectionViewModel.class);
-        db = FirebaseFirestore.getInstance();
-        db.collection("Users").document(currentUser.getUid())
-                .get()
-                .addOnSuccessListener(documentSnapshot ->
-                {
-                    if(documentSnapshot.exists())
-                    {
-                        String userType = documentSnapshot.getString("userType");
-                        if("restaurant".equals(userType))
-                        {
-                            containerID = R.id.fragment_container;
-                        } else if("user".equals(userType))
-                        {
-                            containerID = R.id.fragmentContainer;
-                        }
-                    }
-                });
-
-        menuAdapter = new MenuAdapter(
-                menuList,
-                menu ->
-                {
-                    // Menu click handler (empty)
-                },
-                item ->
-                {
-                    Log.d("RestaurantOverviewFragment", "Clicked on item: " + item.getName());
-
-                    menuItemSelectionViewModel.selectMenuItem(item);
-
-                    // Create new fragment instance and pass data if needed
-                    MenuItemFragment menuItemFragment = new MenuItemFragment();
-                    getActivity().getSupportFragmentManager().beginTransaction()
-                            .replace(containerID, menuItemFragment)
-                            .commit();
-                },
-                restaurantID
-        );
-
-        // Set adapter after initialization
-        recyclerViewMenus.setLayoutManager(new LinearLayoutManager(getContext()));
-        recyclerViewMenus.setAdapter(menuAdapter);
-        setUpSearchBar();
-    }
-
-
     private void setUpSearchBar()
     {
         searchBar.setOnClickListener(v -> searchBar.setIconified(false));
@@ -327,8 +280,8 @@ public class RestaurantInfoFragment extends Fragment
         if(restaurant == null) return;
 
         // Name & Address
-        restaurantDetailName.setText(restaurant.getName() != null ? restaurant.getName() : "N/A");
-        restaurantDetailAddress.setText(restaurant.getAddress() != null ? restaurant.getAddress() : "N/A");
+        restaurantDetailName.setText(getSafeText(restaurant.getName()));
+        restaurantDetailAddress.setText(getSafeText(restaurant.getAddress()));
 
         // Rating
         double rating = restaurant.getRating();
@@ -336,26 +289,36 @@ public class RestaurantInfoFragment extends Fragment
 
         // Business Hours
         restaurantDetailBusinessHours.setText("Hours: " +
-                (restaurant.getBusinessHours() != null ? restaurant.getBusinessHours().toString() : "N/A"));
+                getSafeText(restaurant.getBusinessHours() != null ? restaurant.getBusinessHours().toString() : null));
 
-        // Contact Info
-        restaurantDetailContactInfo.setText("Contact: " +
-                (restaurant.getContactInfo() != null ? restaurant.getContactInfo().toString() : "N/A"));
+        // Contact Info (formatted without {})
+        restaurantDetailContactInfo.setText("Contact: " + formatContactInfo(restaurant.getContactInfo()));
 
         // Reservable
-        restaurantDetailReservable.setText("Reservable: " + (restaurant.isReservable() ? "Yes" : "No"));
-
+        boolean isReservable = restaurant.isReservable();
+        SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("FeedMe", Context.MODE_PRIVATE);
+        String userType = sharedPreferences.getString("userType", "user");
+        restaurantDetailReservable.setText("Reservable: " + (isReservable ? "Yes" : "No"));
+        if(isReservable && "user".equals(userType))
+        {
+            openReservationOverlayButton.setVisibility(View.VISIBLE);
+            openReservationOverlayButton.setOnClickListener(v ->
+                    setupReservationOverlay());
+        } else
+        {
+            openReservationOverlayButton.setVisibility(View.GONE);
+        }
         // Type
-        restaurantDetailType.setText("Type: " +
-                (restaurant.getType() != null && !restaurant.getType().isEmpty() ? restaurant.getType() : "N/A"));
+        restaurantDetailType.setText("Type: " + getSafeText(restaurant.getType()));
 
-        // Tags
-        restaurantDetailTags.setText("Tags: " +
-                (restaurant.getTags() != null && !restaurant.getTags().isEmpty() ? restaurant.getTags().toString() : "N/A"));
+        // Tags (comma-separated)
+        restaurantDetailTags.setText("Tags: " + formatList(restaurant.getTags()));
 
-        // Price Level
-        int priceLevel = restaurant.getPriceLevel();
-        restaurantDetailPriceLevel.setText("Price Level: " + (priceLevel > 0 ? priceLevel : "N/A"));
+        // Price Level ($, $$, etc.)
+        restaurantDetailPriceLevel.setText("Price Level: " + formatPriceLevel(restaurant.getPriceLevel()));
+
+        // Description (added)
+        restaurantDetailDescription.setText("Description: " + getSafeText(restaurant.getDescription()));
 
         // Image
         String imageUrl = restaurant.getImageURL();
@@ -367,6 +330,53 @@ public class RestaurantInfoFragment extends Fragment
 
         // Menu data
         loadMenuData();
+    }
+
+    // Helper to avoid "null" text
+    private String getSafeText(String text)
+    {
+        return (text != null && !text.isEmpty()) ? text : "N/A";
+    }
+
+    // Helper to format list without [ ]
+    private String formatList(List<String> list)
+    {
+        if(list == null || list.isEmpty()) return "N/A";
+        return TextUtils.join(", ", list);
+    }
+
+    // Helper to format price level into $/$$/$$$
+    private String formatPriceLevel(int priceLevel)
+    {
+        if(priceLevel <= 0) return "N/A";
+        StringBuilder sb = new StringBuilder();
+        for(int i = 0; i < priceLevel; i++)
+        {
+            sb.append("$");
+        }
+        return sb.toString();
+    }
+
+    // Helper to format contact info without {} and = replaced with :
+    private String formatContactInfo(Map<String, String> contactInfo)
+    {
+        if(contactInfo == null || contactInfo.isEmpty()) return "N/A";
+
+        StringBuilder sb = new StringBuilder();
+        for(Map.Entry<String, String> entry : contactInfo.entrySet())
+        {
+            String key = capitalizeFirst(entry.getKey());
+            String value = entry.getValue() != null ? entry.getValue() : "N/A";
+            sb.append(key).append(": ").append(value).append("\n");
+        }
+        return sb.toString().trim();
+    }
+
+    // Capitalize first letter of key (optional, for better formatting)
+    private String capitalizeFirst(String str)
+    {
+        if(str == null || str.isEmpty()) return str;
+        return str.substring(0, 1).toUpperCase() + str.substring(1);
     }
 
 
@@ -422,6 +432,55 @@ public class RestaurantInfoFragment extends Fragment
                     showLoading(false);
                     Toast.makeText(getContext(), "Failed to load menus: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
+    }
+
+    private void setupMenuItems(String restaurantID)
+    {
+        MenuItemSelectionViewModel menuItemSelectionViewModel = new ViewModelProvider(requireActivity())
+                .get(MenuItemSelectionViewModel.class);
+        db = FirebaseFirestore.getInstance();
+        db.collection("Users").document(currentUser.getUid())
+                .get()
+                .addOnSuccessListener(documentSnapshot ->
+                {
+                    if(documentSnapshot.exists())
+                    {
+                        String userType = documentSnapshot.getString("userType");
+                        if("restaurant".equals(userType))
+                        {
+                            containerID = R.id.fragment_container;
+                        } else if("user".equals(userType))
+                        {
+                            containerID = R.id.fragmentContainer;
+                        }
+                    }
+                });
+
+        menuAdapter = new MenuAdapter(
+                menuList,
+                menu ->
+                {
+                    // Menu click handler (empty)
+                },
+                item ->
+                {
+                    Log.d("RestaurantOverviewFragment", "Clicked on item: " + item.getName());
+
+                    menuItemSelectionViewModel.selectMenuItem(item);
+
+                    // Create new fragment instance and pass data if needed
+                    MenuItemFragment menuItemFragment = new MenuItemFragment();
+                    getActivity().getSupportFragmentManager().beginTransaction()
+                            .replace(containerID, menuItemFragment)
+                            .commit();
+                },
+                restaurantID
+        );
+
+        // Set adapter after initialization
+        recyclerViewMenus.setLayoutManager(new LinearLayoutManager(getContext()));
+        recyclerViewMenus.setAdapter(menuAdapter);
+        setUpSearchBar();
     }
 
     private void loadAllMenuItems()
@@ -743,7 +802,6 @@ public class RestaurantInfoFragment extends Fragment
                                     String phone = documentSnapshot.getString("phoneNumber");
 
 
-
                                     if(name != null) reservationData.put("userName", name);
                                     if(phone != null) reservationData.put("phoneNumber", phone);
                                 }
@@ -766,6 +824,25 @@ public class RestaurantInfoFragment extends Fragment
                 .addOnFailureListener(e -> Log.e("Reservation", "Error saving to user", e));
     }
 
+    private void openNavigationApp(String address)
+    {
+        // The general geo URI that can be handled by multiple apps (including Maps and other navigation apps)
+        String uri = "geo:0,0?q=" + Uri.encode(address);
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
+
+        // Create chooser for available navigation apps
+        Intent chooserIntent = Intent.createChooser(intent, "Choose a Navigation App");
+
+        // Check if there's any app that can handle the intent
+        if(intent.resolveActivity(requireContext().getPackageManager()) != null)
+        {
+            startActivity(chooserIntent);  // This will show a prompt with apps like Google Maps, Waze, etc.
+        } else
+        {
+            // Fallback for no apps available
+            Toast.makeText(requireContext(), "No navigation apps available", Toast.LENGTH_SHORT).show();
+        }
+    }
 
     private void showLoading(boolean isLoading)
     {

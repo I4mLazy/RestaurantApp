@@ -6,20 +6,34 @@
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
     app:cardCornerRadius="12dp"
-    app:cardElevation="4dp">
+    app:cardElevation="4dp"
+    app:cardBackgroundColor="@color/surface">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- Restaurant Image -->
-        <ImageView
-            android:id="@+id/restaurantImage"
+        <!-- Restaurant Image with Gradient Overlay -->
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="200dp"
-            android:scaleType="centerCrop"
-            android:src="@drawable/image_placeholder" />
+            android:layout_height="200dp">
+
+            <ImageView
+                android:id="@+id/restaurantImage"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:src="@drawable/image_placeholder"
+                android:contentDescription="Restaurant Image" />
+
+            <!-- Gradient overlay for better text visibility -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="70dp"
+                android:layout_gravity="bottom"
+                android:background="@color/black_overlay" />
+        </FrameLayout>
 
         <!-- Restaurant Info -->
         <LinearLayout
@@ -28,46 +42,115 @@
             android:orientation="vertical"
             android:padding="12dp">
 
-            <!-- Name -->
-            <TextView
-                android:id="@+id/restaurantName"
-                android:layout_width="wrap_content"
+            <!-- Name and Rating in same row -->
+            <RelativeLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Restaurant Name"
-                android:textSize="20sp"
-                android:textStyle="bold" />
+                android:layout_marginBottom="8dp">
 
-            <!-- Rating -->
-            <TextView
-                android:id="@+id/restaurantRating"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Rating: 4.5"
-                android:textSize="16sp" />
+                <TextView
+                    android:id="@+id/restaurantName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Restaurant Name"
+                    android:textColor="@color/text_primary"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:layout_alignParentStart="true"
+                    android:layout_toStartOf="@+id/restaurantRating" />
 
-            <!-- Address -->
-            <TextView
-                android:id="@+id/restaurantAddress"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="123 Main Street"
-                android:textSize="14sp" />
+                <TextView
+                    android:id="@+id/restaurantRating"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="★ 4.5"
+                    android:textColor="#F39C12"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:layout_alignParentEnd="true" />
+            </RelativeLayout>
 
-            <!-- Price Level -->
-            <TextView
-                android:id="@+id/restaurantPriceLevel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Price: $$$"
-                android:textSize="14sp" />
+            <!-- Divider -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#D35400"
+                android:layout_marginBottom="10dp"
+                android:alpha="0.5" />
 
-            <!-- Tags -->
-            <TextView
-                android:id="@+id/restaurantTags"
-                android:layout_width="wrap_content"
+            <!-- Address with icon -->
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Italian, Pizza, Pasta"
-                android:textSize="14sp" />
+                android:orientation="horizontal"
+                android:layout_marginBottom="6dp">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/baseline_location_on_24"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginEnd="8dp"
+                    android:contentDescription="Location icon"
+                    app:tint="#E67E22" />
+
+                <TextView
+                    android:id="@+id/restaurantAddress"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="123 Main Street"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <!-- Price Level with icon -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="6dp">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/baseline_discount_24"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginEnd="8dp"
+                    android:contentDescription="Price icon"
+                    app:tint="@color/primary" />
+
+                <TextView
+                    android:id="@+id/restaurantPriceLevel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Price: $$"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <!-- Tags with icon -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/baseline_tag_24"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginEnd="8dp"
+                    android:contentDescription="Tags icon"
+                    app:tint="@color/primary" />
+
+                <TextView
+                    android:id="@+id/restaurantTags"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Italian, Pizza, Pasta"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp" />
+            </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 </androidx.cardview.widget.CardView>

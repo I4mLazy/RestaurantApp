@@ -7,6 +7,7 @@ import android.location.Location;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -27,19 +28,31 @@ import com.google.firebase.firestore.GeoPoint;
 
 import java.util.List;
 
-public class RestaurantSearchResultsAdapter extends RecyclerView.Adapter<RestaurantSearchResultsAdapter.ViewHolder>
+public class RestaurantSearchResultsAdapter
+        extends RecyclerView.Adapter<RestaurantSearchResultsAdapter.ViewHolder>
 {
 
-    private List<Restaurant> restaurants;
-    private Context context;
+    public interface OnItemClickListener
+    {
+        void onItemClick(Restaurant restaurant);
 
-    public RestaurantSearchResultsAdapter(List<Restaurant> restaurants, Context context)
+        void onNavigateClick(Restaurant restaurant);
+    }
+
+    private List<Restaurant> restaurants;
+    private final Context context;
+    private final OnItemClickListener listener;
+
+    public RestaurantSearchResultsAdapter(
+            List<Restaurant> restaurants,
+            Context context,
+            OnItemClickListener listener)
     {
         this.restaurants = restaurants;
         this.context = context;
+        this.listener = listener;
     }
 
-    // Method to update data
     public void updateData(List<Restaurant> newRestaurants)
     {
         this.restaurants.clear();
@@ -51,7 +64,8 @@ public class RestaurantSearchResultsAdapter extends RecyclerView.Adapter<Restaur
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType)
     {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_restaurant, parent, false);
+        View view = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_restaurant, parent, false);
         return new ViewHolder(view);
     }
 
@@ -60,22 +74,43 @@ public class RestaurantSearchResultsAdapter extends RecyclerView.Adapter<Restaur
     {
         Restaurant restaurant = restaurants.get(position);
 
+        // Bind the fields
         holder.nameTextView.setText(restaurant.getName() != null ? restaurant.getName() : "Unknown");
         Double rating = restaurant.getRating();
-        holder.ratingTextView.setText(rating != null ? String.valueOf(restaurant.getRating()) : "N/A");
-        holder.tagsTextView.setText(restaurant.getTags() != null ? restaurant.getTags().toString() : "No tags");
-        if (restaurant.getLocation() != null) {
-            getDistance(restaurant, distance -> {
-                holder.distanceTextView.setText(distance != -1 ? distance + " km" : "N/A");
-            });
-        } else {
-            holder.distanceTextView.setText("N/A");
-        }
-        // Load restaurant image from URL using Glide
-        Glide.with(context).load(restaurant.getImageURL())
+        holder.ratingTextView.setText(rating != null ? String.valueOf(rating) : "N/A");
+        holder.tagsTextView.setText(restaurant.getTags() != null
+                ? restaurant.getTags().toString()
+                : "No tags");
+
+        Glide.with(context)
+                .load(restaurant.getImageURL())
                 .placeholder(R.drawable.image_placeholder)
                 .error(R.drawable.image_placeholder)
                 .into(holder.restaurantImage);
+
+        // Bind distance (if needed)
+        if(restaurant.getLocation() != null)
+        {
+            getDistance(restaurant, distance ->
+            {
+                if(distance != -1)
+                {
+                    holder.distanceTextView.setText(distance + " km");
+                } else
+                {
+                    holder.distanceTextView.setText("N/A");
+                }
+            });
+        } else
+        {
+            holder.distanceTextView.setText("N/A");
+        }
+
+        // Item click listener
+        holder.itemView.setOnClickListener(v -> listener.onItemClick(restaurant));
+
+        // Navigation button click listener
+        holder.navButton.setOnClickListener(v -> listener.onNavigateClick(restaurant));
     }
 
     @Override
@@ -88,6 +123,7 @@ public class RestaurantSearchResultsAdapter extends RecyclerView.Adapter<Restaur
     {
         ImageView restaurantImage, starIcon;
         TextView nameTextView, ratingTextView, tagsTextView, distanceTextView;
+        ImageButton navButton;
 
         public ViewHolder(@NonNull View itemView)
         {
@@ -98,6 +134,7 @@ public class RestaurantSearchResultsAdapter extends RecyclerView.Adapter<Restaur
             tagsTextView = itemView.findViewById(R.id.restaurantTags);
             distanceTextView = itemView.findViewById(R.id.restaurantDistance);
             starIcon = itemView.findViewById(R.id.starIcon);
+            navButton = itemView.findViewById(R.id.navButton);
         }
     }
 
@@ -105,7 +142,7 @@ public class RestaurantSearchResultsAdapter extends RecyclerView.Adapter<Restaur
     {
         FusedLocationProviderClient fusedLocationClient = LocationServices.getFusedLocationProviderClient(context);
 
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+        if(ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED)
         {
 
@@ -119,12 +156,12 @@ public class RestaurantSearchResultsAdapter extends RecyclerView.Adapter<Restaur
 
             locationTask.addOnCompleteListener(task ->
             {
-                if (task.isSuccessful() && task.getResult() != null)
+                if(task.isSuccessful() && task.getResult() != null)
                 {
                     Location location = task.getResult();
                     LatLng currentLatLng = new LatLng(location.getLatitude(), location.getLongitude());
                     GeoPoint geoPoint = restaurant.getLocation();
-                    LatLng restaurantLatLng = new LatLng(geoPoint.getLatitude(),geoPoint.getLongitude());
+                    LatLng restaurantLatLng = new LatLng(geoPoint.getLatitude(), geoPoint.getLongitude());
 
                     float[] results = new float[1];
                     Location.distanceBetween(
@@ -147,10 +184,8 @@ public class RestaurantSearchResultsAdapter extends RecyclerView.Adapter<Restaur
         }
     }
 
-
     public interface DistanceCallback
     {
         void onDistanceCalculated(double distance);
     }
-
 }

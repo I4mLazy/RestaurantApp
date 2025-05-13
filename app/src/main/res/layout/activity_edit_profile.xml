@@ -31,6 +31,24 @@
 
     </com.google.android.material.textfield.TextInputLayout>
 
+    <!-- Hidden Password Field -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/passwordInputLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/textInputLayout"
+        android:layout_marginTop="16dp"
+        android:hint="Enter your password"
+        android:visibility="gone"
+        app:hintEnabled="true">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/passwordEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textPassword" />
+    </com.google.android.material.textfield.TextInputLayout>
+
     <Button
         android:id="@+id/saveButton"
         android:layout_width="match_parent"

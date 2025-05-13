@@ -5,7 +5,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.media.ExifInterface;
@@ -33,10 +32,11 @@ import androidx.fragment.app.FragmentActivity;
 import com.bumptech.glide.Glide;
 import com.example.restaurantapp.R;
 import com.example.restaurantapp.activities.AuthenticationActivity;
-import com.example.restaurantapp.activities.EditProfileActivity;
+import com.example.restaurantapp.activities.EditInfoActivity;
 import com.example.restaurantapp.activities.SettingsActivity;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -58,7 +58,7 @@ public class ProfileFragment extends Fragment
 {
     private ImageButton editProfilePictureImageButton;
     private TextView profileName, profileEmail, profilePhone, editProfilePictureTextView;
-    private ActivityResultLauncher<Intent> editProfileLauncher;
+    private ActivityResultLauncher<Intent> editInfoLauncher;
     private BottomSheetDialog bottomSheetDialog;
     private UploadTask currentUploadTask;
     private boolean isUploading = false;
@@ -122,7 +122,7 @@ public class ProfileFragment extends Fragment
         logoutButton.setOnClickListener(v -> handleLogout());
 
         // Register the ActivityResultLauncher for profile edits
-        editProfileLauncher = registerForActivityResult(
+        editInfoLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> handleEditProfileResult(result)
         );
@@ -255,7 +255,7 @@ public class ProfileFragment extends Fragment
                     String name = documentSnapshot.getString("name");
                     String phone = documentSnapshot.getString("phoneNumber");
                     String email = documentSnapshot.getString("email");
-                    String imageUrl = documentSnapshot.getString("profileImageUrl");
+                    String imageUrl = documentSnapshot.getString("profileImageURL");
 
                     // Update UI
                     if(name != null)
@@ -304,44 +304,110 @@ public class ProfileFragment extends Fragment
         if(currentUser != null)
         {
             DocumentReference userRef = db.collection("Users").document(currentUser.getUid());
-
             Map<String, Object> updatedData = new HashMap<>();
+
+            // Handle different field types
             if("Name".equals(fieldType))
             {
                 updatedData.put("name", updatedValue);
-            } else if("Email".equals(fieldType))
-            {
-                updatedData.put("email", updatedValue);
+                updateFirestore(userRef, updatedData);
             } else if("Phone".equals(fieldType))
             {
                 updatedData.put("phoneNumber", "+" + updatedValue);
+                updateFirestore(userRef, updatedData);
+            } else if("Email".equals(fieldType))
+            {
+                // For email updates, using verifyBeforeUpdateEmail
+                handleEmailUpdate(currentUser, updatedValue, userRef);
             }
-
-            userRef.update(updatedData)
-                    .addOnSuccessListener(aVoid ->
-                    {
-                        if(isAdded())
-                        {
-                            Toast.makeText(getContext(), "Profile updated successfully", Toast.LENGTH_SHORT).show();
-                        }
-                    })
-                    .addOnFailureListener(e ->
-                    {
-                        if(isAdded())
-                        {
-                            Toast.makeText(getContext(), "Error updating profile", Toast.LENGTH_SHORT).show();
-                            Log.e(TAG, "Error updating profile", e);
-                        }
-                    });
         }
+    }
+
+    private void updateFirestore(DocumentReference userRef, Map<String, Object> data)
+    {
+        userRef.update(data)
+                .addOnSuccessListener(aVoid ->
+                {
+                    if(isAdded())
+                    {
+                        Toast.makeText(getContext(), "Profile updated successfully", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(e ->
+                {
+                    if(isAdded())
+                    {
+                        Toast.makeText(getContext(), "Error updating profile", Toast.LENGTH_SHORT).show();
+                        Log.e(TAG, "Error updating profile", e);
+                    }
+                });
+    }
+
+    private void handleEmailUpdate(FirebaseUser user, String newEmail, DocumentReference userRef)
+    {
+        // Send verification email to the new address before updating
+        user.verifyBeforeUpdateEmail(newEmail)
+                .addOnSuccessListener(aVoid ->
+                {
+                    if(isAdded())
+                    {
+                        Toast.makeText(getContext(),
+                                "Verification email sent to " + newEmail + ". Please verify to complete the update.",
+                                Toast.LENGTH_LONG).show();
+                    }
+
+                    // Important: At this point, the email in Authentication is NOT yet updated
+                    // We need to store pending email change in Firestore
+                    Map<String, Object> pendingUpdate = new HashMap<>();
+                    pendingUpdate.put("pendingEmail", newEmail);
+
+                    userRef.update(pendingUpdate)
+                            .addOnSuccessListener(unused ->
+                            {
+                                if(isAdded())
+                                {
+                                    Log.d(TAG, "Pending email update saved to Firestore");
+                                }
+                            })
+                            .addOnFailureListener(e ->
+                            {
+                                if(isAdded())
+                                {
+                                    Log.e(TAG, "Failed to save pending email update", e);
+                                }
+                            });
+
+                    // Note: You'll need a separate mechanism to detect when the email
+                    // verification is complete and then update the primary email field in Firestore
+                })
+                .addOnFailureListener(e ->
+                {
+                    if(isAdded())
+                    {
+                        // This might fail if the user hasn't recently signed in
+                        if(e instanceof FirebaseAuthRecentLoginRequiredException)
+                        {
+                            Toast.makeText(getContext(),
+                                    "Please sign in again before changing your email",
+                                    Toast.LENGTH_LONG).show();
+                            // Here you could prompt for reauthentication
+                        } else
+                        {
+                            Toast.makeText(getContext(),
+                                    "Error initiating email update: " + e.getMessage(),
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                        Log.e(TAG, "Error updating email", e);
+                    }
+                });
     }
 
     private void launchEditActivity(String fieldType, String currentValue)
     {
-        Intent intent = new Intent(getActivity(), EditProfileActivity.class);
+        Intent intent = new Intent(getActivity(), EditInfoActivity.class);
         intent.putExtra("fieldType", fieldType);
         intent.putExtra("currentValue", currentValue);
-        editProfileLauncher.launch(intent);
+        editInfoLauncher.launch(intent);
     }
 
     private void selectProfilePicture()
@@ -800,7 +866,7 @@ public class ProfileFragment extends Fragment
 
             // Update the profileImageUrl field in the user's document
             Map<String, Object> updates = new HashMap<>();
-            updates.put("profileImageUrl", imageUrl);
+            updates.put("profileImageURL", imageUrl);
 
             userRef.update(updates)
                     .addOnSuccessListener(aVoid ->
@@ -840,7 +906,7 @@ public class ProfileFragment extends Fragment
             {
                 if(documentSnapshot.exists())
                 {
-                    String oldImageUrl = documentSnapshot.getString("profileImageUrl");
+                    String oldImageUrl = documentSnapshot.getString("profileImageURL");
 
                     // Only proceed if there's an old image URL and it's different from the new one
                     if(oldImageUrl != null && !oldImageUrl.isEmpty() && !oldImageUrl.equals(newImageUrl))

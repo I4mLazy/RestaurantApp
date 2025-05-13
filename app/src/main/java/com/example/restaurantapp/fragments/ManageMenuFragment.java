@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Build;
@@ -20,6 +21,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -51,9 +53,11 @@ import com.example.restaurantapp.R;
 import com.example.restaurantapp.adapters.MenuAdapter;
 import com.example.restaurantapp.models.Menu;
 import com.example.restaurantapp.models.MenuItem;
+import com.example.restaurantapp.utils.DiscountUtils;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -73,6 +77,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -93,9 +98,11 @@ public class ManageMenuFragment extends Fragment
     private List<Menu> filteredMenus = new ArrayList<>();
     private List<MenuItem> filteredItems = new ArrayList<>();
 
-    private ImageButton btnCreateDiscount, btnSetOrder, btnAdd;
+    private ImageButton btnCreateDiscount, btnSetOrder, btnAdd, itemEditImage, menuEditImage;
+    private ImageView menuViewImage, itemViewImage;
     private RelativeLayout itemViewOverlay, menuViewOverlay, addChoiceOverlay, itemEditOverlay, menuEditOverlay, discountOverlay, loadingOverlay;
-    private EditText editItemName, editItemPrice, editMenuName, editMenuDescription, editDiscountAmount, editItemDescription;
+    private EditText editItemName, editItemPrice, editItemDescription, editItemAllergens, editItemCategory, editMenuName, editMenuDescription, editDiscountAmount;
+    private TextInputLayout editItemNameLayout, editItemPriceLayout, editItemDescriptionLayout, editItemAllergensLayout, editItemCategoryLayout;
     private Button btnChooseAddItem, btnChooseAddMenu, btnCancelAddChoice, btnSaveItem, btnCancelEdit, btnSaveMenu, btnCancelMenuEdit, btnChooseForDiscount, btnApplyDiscount, btnCancelDiscount, btnSaveOrder;
     private ProgressBar progressBar;
     private Switch switchEnableSchedule;
@@ -103,11 +110,10 @@ public class ManageMenuFragment extends Fragment
     private Spinner spinnerMenuSelection, spinnerDiscountMenu, spinnerDiscountItem;
     private DatePicker startDatePicker, endDatePicker;
     private TimePicker startTimePicker, endTimePicker;
-    private TextView noResults, itemEditImageTextView, menuEditImageTextView, itemViewName, menuViewName;
+    private TextView noResults, itemEditImageTextView, menuEditImageTextView, menuViewName, menuViewDescription, menuItemCount,
+            itemViewName, itemViewPrice, itemViewDescription, itemViewAvailability, itemViewCategory, itemViewAllergens, discountBadge, oldPrice;
+    private CheckBox editItemAvailability;
     private BottomSheetDialog imageBottomSheetDialog;
-    private ImageView itemViewImage, menuViewImage;
-    private ImageButton itemEditImage, menuEditImage;
-
     private FirebaseFirestore db;
     private FirebaseAuth auth;
     private FirebaseUser currentUser;
@@ -212,9 +218,17 @@ public class ManageMenuFragment extends Fragment
         editItemName = view.findViewById(R.id.editItemName);
         editItemPrice = view.findViewById(R.id.editItemPrice);
         editItemDescription = view.findViewById(R.id.editItemDescription);
+        editItemAllergens = view.findViewById(R.id.editItemAllergens);
+        editItemCategory = view.findViewById(R.id.editItemCategory);
         editMenuName = view.findViewById(R.id.editMenuName);
         editMenuDescription = view.findViewById(R.id.editMenuDescription);
         editDiscountAmount = view.findViewById(R.id.editDiscountAmount);
+
+        editItemNameLayout = view.findViewById(R.id.editItemNameLayout);
+        editItemPriceLayout = view.findViewById(R.id.editItemPriceLayout);
+        editItemDescriptionLayout = view.findViewById(R.id.editItemDescriptionLayout);
+        editItemAllergensLayout = view.findViewById(R.id.editItemAllergensLayout);
+        editItemCategoryLayout = view.findViewById(R.id.editItemCategoryLayout);
 
         btnChooseAddItem = view.findViewById(R.id.btnChooseAddItem);
         btnChooseAddMenu = view.findViewById(R.id.btnChooseAddMenu);
@@ -232,6 +246,8 @@ public class ManageMenuFragment extends Fragment
         radioDiscountType = view.findViewById(R.id.radioDiscountType);
         radioApplyScope = view.findViewById(R.id.radioApplyScope);
 
+        editItemAvailability = view.findViewById(R.id.editItemAvailability);
+
         progressBar = view.findViewById(R.id.progressBar);
 
         spinnerMenuSelection = view.findViewById(R.id.spinnerMenuSelection);
@@ -246,16 +262,25 @@ public class ManageMenuFragment extends Fragment
         endTimePicker = view.findViewById(R.id.timePickerEnd);
         endTimePicker.setIs24HourView(true);
 
-        itemViewImage = view.findViewById(R.id.itemViewImage);
-        menuViewImage = view.findViewById(R.id.menuViewImage);
-
         itemEditImage = view.findViewById(R.id.editItemImage);
         menuEditImage = view.findViewById(R.id.editMenuImage);
 
+        itemViewImage = itemViewOverlay.findViewById(R.id.itemViewImage);
+        menuViewImage = itemViewOverlay.findViewById(R.id.menuViewImage);
+
         itemEditImageTextView = view.findViewById(R.id.itemEditImageTextView);
         menuEditImageTextView = view.findViewById(R.id.menuEditImageTextView);
-        itemViewName = view.findViewById(R.id.itemViewName);
-        menuViewName = view.findViewById(R.id.menuViewName);
+        itemViewAllergens = itemViewOverlay.findViewById(R.id.itemViewAllergens);
+        itemViewAvailability = itemViewOverlay.findViewById(R.id.itemViewAvailability);
+        itemViewCategory = itemViewOverlay.findViewById(R.id.itemViewCategory);
+        itemViewDescription = itemViewOverlay.findViewById(R.id.itemViewDescription);
+        itemViewName = itemViewOverlay.findViewById(R.id.itemViewName);
+        itemViewPrice = itemViewOverlay.findViewById(R.id.itemViewPrice);
+        menuItemCount = menuViewOverlay.findViewById(R.id.menuItemCount);
+        menuViewDescription = menuViewOverlay.findViewById(R.id.menuViewDescription);
+        menuViewName = menuViewOverlay.findViewById(R.id.menuViewName);
+        discountBadge = itemViewOverlay.findViewById(R.id.discountBadge);
+        oldPrice = itemViewOverlay.findViewById(R.id.oldPrice);
 
         noResults = view.findViewById(R.id.noResults);
 
@@ -283,19 +308,45 @@ public class ManageMenuFragment extends Fragment
             }
         });
 
-        btnAdd.setOnClickListener(v -> toggleOverlay(addChoiceOverlay, true));
+        btnAdd.setOnClickListener(v ->
+        {
+            if(restaurantID != null)
+            {
+                toggleOverlay(addChoiceOverlay, true);
+            } else
+            {
+                Toast.makeText(requireContext(), "Invalid restaurant ID", Toast.LENGTH_SHORT).show();
+            }
+        });
         btnCancelAddChoice.setOnClickListener(v -> toggleOverlay(addChoiceOverlay, false));
 
         btnChooseAddItem.setOnClickListener(v ->
         {
+            if(restaurantID == null || restaurantID.isEmpty())
+            {
+                Toast.makeText(getContext(), "Invalid restaurant ID", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if(menuList == null || menuList.isEmpty())
+            {
+                Log.e(TAG, "menuList is null or empty — not loading menus/items");
+                Toast.makeText(requireContext(), "You need at least one menu to create items", Toast.LENGTH_LONG).show();
+                return;
+            }
+
             imageEdited = false;
             isEditMode = false;
             currentType = "MenuItem";
             currentMenuItem = new MenuItem();
-            itemViewName.setText("Add Item");
+
             editItemName.setText("");
             editItemPrice.setText("");
             editItemDescription.setText("");
+
+            editItemCategory.setText("");
+            editItemAvailability.setChecked(true); // Default to available
+            editItemAllergens.setText("");
+
             itemEditImage.setImageResource(R.drawable.image_placeholder);
             loadMenusForSpinner(spinnerMenuSelection);
             toggleOverlay(addChoiceOverlay, false);
@@ -315,13 +366,18 @@ public class ManageMenuFragment extends Fragment
             });
         });
 
+
         btnChooseAddMenu.setOnClickListener(v ->
         {
+            if(restaurantID == null || restaurantID.isEmpty())
+            {
+                Toast.makeText(getContext(), "Invalid restaurant ID", Toast.LENGTH_SHORT).show();
+                return;
+            }
             imageEdited = false;
             isEditMode = false;
             currentType = "Menu";
             currentMenu = new Menu();
-            menuViewName.setText("Add Menu");
             editMenuName.setText("");
             menuEditImage.setImageResource(R.drawable.image_placeholder);
             toggleOverlay(addChoiceOverlay, false);
@@ -349,15 +405,27 @@ public class ManageMenuFragment extends Fragment
 
         btnSetOrder.setOnClickListener(v ->
         {
+            if(restaurantID == null || restaurantID.isEmpty())
+            {
+                Toast.makeText(getContext(), "Invalid restaurant ID", Toast.LENGTH_SHORT).show();
+                return;
+            }
             searchBar.setQuery("", true);
             Toast.makeText(getContext(), "Rearrange items by dragging", Toast.LENGTH_SHORT).show();
             //setupItemTouchHelper();
         });
 
         //btnSaveOrder.setOnClickListener(view -> saveOrder());
-
         btnCreateDiscount.setOnClickListener(v ->
         {
+            // Check if menuList is not empty before proceeding with any discount creation
+            if(menuList == null || menuList.isEmpty())
+            {
+                Log.e(TAG, "menuList is null or empty — not loading menus/items");
+                Toast.makeText(requireContext(), "You need at least one menu to create discounts", Toast.LENGTH_LONG).show();
+                return;
+            }
+
             toggleOverlay(discountOverlay, true);
             switchEnableSchedule.setChecked(false);
             radioApplyScope.check(R.id.radioApplyToMenuOrItem);
@@ -365,9 +433,23 @@ public class ManageMenuFragment extends Fragment
             discountOverlay.findViewById(R.id.layoutSchedule).setVisibility(View.GONE);
             scheduleOn = false;
             editDiscountAmount.setText("");
+
+            // Load available menus into the spinner
             loadMenusForSpinner(spinnerDiscountMenu);
-            loadItemsForSpinner(spinnerDiscountItem, menuList.get(0).getMenuID());
+
+            Menu firstMenu = menuList.get(0);
+            if(firstMenu != null && firstMenu.getMenuID() != null)
+            {
+                loadItemsForSpinner(spinnerDiscountItem, firstMenu.getMenuID());
+            } else
+            {
+                Log.e(TAG, "First menu or menu ID is null");
+                // Clear the items spinner or show a message
+                Toast.makeText(requireContext(), "Invalid menu ID.", Toast.LENGTH_SHORT).show();
+            }
         });
+
+
         btnChooseForDiscount.setOnClickListener(v -> toggleOverlay(discountOverlay, false));
         btnApplyDiscount.setOnClickListener(v -> applyDiscount());
         btnCancelDiscount.setOnClickListener(v -> toggleOverlay(discountOverlay, false));
@@ -440,7 +522,11 @@ public class ManageMenuFragment extends Fragment
 
         // Item View Overlay Buttons
         itemViewOverlay.findViewById(R.id.btnCloseItemView).setOnClickListener(v ->
-                toggleOverlay(itemViewOverlay, false));
+        {
+            toggleOverlay(itemViewOverlay, false);
+            oldPrice.setVisibility(View.GONE);
+            discountBadge.setVisibility(View.GONE);
+        });
 
         itemViewOverlay.findViewById(R.id.btnEditItem).setOnClickListener(v ->
         {
@@ -475,6 +561,11 @@ public class ManageMenuFragment extends Fragment
 
     private void loadMenusForSpinner(Spinner spinner)
     {
+        if(restaurantID == null || restaurantID.isEmpty())
+        {
+            Toast.makeText(getContext(), "Invalid restaurant ID", Toast.LENGTH_SHORT).show();
+            return;
+        }
         db.collection("Restaurants").document(restaurantID)
                 .collection("Menus")
                 .orderBy("menuIndex")
@@ -512,6 +603,11 @@ public class ManageMenuFragment extends Fragment
 
     private void loadItemsForSpinner(Spinner spinner, String menuID)
     {
+        if(restaurantID == null || restaurantID.isEmpty() || menuID == null || menuID.isEmpty())
+        {
+            Toast.makeText(getContext(), "Invalid restaurant ID or menu ID", Toast.LENGTH_SHORT).show();
+            return;
+        }
         db.collection("Restaurants").document(restaurantID)
                 .collection("Menus").document(menuID)
                 .collection("Items").orderBy("orderIndex")
@@ -553,6 +649,7 @@ public class ManageMenuFragment extends Fragment
                 {
                     Toast.makeText(getContext(), "Failed to load menu items: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
+
     }
 
 
@@ -646,6 +743,9 @@ public class ManageMenuFragment extends Fragment
 
     private void loadAllMenuItems()
     {
+        if(menuAdapter == null)
+            return;
+
         menuItemList.clear();
 
         // Track completed menu loads
@@ -721,7 +821,13 @@ public class ManageMenuFragment extends Fragment
         if(TextUtils.isEmpty(query))
         {
             // Reset to full data if search is empty
-            menuAdapter.clearFiltering();
+            if(menuAdapter != null)
+            {
+                menuAdapter.clearFiltering();
+            } else
+            {
+                Log.e("RestaurantMenuFragment", "MenuAdapter is null, cannot clear filtering");
+            }
             noResults.setVisibility(View.GONE);
             recyclerViewMenus.setVisibility(View.VISIBLE);
             return;
@@ -750,8 +856,11 @@ public class ManageMenuFragment extends Fragment
         }
 
         // Store search query and set filter data
-        menuAdapter.setCurrentSearchQuery(lowerQuery);
-        menuAdapter.setFilterData(menuMatchIds, itemMatchMenuIds);
+        if(menuAdapter != null)
+        {
+            menuAdapter.setCurrentSearchQuery(lowerQuery);
+            menuAdapter.setFilterData(menuMatchIds, itemMatchMenuIds);
+        }
 
         // Show a "No results" message if no matches found
         boolean noMenuMatch = menuMatchIds.isEmpty();
@@ -776,11 +885,6 @@ public class ManageMenuFragment extends Fragment
         currentMenuItem = item;
         toggleOverlay(itemViewOverlay, true);
 
-        TextView itemViewName = itemViewOverlay.findViewById(R.id.itemViewName);
-        TextView itemViewPrice = itemViewOverlay.findViewById(R.id.itemViewPrice);
-        TextView itemViewDescription = itemViewOverlay.findViewById(R.id.itemViewDescription);
-        TextView itemViewAvailability = itemViewOverlay.findViewById(R.id.itemViewAvailability);
-
         itemViewName.setText(item.getName());
 
         // Handle null price and format currency
@@ -788,20 +892,73 @@ public class ManageMenuFragment extends Fragment
         double price = item.getPrice();
         itemViewPrice.setText(currencyFormat.format(price));
 
-        itemViewDescription.setText(item.getDescription() != null ? item.getDescription() : "No description available");
+        // Show discount if available
+        DiscountUtils.applyActiveDiscounts(item, itemViewOverlay.getContext(), (original, current, hasDiscount, isFree, badgeText) ->
+        {
+            if(hasDiscount)
+            {
+                itemViewPrice.setText(currencyFormat.format(current));
+                oldPrice.setVisibility(View.VISIBLE);
+                oldPrice.setText(currencyFormat.format(original)); // Set the original price
+                oldPrice.setPaintFlags(oldPrice.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG); // Strikethrough effect
+                discountBadge.setVisibility(View.VISIBLE);
+                discountBadge.setText(badgeText);
+            } else
+            {
+                oldPrice.setVisibility(View.GONE);
+                discountBadge.setVisibility(View.GONE);
+            }
 
-        // Show availability status
+            if(isFree)
+            {
+                discountBadge.setVisibility(View.VISIBLE);
+                discountBadge.setText(itemViewOverlay.getContext().getString(R.string.free)); // Show "free" badge
+            }
+        });
+
+        // Description
+        if(item.getDescription() != null && !item.getDescription().isEmpty())
+        {
+            itemViewDescription.setText(item.getDescription());
+            itemViewDescription.setVisibility(View.VISIBLE);
+        } else
+        {
+            itemViewDescription.setVisibility(View.GONE);
+        }
+
+        // Category
+        if(item.getCategory() != null && !item.getCategory().isEmpty())
+        {
+            itemViewCategory.setText(item.getCategory());
+            itemViewCategory.setVisibility(View.VISIBLE);
+        } else
+        {
+            itemViewCategory.setVisibility(View.GONE);
+        }
+
+        // Allergens
+        List<String> allergens = item.getAllergens();
+        if(allergens != null && !allergens.isEmpty())
+        {
+            itemViewAllergens.setText(TextUtils.join(", ", allergens));
+            itemViewAllergens.setVisibility(View.VISIBLE);
+        } else
+        {
+            itemViewAllergens.setVisibility(View.GONE);
+        }
+
+        // Availability status
         if(item.getAvailability() != null && item.getAvailability())
         {
             itemViewAvailability.setText("Available");
-            itemViewAvailability.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
+            itemViewAvailability.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.holo_green_dark));
+            itemViewAvailability.setVisibility(View.VISIBLE);
         } else
         {
             itemViewAvailability.setText("Unavailable");
-            itemViewAvailability.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
+            itemViewAvailability.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.holo_red_dark));
+            itemViewAvailability.setVisibility(View.VISIBLE);
         }
-
-        //Load image
         String imageUrl = item.getImageURL();
         if(imageUrl != null && !imageUrl.isEmpty())
         {
@@ -815,14 +972,11 @@ public class ManageMenuFragment extends Fragment
         }
     }
 
+
     private void showMenuView(Menu menu)
     {
         currentMenu = menu;
         toggleOverlay(menuViewOverlay, true);
-
-        TextView menuViewName = menuViewOverlay.findViewById(R.id.menuViewName);
-        TextView menuViewDescription = menuViewOverlay.findViewById(R.id.menuViewDescription);
-        TextView menuItemCount = menuViewOverlay.findViewById(R.id.menuItemCount);
 
         menuViewName.setText(menu.getName());
         menuViewDescription.setText(menu.getDescription() != null ? menu.getDescription() : "No description available");
@@ -863,13 +1017,28 @@ public class ManageMenuFragment extends Fragment
         currentMenuItem = item;
         currentType = "MenuItem";
 
-        itemViewName.setText("Edit Item");
         editItemName.setText(item.getName());
         editItemPrice.setText(String.valueOf(item.getPrice()));
         editItemDescription.setText(item.getDescription());
         setSpinnerSelection(item.getMenuID());
 
-        //Load image
+        // New field: Category
+        editItemCategory.setText(item.getCategory() != null ? item.getCategory() : "");
+
+        // New field: IsAvailable (assuming it's a CheckBox or Switch)
+        editItemAvailability.setChecked(item.getAvailability());
+
+        // New field: Allergens (convert list to comma-separated string)
+        if(item.getAllergens() != null && !item.getAllergens().isEmpty())
+        {
+            String allergens = TextUtils.join(", ", item.getAllergens());
+            editItemAllergens.setText(allergens);
+        } else
+        {
+            editItemAllergens.setText("");
+        }
+
+        // Load image
         String imageUrl = item.getImageURL();
         if(imageUrl != null && !imageUrl.isEmpty())
         {
@@ -899,6 +1068,7 @@ public class ManageMenuFragment extends Fragment
         toggleOverlay(itemEditOverlay, true);
     }
 
+
     private void editExistingMenu(Menu menu)
     {
         imageEdited = false;
@@ -906,7 +1076,6 @@ public class ManageMenuFragment extends Fragment
         currentMenu = menu;
         currentType = "Menu";
 
-        menuViewName.setText("Edit Menu");
         editMenuName.setText(menu.getName());
         editMenuDescription.setText(menu.getDescription());
 
@@ -942,37 +1111,74 @@ public class ManageMenuFragment extends Fragment
 
     private void saveItem()
     {
+        // Reset errors
+        editItemNameLayout.setError(null);
+        editItemPriceLayout.setError(null);
+        editItemDescriptionLayout.setError(null);
+        editItemCategoryLayout.setError(null);
+
+        boolean hasError = false;
+
         // Get input values
         String name = editItemName.getText().toString().trim();
         String priceStr = editItemPrice.getText().toString().trim();
         String description = editItemDescription.getText().toString().trim();
+        String allergens = editItemAllergens.getText().toString().trim();
+        String category = editItemCategory.getText().toString().trim();
+        boolean isAvailable = editItemAvailability.isChecked();
 
-        // Validate inputs
-        if(name.isEmpty() || priceStr.isEmpty() || spinnerMenuSelection.getSelectedItem() == null)
+        // Name validation
+        if(name.isEmpty())
         {
-            Toast.makeText(getContext(), "Please enter name, price and menu.", Toast.LENGTH_SHORT).show();
-            return;
+            editItemNameLayout.setError("Item name is required");
+            hasError = true;
         }
 
-        // Parse price
-        double price;
-        try
+        // Price validation
+        double price = 0;
+        if(priceStr.isEmpty())
         {
-            price = Double.parseDouble(priceStr);
-        } catch(NumberFormatException e)
+            editItemPriceLayout.setError("Price is required");
+            hasError = true;
+        } else
         {
-            Toast.makeText(getContext(), "Please enter a valid price", Toast.LENGTH_SHORT).show();
-            return;
+            try
+            {
+                price = Double.parseDouble(priceStr);
+            } catch(NumberFormatException e)
+            {
+                editItemPriceLayout.setError("Please enter a valid number");
+                hasError = true;
+            }
         }
 
-        // Get selected menu from spinner
-        int selectedMenuIndex = spinnerMenuSelection.getSelectedItemPosition();
-        if(selectedMenuIndex == -1)
+        // Description validation
+        if(description.isEmpty())
+        {
+            editItemDescriptionLayout.setError("Description is required");
+            hasError = true;
+        }
+
+        // Category validation
+        if(category.isEmpty())
+        {
+            editItemCategoryLayout.setError("Category is required");
+            hasError = true;
+        }
+
+        // Spinner validation
+        if(spinnerMenuSelection.getSelectedItemPosition() == -1 || spinnerMenuSelection.getSelectedItem() == null)
         {
             Toast.makeText(getContext(), "Please select a menu", Toast.LENGTH_SHORT).show();
+            hasError = true;
+        }
+
+        if(hasError)
+        {
             return;
         }
 
+        // Inputs are valid, continue
         toggleOverlay(itemEditOverlay, false);
 
         if(isEditMode && currentMenuItem != null)
@@ -1023,34 +1229,27 @@ public class ManageMenuFragment extends Fragment
         // Get input values
         String name = editItemName.getText().toString().trim();
         String priceStr = editItemPrice.getText().toString().trim();
+        double price = Double.parseDouble(priceStr);
         String description = editItemDescription.getText().toString().trim();
+        String category = editItemCategory.getText().toString().trim();
+        boolean isAvailable = editItemAvailability.isChecked();
+        String allergensStr = editItemAllergens.getText().toString().trim();
+        List<String> allergensList;
 
-        // Validate inputs
-        if(name.isEmpty() || priceStr.isEmpty() || spinnerMenuSelection.getSelectedItem() == null)
+        if(!allergensStr.isEmpty())
         {
-            Toast.makeText(getContext(), "Please enter name, price and menu.", Toast.LENGTH_SHORT).show();
-            return;
+            allergensList = Arrays.asList(allergensStr.split(","));
+            // Optionally, trim each allergen in the list
+            for(int i = 0; i < allergensList.size(); i++)
+            {
+                allergensList.set(i, allergensList.get(i).trim());
+            }
+        } else
+        {
+            allergensList = new ArrayList<>();
         }
 
-        // Parse price
-        double price;
-        try
-        {
-            price = Double.parseDouble(priceStr);
-        } catch(NumberFormatException e)
-        {
-            Toast.makeText(getContext(), "Please enter a valid price", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        // Get selected menu from spinner
-        int selectedMenuIndex = spinnerMenuSelection.getSelectedItemPosition();
-        if(selectedMenuIndex == -1)
-        {
-            Toast.makeText(getContext(), "Please select a menu", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
+        // Get selected menu ID
         List<String> menuIDs = (List<String>) spinnerMenuSelection.getTag();
         String selectedMenuID = menuIDs.get(spinnerMenuSelection.getSelectedItemPosition());
 
@@ -1074,6 +1273,9 @@ public class ManageMenuFragment extends Fragment
                 currentMenuItem.setName(name);
                 currentMenuItem.setPrice(price);
                 currentMenuItem.setDescription(description);
+                currentMenuItem.setCategory(category);
+                currentMenuItem.setAvailability(isAvailable);
+                currentMenuItem.setAllergens(allergensList);
                 currentMenuItem.setOrderIndex(itemCount);
                 currentMenuItem.setImageURL(imageURL);
 
@@ -1113,6 +1315,9 @@ public class ManageMenuFragment extends Fragment
             currentMenuItem.setName(name);
             currentMenuItem.setPrice(price);
             currentMenuItem.setDescription(description);
+            currentMenuItem.setCategory(category);
+            currentMenuItem.setAvailability(isAvailable);
+            currentMenuItem.setAllergens(allergensList);
             currentMenuItem.setImageURL(imageURL);
 
             itemRef.set(currentMenuItem)
@@ -1136,34 +1341,28 @@ public class ManageMenuFragment extends Fragment
         // Get input values
         String name = editItemName.getText().toString().trim();
         String priceStr = editItemPrice.getText().toString().trim();
+        double price = Double.parseDouble(priceStr);
         String description = editItemDescription.getText().toString().trim();
+        String category = editItemCategory.getText().toString().trim();
+        boolean isAvailable = editItemAvailability.isChecked();
+        String allergensStr = editItemAllergens.getText().toString().trim();
+        List<String> allergensList;
 
-        // Validate inputs
-        if(name.isEmpty() || priceStr.isEmpty() || spinnerMenuSelection.getSelectedItem() == null)
+        if(!allergensStr.isEmpty())
         {
-            Toast.makeText(getContext(), "Please enter name, price and menu.", Toast.LENGTH_SHORT).show();
-            return;
+            allergensList = Arrays.asList(allergensStr.split(","));
+            // Optionally, trim each allergen in the list
+            for(int i = 0; i < allergensList.size(); i++)
+            {
+                allergensList.set(i, allergensList.get(i).trim());
+            }
+        } else
+        {
+            allergensList = new ArrayList<>();
         }
 
-        // Parse price
-        double price;
-        try
-        {
-            price = Double.parseDouble(priceStr);
-        } catch(NumberFormatException e)
-        {
-            Toast.makeText(getContext(), "Please enter a valid price", Toast.LENGTH_SHORT).show();
-            return;
-        }
 
-        // Get selected menu from spinner
-        int selectedMenuIndex = spinnerMenuSelection.getSelectedItemPosition();
-        if(selectedMenuIndex == -1)
-        {
-            Toast.makeText(getContext(), "Please select a menu", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
+        // Get selected menu ID
         List<String> menuIDs = (List<String>) spinnerMenuSelection.getTag();
         String selectedMenuID = menuIDs.get(spinnerMenuSelection.getSelectedItemPosition());
 
@@ -1190,15 +1389,10 @@ public class ManageMenuFragment extends Fragment
             newItem.setName(name);
             newItem.setPrice(price);
             newItem.setDescription(description);
-            newItem.setAvailability(true);
-            newItem.setStatus("Active");
-            if(imageURL == null)
-            {
-                newItem.setOrderIndex(itemCount);
-            } else
-            {
-                newItem.setOrderIndex(itemCount - 1);
-            }
+            newItem.setAvailability(isAvailable);
+            newItem.setAllergens(allergensList);
+            newItem.setCategory(category);
+            newItem.setOrderIndex(itemCount);
             newItem.setRestaurantID(restaurantID);
             newItem.setMenuID(selectedMenuID);
             newItem.setImageURL(imageURL);
@@ -1374,14 +1568,7 @@ public class ManageMenuFragment extends Fragment
         newMenu.setMenuID(menuRef.getId());
         newMenu.setRestaurantID(restaurantID);
         newMenu.setTimeCreated(Timestamp.now());
-        if(imageURL == null)
-        {
-            newMenu.setMenuIndex(menuList.size());
-
-        } else
-        {
-            newMenu.setMenuIndex(menuList.size() - 1);
-        }
+        newMenu.setMenuIndex(menuList.size());
         newMenu.setImageURL(imageURL);
 
         menuRef.set(newMenu)
@@ -1491,7 +1678,7 @@ public class ManageMenuFragment extends Fragment
                                             .delete()
                                             .addOnSuccessListener(aVoid2 ->
                                             {
-                                                Toast.makeText(getContext(), "Menu and items deleted successfully", Toast.LENGTH_SHORT).show();
+                                                Toast.makeText(getContext(), "Menu and Items deleted successfully", Toast.LENGTH_SHORT).show();
                                                 menuList.remove(menu);
                                                 filteredMenus.remove(menu);
                                                 menuAdapter.notifyDataSetChanged();
@@ -1900,10 +2087,8 @@ public class ManageMenuFragment extends Fragment
             return;
         }
 
-
         // Create a unique filename for the image
         String filename = generateFileName();
-
 
         StorageReference imageRef = storageRef.child(filename);
 
@@ -1929,9 +2114,34 @@ public class ManageMenuFragment extends Fragment
                     if(isAdded() && getActivity() != null && !getActivity().isFinishing())
                     {
                         // Got the download URL, now update the user's Firestore document
-                        Log.d(TAG, "Called deleteOldImage with URL: " + downloadUri.toString());
-                        deleteOldImage(downloadUri.toString());
-                        Log.d(TAG, "Upload successful, URL: " + downloadUri.toString());
+                        if(newItem || newMenu)
+                        {
+                            if("Menu".equals(currentType))
+                            {
+                                if(newMenu)
+                                {
+                                    proceedWithMenuSave(downloadUri.toString());
+                                } else
+                                {
+                                    proceedWithMenuUpdate(downloadUri.toString());
+                                }
+
+                            } else if("MenuItem".equals(currentType))
+                            {
+                                if(newItem)
+                                {
+                                    proceedWithItemSave(downloadUri.toString());
+                                } else
+                                {
+                                    proceedWithItemUpdate(downloadUri.toString());
+                                }
+                            }
+                        } else
+                        {
+                            deleteOldImage(downloadUri.toString());
+                            Log.d(TAG, "Called deleteOldImage with URL: " + downloadUri);
+                        }
+                        Log.d(TAG, "Upload successful, URL: " + downloadUri);
                     }
                 }).addOnFailureListener(e ->
                 {
@@ -1978,19 +2188,6 @@ public class ManageMenuFragment extends Fragment
                 currentMenu = new Menu();
                 currentMenu.setMenuID(newMenuRef.getId());
 
-                // Ensure Firestore document is created before proceeding
-                Map<String, Object> initialData = new HashMap<>();
-                initialData.put("name", "");  // Placeholder value
-                initialData.put("description", ""); //Placeholder value
-
-                newMenuRef.set(initialData)  // Create the menu document in Firestore
-                        .addOnSuccessListener(aVoid ->
-                        {
-                            Log.d(TAG, "Document successfully created: " + newMenuRef.getId());
-                            // Now the document exists, and you can proceed with other updates
-                        })
-                        .addOnFailureListener(e -> Log.e(TAG, "Error creating document", e));
-
                 // Generate a unique filename for the menu image
                 filename = "menu_images/" + currentMenu.getMenuID() + "/" + UUID.randomUUID().toString() + ".jpg";
             } else
@@ -2012,19 +2209,6 @@ public class ManageMenuFragment extends Fragment
                 currentMenuItem = new MenuItem();
                 currentMenuItem.setItemID(newItemRef.getId());
                 currentMenuItem.setMenuID(selectedMenuID);
-
-                // Ensure Firestore document is created before proceeding
-                Map<String, Object> initialData = new HashMap<>();
-                initialData.put("name", "");  // Placeholder value
-                initialData.put("price", 0);  // Placeholder value
-
-                newItemRef.set(initialData) // Create document in Firestore
-                        .addOnSuccessListener(aVoid ->
-                        {
-                            Log.d(TAG, "Document successfully created: " + newItemRef.getId());
-                            // Now the document exists, and you can proceed with other updates
-                        })
-                        .addOnFailureListener(e -> Log.e(TAG, "Error creating document", e));
 
                 filename = "menuItem_images/" + currentMenuItem.getItemID() + "/" + UUID.randomUUID().toString() + ".jpg";
             } else
@@ -2136,11 +2320,56 @@ public class ManageMenuFragment extends Fragment
                                         deleteMode = false;
                                     } else
                                     {
-                                        updateImageWithImageUrl(newImageURL);
+                                        if("Menu".equals(currentType))
+                                        {
+                                            if(newMenu)
+                                            {
+                                                proceedWithMenuSave(newImageURL);
+                                            } else
+                                            {
+                                                proceedWithMenuUpdate(newImageURL);
+                                            }
+
+                                        } else if("MenuItem".equals(currentType))
+                                        {
+                                            if(newItem)
+                                            {
+                                                proceedWithItemSave(newImageURL);
+                                            } else
+                                            {
+                                                proceedWithItemUpdate(newImageURL);
+                                            }
+                                        }
                                     }
                                 }).addOnFailureListener(e ->
                                 {
                                     Log.e(TAG, "Error deleting old image", e);
+                                    if(deleteMode)
+                                    {
+                                        deleteMode = false;
+                                    } else
+                                    {
+                                        if("Menu".equals(currentType))
+                                        {
+                                            if(newMenu)
+                                            {
+                                                proceedWithMenuSave(newImageURL);
+                                            } else
+                                            {
+                                                proceedWithMenuUpdate(newImageURL);
+                                            }
+
+                                        } else if("MenuItem".equals(currentType))
+                                        {
+                                            if(newItem)
+                                            {
+                                                proceedWithItemSave(newImageURL);
+                                            } else
+                                            {
+                                                proceedWithItemUpdate(newImageURL);
+                                            }
+                                        }
+                                    }
                                 });
                             } catch(Exception e)
                             {
@@ -2154,7 +2383,26 @@ public class ManageMenuFragment extends Fragment
                             deleteMode = false;
                         } else
                         {
-                            updateImageWithImageUrl(newImageURL);
+                            if("Menu".equals(currentType))
+                            {
+                                if(newMenu)
+                                {
+                                    proceedWithMenuSave(newImageURL);
+                                } else
+                                {
+                                    proceedWithMenuUpdate(newImageURL);
+                                }
+
+                            } else if("MenuItem".equals(currentType))
+                            {
+                                if(newItem)
+                                {
+                                    proceedWithItemSave(newImageURL);
+                                } else
+                                {
+                                    proceedWithItemUpdate(newImageURL);
+                                }
+                            }
                         }
                     }
                 }
@@ -2163,68 +2411,6 @@ public class ManageMenuFragment extends Fragment
                 Log.e(TAG, "Error fetching user document to delete old image", e);
             });
         }
-    }
-
-    private void updateImageWithImageUrl(String imageURL)
-    {
-        DocumentReference typeRef = null;
-        if("Menu".equals(currentType))
-        {
-            typeRef = db.collection("Restaurants").document(restaurantID)
-                    .collection("Menus").document(currentMenu.getMenuID());
-        } else if("MenuItem".equals(currentType))
-        {
-            typeRef = db.collection("Restaurants").document(restaurantID)
-                    .collection("Menus").document(currentMenuItem.getMenuID())
-                    .collection("Items").document(currentMenuItem.getItemID());
-        }
-
-        // Update the imageURL field
-        Map<String, Object> updates = new HashMap<>();
-        updates.put("imageURL", imageURL);
-
-        Log.d(TAG, "Attempting to update imageURL with value: " + imageURL);
-
-        typeRef.update(updates)
-                .addOnSuccessListener(aVoid ->
-                {
-                    if(isAdded() && getActivity() != null && !getActivity().isFinishing())
-                    {
-                        Toast.makeText(requireContext(),
-                                "Image updated successfully", Toast.LENGTH_SHORT).show();
-                        Log.d(TAG, "Image updated successfully");
-                        if("Menu".equals(currentType))
-                        {
-                            if(newMenu)
-                            {
-                                proceedWithMenuSave(imageURL);
-                            } else
-                            {
-                                proceedWithMenuUpdate(imageURL);
-                            }
-
-                        } else if("MenuItem".equals(currentType))
-                        {
-                            if(newItem)
-                            {
-                                proceedWithItemSave(imageURL);
-                            } else
-                            {
-                                proceedWithItemUpdate(imageURL);
-                            }
-                        }
-                    }
-                })
-                .addOnFailureListener(e ->
-                {
-                    if(isAdded() && getActivity() != null && !getActivity().isFinishing())
-                    {
-                        Log.e(TAG, "Error updating image with image URL", e);
-                        Toast.makeText(requireContext(),
-                                "Failed to update image: " + e.getMessage(),
-                                Toast.LENGTH_SHORT).show();
-                    }
-                });
     }
 
     private void applyDiscount()

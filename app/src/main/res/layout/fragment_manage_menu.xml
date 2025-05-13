@@ -85,10 +85,8 @@
             android:padding="12dp"
             android:text="Save Order"
             android:visibility="gone" />
-
     </FrameLayout>
 
-    <!-- Item View -->
     <RelativeLayout
         android:id="@+id/itemViewOverlay"
         android:layout_width="match_parent"
@@ -96,71 +94,160 @@
         android:background="#99000000"
         android:visibility="gone">
 
-        <LinearLayout
+        <ScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:background="@drawable/box_background"
-            android:orientation="vertical"
-            android:padding="20dp">
+            android:layout_centerInParent="true">
 
-            <ImageView
-                android:id="@+id/itemViewImage"
-                android:layout_width="120dp"
-                android:layout_height="120dp"
-                android:layout_gravity="center"
-                android:background="@drawable/image_placeholder"
-                android:scaleType="centerCrop"
-                android:src="@drawable/image_placeholder" />
-
-            <TextView
-                android:id="@+id/itemViewName"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:textSize="18sp"
-                android:textStyle="bold" />
+                android:layout_margin="24dp"
+                android:background="@drawable/box_background"
+                android:elevation="6dp"
+                android:orientation="vertical"
+                android:padding="24dp"
+                android:radius="12dp">
 
-            <TextView
-                android:id="@+id/itemViewPrice"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:textSize="16sp" />
+                <FrameLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginBottom="12dp">
 
-            <TextView
-                android:id="@+id/itemViewDescription"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:paddingTop="8dp"
-                android:textColor="@android:color/darker_gray"
-                android:textSize="14sp"
-                android:visibility="gone" />
+                    <ImageView
+                        android:id="@+id/itemViewImage"
+                        android:layout_width="120dp"
+                        android:layout_height="120dp"
+                        android:layout_centerInParent="true"
+                        android:background="@drawable/image_placeholder"
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/image_placeholder" />
 
-            <TextView
-                android:id="@+id/itemViewAvailability"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:paddingTop="4dp"
-                android:textColor="@android:color/holo_green_dark"
-                android:textSize="14sp"
-                android:visibility="gone" />
+                    <TextView
+                        android:id="@+id/discountBadge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="top|end"
+                        android:layout_margin="4dp"
+                        android:background="@drawable/discount_badge_background"
+                        android:paddingHorizontal="8dp"
+                        android:paddingVertical="4dp"
+                        android:text="-20%"
+                        android:textColor="@android:color/white"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:visibility="gone" />
+                </FrameLayout>
 
-            <Button
-                android:id="@+id/btnEditItem"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Edit Item" />
+                <TextView
+                    android:id="@+id/itemViewName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:gravity="center"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
 
-            <Button
-                android:id="@+id/btnCloseItemView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Close" />
-        </LinearLayout>
+                <TextView
+                    android:id="@+id/itemViewPrice"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    android:gravity="center"
+                    android:textColor="@android:color/holo_green_dark"
+                    android:textSize="18sp" />
+
+                <!-- Old Price-->
+                <TextView
+                    android:id="@+id/oldPrice"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:gravity="center"
+                    android:text="Old Price"
+                    android:textColor="@android:color/darker_gray"
+                    android:textSize="16sp"
+                    android:textStyle="italic"
+                    android:visibility="gone" />
+
+                <!-- Description Section -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Description:"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/itemViewDescription"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:textColor="@android:color/darker_gray"
+                    android:textSize="14sp"
+                    android:visibility="gone" />
+
+                <!-- Category -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Category:"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/itemViewCategory"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:textSize="14sp" />
+
+                <!-- Allergens -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Allergens:"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/itemViewAllergens"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:textSize="14sp" />
+
+                <!-- Availability -->
+                <TextView
+                    android:id="@+id/itemViewAvailability"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    android:gravity="center"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <!-- Buttons -->
+                <Button
+                    android:id="@+id/btnEditItem"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:text="Edit Item"
+                    android:textColor="@android:color/white" />
+
+                <Button
+                    android:id="@+id/btnCloseItemView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Close"
+                    android:textColor="@android:color/white" />
+            </LinearLayout>
+        </ScrollView>
     </RelativeLayout>
+
 
     <!-- Menu View -->
     <RelativeLayout
@@ -237,92 +324,168 @@
         android:background="#99000000"
         android:visibility="gone">
 
-        <LinearLayout
+        <androidx.core.widget.NestedScrollView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:background="@drawable/box_background"
-            android:orientation="vertical"
-            android:padding="20dp">
+            android:layout_height="match_parent">
 
-            <TextView
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:text="Edit Item"
-                android:textSize="18sp"
-                android:textStyle="bold" />
+                android:layout_centerInParent="true"
+                android:background="@drawable/box_background"
+                android:orientation="vertical"
+                android:padding="6dp">
 
-            <ImageButton
-                android:id="@+id/editItemImage"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                android:layout_gravity="center"
-                android:background="@drawable/image_placeholder"
-                android:scaleType="centerCrop"
-                android:src="@drawable/image_placeholder" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp"
+                    android:gravity="center"
+                    android:text="Edit Item"
+                    android:textColor="@android:color/white"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/itemEditImageTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="Edit Image"
-                android:textSize="16sp"
-                android:textColor="@android:color/holo_blue_dark"
-                android:clickable="true"
-                android:focusable="true"
-                android:padding="8dp"/>
+                <ImageButton
+                    android:id="@+id/editItemImage"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:layout_gravity="center"
+                    android:layout_marginBottom="2dp"
+                    android:background="@android:color/darker_gray"
+                    android:scaleType="centerCrop" />
 
-            <Spinner
-                android:id="@+id/spinnerMenuSelection"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp" />
+                <TextView
+                    android:id="@+id/itemEditImageTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginBottom="4dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:text="Edit Image"
+                    android:textColor="@android:color/holo_blue_dark"
+                    android:textSize="12sp" />
 
-            <EditText
-                android:id="@+id/editItemName"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Item Name"
-                android:inputType="text" />
+                <Spinner
+                    android:id="@+id/spinnerMenuSelection"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp" />
 
-            <EditText
-                android:id="@+id/editItemPrice"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Price"
-                android:inputType="numberDecimal" />
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/editItemNameLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp"
+                    android:hint="Item Name">
 
-            <EditText
-                android:id="@+id/editItemDescription"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="top"
-                android:hint="Description"
-                android:inputType="textMultiLine"
-                android:minLines="3"
-                android:scrollbars="vertical" />
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/editItemName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text" />
+                </com.google.android.material.textfield.TextInputLayout>
 
-            <Button
-                android:id="@+id/btnSaveItem"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Save" />
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/editItemPriceLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp"
+                    android:hint="Price">
 
-            <Button
-                android:id="@+id/btnCancelEdit"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Cancel" />
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/editItemPrice"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="numberDecimal" />
+                </com.google.android.material.textfield.TextInputLayout>
 
-            <Button
-                android:id="@+id/btnDeleteItem"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Delete Item"
-                android:textColor="@android:color/holo_red_dark" />
-        </LinearLayout>
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/editItemDescriptionLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp"
+                    android:hint="Description">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/editItemDescription"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="top"
+                        android:inputType="textMultiLine"
+                        android:maxLines="2"
+                        android:minLines="1" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/editItemAllergensLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp"
+                    android:hint="Allergens (comma separated)">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/editItemAllergens"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/editItemCategoryLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp"
+                    android:hint="Category">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/editItemCategory"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <CheckBox
+                    android:id="@+id/editItemAvailability"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp"
+                    android:text="Available" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_horizontal"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btnSaveItem"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="2dp"
+                        android:layout_weight="1"
+                        android:text="Save" />
+
+                    <Button
+                        android:id="@+id/btnCancelEdit"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="2dp"
+                        android:layout_weight="1"
+                        android:text="Cancel" />
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/btnDeleteItem"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Delete Item"
+                    android:textColor="@android:color/holo_red_dark"
+                    android:textSize="12sp" />
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
     </RelativeLayout>
 
     <!-- Edit Menu Overlay -->
@@ -363,12 +526,12 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:text="Edit Image"
-                android:textSize="16sp"
-                android:textColor="@android:color/holo_blue_dark"
                 android:clickable="true"
                 android:focusable="true"
-                android:padding="8dp"/>
+                android:padding="8dp"
+                android:text="Edit Image"
+                android:textColor="@android:color/holo_blue_dark"
+                android:textSize="16sp" />
 
             <EditText
                 android:id="@+id/editMenuName"
@@ -457,26 +620,26 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
+                android:layout_margin="16dp"
                 android:background="@drawable/box_background"
-                android:padding="20dp"
-                android:layout_margin="16dp">
+                android:orientation="vertical"
+                android:padding="20dp">
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:gravity="center"
                     android:text="Create Discount"
                     android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:gravity="center" />
+                    android:textStyle="bold" />
 
                 <!-- Discount Type -->
                 <RadioGroup
                     android:id="@+id/radioDiscountType"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginTop="12dp">
+                    android:layout_marginTop="12dp"
+                    android:orientation="horizontal">
 
                     <RadioButton
                         android:id="@+id/radioPercentage"
@@ -495,23 +658,23 @@
                     android:id="@+id/editDiscountAmount"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
                     android:hint="Discount Amount"
-                    android:inputType="numberDecimal"
-                    android:layout_marginTop="8dp" />
+                    android:inputType="numberDecimal" />
 
                 <!-- Schedule Toggle -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Enable Schedule"
-                        android:layout_marginEnd="12dp" />
+                        android:layout_marginEnd="12dp"
+                        android:text="Enable Schedule" />
 
                     <Switch
                         android:id="@+id/switchEnableSchedule"
@@ -523,9 +686,9 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
                     android:text="Apply Discount To:"
-                    android:textStyle="bold"
-                    android:layout_marginTop="16dp" />
+                    android:textStyle="bold" />
 
                 <RadioGroup
                     android:id="@+id/radioApplyScope"
@@ -564,8 +727,8 @@
                     android:id="@+id/layoutSchedule"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginTop="16dp">
+                    android:layout_marginTop="16dp"
+                    android:orientation="vertical">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -583,14 +746,14 @@
                         android:id="@+id/timePickerStart"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:timePickerMode="spinner"/>
+                        android:timePickerMode="spinner" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
                         android:text="End Date &amp; Time"
-                        android:textStyle="bold"
-                        android:layout_marginTop="12dp" />
+                        android:textStyle="bold" />
 
                     <DatePicker
                         android:id="@+id/datePickerEnd"
@@ -602,7 +765,7 @@
                         android:id="@+id/timePickerEnd"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:timePickerMode="spinner"/>
+                        android:timePickerMode="spinner" />
                 </LinearLayout>
 
                 <!-- Choose Button -->
@@ -610,23 +773,23 @@
                     android:id="@+id/btnChooseForDiscount"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Choose Items/Menus"
-                    android:layout_marginTop="16dp" />
+                    android:layout_marginTop="16dp"
+                    android:text="Choose Items/Menus" />
 
                 <!-- Apply / Cancel -->
                 <Button
                     android:id="@+id/btnApplyDiscount"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Apply"
-                    android:layout_marginTop="12dp" />
+                    android:layout_marginTop="12dp"
+                    android:text="Apply" />
 
                 <Button
                     android:id="@+id/btnCancelDiscount"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Cancel"
-                    android:layout_marginTop="8dp" />
+                    android:layout_marginTop="8dp"
+                    android:text="Cancel" />
             </LinearLayout>
         </ScrollView>
     </RelativeLayout>
