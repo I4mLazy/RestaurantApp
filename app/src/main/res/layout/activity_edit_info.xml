@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp">
@@ -14,47 +15,65 @@
         app:navigationIcon="@drawable/baseline_arrow_back_24"
         app:title="Edit Profile" />
 
+    <!-- Universal input field (email, username, phone, etc.) -->
     <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/textInputLayout"
+        android:id="@+id/universalInputLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/toolbar"
         android:layout_marginTop="16dp"
-        android:hint="Enter new value"
+        android:hint="Enter Value"
         app:hintEnabled="true">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/editText"
+            android:id="@+id/universalEditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="phone" />
-
+            android:inputType="text" />
     </com.google.android.material.textfield.TextInputLayout>
 
-    <!-- Hidden Password Field -->
+    <!-- Only shown for password change -->
     <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/passwordInputLayout"
+        android:id="@+id/newPasswordInputLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/textInputLayout"
+        android:layout_below="@id/universalInputLayout"
         android:layout_marginTop="16dp"
-        android:hint="Enter your password"
+        android:hint="New Password"
         android:visibility="gone"
         app:hintEnabled="true">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/passwordEditText"
+            android:id="@+id/newPasswordEditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="textPassword" />
     </com.google.android.material.textfield.TextInputLayout>
 
-    <Button
-        android:id="@+id/saveButton"
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/confirmPasswordInputLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_marginBottom="64dp"
-        android:text="Save" />
+        android:layout_below="@id/newPasswordInputLayout"
+        android:layout_marginTop="16dp"
+        android:hint="Confirm New Password"
+        android:visibility="gone"
+        app:hintEnabled="true">
 
-</RelativeLayout>
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/confirmPasswordEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textPassword" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Save button -->
+<Button
+android:id="@+id/saveButton"
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:layout_alignParentBottom="true"
+android:layout_marginBottom="64dp"
+android:text="Save" />
+
+    </RelativeLayout>

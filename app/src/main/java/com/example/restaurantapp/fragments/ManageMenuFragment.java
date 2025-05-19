@@ -183,7 +183,6 @@ public class ManageMenuFragment extends Fragment
                                 recyclerViewMenus.setLayoutManager(new LinearLayoutManager(getContext()));
                                 recyclerViewMenus.setAdapter(menuAdapter);
                                 loadMenuData();
-                                loadMenusForSpinner(spinnerMenuSelection);
                             } else
                             {
                                 Toast.makeText(getContext(), "No restaurant assigned to user", Toast.LENGTH_SHORT).show();
@@ -266,7 +265,7 @@ public class ManageMenuFragment extends Fragment
         menuEditImage = view.findViewById(R.id.editMenuImage);
 
         itemViewImage = itemViewOverlay.findViewById(R.id.itemViewImage);
-        menuViewImage = itemViewOverlay.findViewById(R.id.menuViewImage);
+        menuViewImage = menuViewOverlay.findViewById(R.id.menuViewImage);
 
         itemEditImageTextView = view.findViewById(R.id.itemEditImageTextView);
         menuEditImageTextView = view.findViewById(R.id.menuEditImageTextView);
@@ -530,6 +529,7 @@ public class ManageMenuFragment extends Fragment
 
         itemViewOverlay.findViewById(R.id.btnEditItem).setOnClickListener(v ->
         {
+            loadMenusForSpinner(spinnerMenuSelection);
             editExistingItem(currentMenuItem);
             toggleOverlay(itemViewOverlay, false);
             toggleOverlay(itemEditOverlay, true);
@@ -563,7 +563,7 @@ public class ManageMenuFragment extends Fragment
     {
         if(restaurantID == null || restaurantID.isEmpty())
         {
-            Toast.makeText(getContext(), "Invalid restaurant ID", Toast.LENGTH_SHORT).show();
+            Log.e("ManageMenuFragment", "No restaurant assigned to user");
             return;
         }
         db.collection("Restaurants").document(restaurantID)
@@ -572,6 +572,12 @@ public class ManageMenuFragment extends Fragment
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots ->
                 {
+                    if(!isAdded())
+                    {
+                        Log.e("ManageMenuFragment", "Fragment isn't added");
+                        return;
+                    }
+
                     List<String> menuNames = new ArrayList<>();
                     List<String> menuIDs = new ArrayList<>();
 

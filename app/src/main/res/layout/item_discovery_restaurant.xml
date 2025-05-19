@@ -63,11 +63,15 @@
                     android:id="@+id/restaurantRating"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="★ 4.5"
+                    android:text="4.5"
                     android:textColor="#F39C12"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:layout_alignParentEnd="true" />
+                    android:layout_alignParentEnd="true"
+                    android:drawableEnd="@drawable/baseline_star_rate_24"
+                    android:drawableTint="#F39C12"
+                    android:drawablePadding="4dp" />
+
             </RelativeLayout>
 
             <!-- Divider -->

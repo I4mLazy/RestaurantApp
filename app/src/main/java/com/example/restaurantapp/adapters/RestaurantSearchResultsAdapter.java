@@ -27,6 +27,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.GeoPoint;
 
 import java.util.List;
+import java.util.Locale;
 
 public class RestaurantSearchResultsAdapter
         extends RecyclerView.Adapter<RestaurantSearchResultsAdapter.ViewHolder>
@@ -65,7 +66,7 @@ public class RestaurantSearchResultsAdapter
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType)
     {
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_restaurant, parent, false);
+                .inflate(R.layout.item_search_restaurant, parent, false);
         return new ViewHolder(view);
     }
 
@@ -76,8 +77,9 @@ public class RestaurantSearchResultsAdapter
 
         // Bind the fields
         holder.nameTextView.setText(restaurant.getName() != null ? restaurant.getName() : "Unknown");
-        Double rating = restaurant.getRating();
-        holder.ratingTextView.setText(rating != null ? String.valueOf(rating) : "N/A");
+        Double rating = restaurant.getAverageRating();
+        holder.ratingTextView.setText(rating > 0 ? String.format(Locale.getDefault(), "%.1f", rating) : "N/A");
+
         holder.tagsTextView.setText(restaurant.getTags() != null
                 ? restaurant.getTags().toString()
                 : "No tags");
@@ -121,7 +123,7 @@ public class RestaurantSearchResultsAdapter
 
     public static class ViewHolder extends RecyclerView.ViewHolder
     {
-        ImageView restaurantImage, starIcon;
+        ImageView restaurantImage;
         TextView nameTextView, ratingTextView, tagsTextView, distanceTextView;
         ImageButton navButton;
 
@@ -133,7 +135,6 @@ public class RestaurantSearchResultsAdapter
             ratingTextView = itemView.findViewById(R.id.restaurantRating);
             tagsTextView = itemView.findViewById(R.id.restaurantTags);
             distanceTextView = itemView.findViewById(R.id.restaurantDistance);
-            starIcon = itemView.findViewById(R.id.starIcon);
             navButton = itemView.findViewById(R.id.navButton);
         }
     }

@@ -19,7 +19,6 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 import com.example.restaurantapp.R;
-import com.example.restaurantapp.activities.SettingsActivity;
 
 public class MessagingService extends FirebaseMessagingService
 {
@@ -29,10 +28,10 @@ public class MessagingService extends FirebaseMessagingService
         // Handle FCM messages here
         if (remoteMessage.getNotification() != null)
         {
-            sendNotification(
+            /*sendNotification(
                     remoteMessage.getNotification().getTitle(),
                     remoteMessage.getNotification().getBody()
-            );
+            );*/
         }
     }
 
@@ -61,17 +60,17 @@ public class MessagingService extends FirebaseMessagingService
     {
         // Build the notification title and message
         String title = "Reservation Cancelled";
-        String message = "Dear " + reservation.getUserName() + ", your reservation for " +
+        String message = "Dear " + reservation.getName() + ", your reservation for " +
                 reservation.getGuests() + " guests on " +
                 reservation.getDate() + " at " + reservation.getTime() + " has been cancelled by the restaurant.";
 
         // Send the notification to the user
-        sendNotification(title, message);
+        //sendNotification(title, message);
     }
 
-    private void sendNotification(String title, String messageBody)
+    /*private void sendNotification(String title, String messageBody)
     {
-        Intent intent = new Intent(this, SettingsActivity.class);
+        Intent intent = new Intent(this, );
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent,
                 PendingIntent.FLAG_IMMUTABLE);
@@ -99,5 +98,5 @@ public class MessagingService extends FirebaseMessagingService
         }
 
         notificationManager.notify(0, notificationBuilder.build());
-    }
+    }*/
 }

@@ -51,7 +51,7 @@ public class ReservationAdapter extends RecyclerView.Adapter<ReservationAdapter.
             }
         }
 
-        SharedPreferences prefs = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+        SharedPreferences prefs = context.getSharedPreferences("FeedMe", Context.MODE_PRIVATE);
         this.isRestaurant = "restaurant".equals(prefs.getString("userType", ""));
     }
 
@@ -114,15 +114,17 @@ public class ReservationAdapter extends RecyclerView.Adapter<ReservationAdapter.
         // User name & phone (for restaurant side)
         if(isRestaurant)
         {
-            holder.userNameText.setText(reservation.getUserName());
+            holder.userNameText.setText(reservation.getName());
             holder.userPhoneText.setText(reservation.getPhoneNumber());
 
             holder.userNameText.setVisibility(View.VISIBLE);
             holder.userPhoneText.setVisibility(View.VISIBLE);
         } else
         {
+            holder.restaurantNameText.setText(reservation.getRestaurantName());
             holder.userNameText.setVisibility(View.GONE);
             holder.userPhoneText.setVisibility(View.GONE);
+            holder.restaurantNameText.setVisibility(View.VISIBLE);
         }
 
         // Cancel button
@@ -159,7 +161,7 @@ public class ReservationAdapter extends RecyclerView.Adapter<ReservationAdapter.
     {
 
         TextView dateTimeText, statusText, guestCountText;
-        TextView specialRequestsText, userNameText, userPhoneText;
+        TextView specialRequestsText, userNameText, userPhoneText, restaurantNameText;
         Button cancelButton;
         View bottomSpacer;
 
@@ -172,6 +174,7 @@ public class ReservationAdapter extends RecyclerView.Adapter<ReservationAdapter.
             guestCountText = itemView.findViewById(R.id.reservationGuestCount);
             specialRequestsText = itemView.findViewById(R.id.reservationSpecialRequests);
             userNameText = itemView.findViewById(R.id.reservationUserName);
+            restaurantNameText = itemView.findViewById(R.id.reservationRestaurantName);
             userPhoneText = itemView.findViewById(R.id.reservationUserPhone);
             cancelButton = itemView.findViewById(R.id.cancelReservationButton);
             bottomSpacer = itemView.findViewById(R.id.bottomSpacer);

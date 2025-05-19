@@ -45,56 +45,68 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:text="Restaurant Name"
+                android:textColor="@color/primary"
                 android:textSize="28sp"
-                android:textStyle="bold"
-                android:textColor="@color/primary" />
+                android:textStyle="bold" />
 
             <!-- Restaurant Rating -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
                 <ImageView
                     android:layout_width="20dp"
                     android:layout_height="20dp"
+                    android:layout_marginEnd="4dp"
                     android:src="@drawable/baseline_star_rate_24"
-                    app:tint="@color/gold"
-                    android:layout_marginEnd="4dp"/>
+                    app:tint="@color/gold" />
 
                 <TextView
                     android:id="@+id/restaurantDetailRating"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Rating: 4.5"
-                    android:textSize="16sp"
-                    android:textColor="@color/text_primary" />
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
+
+                <ImageButton
+                    android:id="@+id/rateButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/rate_button_background"
+                    android:contentDescription="Rate this restaurant"
+                    android:src="@drawable/baseline_edit_24"
+                    app:tint="@color/primary"
+                    android:visibility="gone"/>
             </LinearLayout>
+
 
             <!-- Restaurant Tags -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
                 <ImageView
                     android:layout_width="20dp"
                     android:layout_height="20dp"
+                    android:layout_marginEnd="4dp"
                     android:src="@drawable/baseline_tag_24"
-                    app:tint="@color/primary_light"
-                    android:layout_marginEnd="4dp"/>
+                    app:tint="@color/primary_light" />
 
                 <TextView
                     android:id="@+id/restaurantDetailTags"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Tags: Italian, Pizza, Pasta"
-                    android:textSize="16sp"
-                    android:textColor="@color/text_primary" />
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
             </LinearLayout>
 
             <!-- Restaurant Address -->
@@ -102,23 +114,23 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
                 <ImageView
                     android:layout_width="20dp"
                     android:layout_height="20dp"
+                    android:layout_marginEnd="4dp"
                     android:src="@drawable/baseline_location_on_24"
-                    app:tint="@color/primary_light"
-                    android:layout_marginEnd="4dp"/>
+                    app:tint="@color/primary_light" />
 
                 <TextView
                     android:id="@+id/restaurantDetailAddress"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="123 Main Street"
-                    android:textSize="16sp"
-                    android:textColor="@color/text_primary" />
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
             </LinearLayout>
 
             <!-- Business Hours -->
@@ -126,23 +138,23 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
                 <ImageView
                     android:layout_width="20dp"
                     android:layout_height="20dp"
+                    android:layout_marginEnd="4dp"
                     android:src="@drawable/baseline_access_time_24"
-                    app:tint="@color/primary_light"
-                    android:layout_marginEnd="4dp"/>
+                    app:tint="@color/primary_light" />
 
                 <TextView
                     android:id="@+id/restaurantDetailBusinessHours"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Business Hours: 10:00 AM - 10:00 PM"
-                    android:textSize="16sp"
-                    android:textColor="@color/text_primary" />
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
             </LinearLayout>
 
             <!-- Contact Info -->
@@ -150,23 +162,23 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
                 <ImageView
                     android:layout_width="20dp"
                     android:layout_height="20dp"
+                    android:layout_marginEnd="4dp"
                     android:src="@drawable/baseline_phone_24"
-                    app:tint="@color/primary_light"
-                    android:layout_marginEnd="4dp"/>
+                    app:tint="@color/primary_light" />
 
                 <TextView
                     android:id="@+id/restaurantDetailContactInfo"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Contact: (123) 456-7890, info@example.com"
-                    android:textSize="16sp"
-                    android:textColor="@color/text_primary" />
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
             </LinearLayout>
 
             <!-- Reservable Info -->
@@ -174,23 +186,23 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
                 <ImageView
                     android:layout_width="20dp"
                     android:layout_height="20dp"
+                    android:layout_marginEnd="4dp"
                     android:src="@drawable/baseline_calendar_month_24"
-                    app:tint="@color/primary_light"
-                    android:layout_marginEnd="4dp"/>
+                    app:tint="@color/primary_light" />
 
                 <TextView
                     android:id="@+id/restaurantDetailReservable"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Reservable: Yes"
-                    android:textSize="16sp"
-                    android:textColor="@color/text_primary" />
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
             </LinearLayout>
 
             <!-- Type of Restaurant -->
@@ -198,23 +210,23 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
                 <ImageView
                     android:layout_width="20dp"
                     android:layout_height="20dp"
+                    android:layout_marginEnd="4dp"
                     android:src="@drawable/baseline_store_24"
-                    app:tint="@color/primary_light"
-                    android:layout_marginEnd="4dp"/>
+                    app:tint="@color/primary_light" />
 
                 <TextView
                     android:id="@+id/restaurantDetailType"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Type: Casual, Fine Dining"
-                    android:textSize="16sp"
-                    android:textColor="@color/text_primary" />
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
             </LinearLayout>
 
             <!-- Price Level -->
@@ -222,23 +234,23 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
                 <ImageView
                     android:layout_width="20dp"
                     android:layout_height="20dp"
+                    android:layout_marginEnd="4dp"
                     android:src="@drawable/baseline_discount_24"
-                    app:tint="@color/primary_light"
-                    android:layout_marginEnd="4dp"/>
+                    app:tint="@color/primary_light" />
 
                 <TextView
                     android:id="@+id/restaurantDetailPriceLevel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Price Level:$$"
-                    android:textSize="16sp"
-                    android:textColor="@color/text_primary" />
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
             </LinearLayout>
 
             <!-- Description -->
@@ -246,8 +258,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                app:cardCornerRadius="8dp"
                 app:cardBackgroundColor="@color/surface"
+                app:cardCornerRadius="8dp"
                 app:cardElevation="2dp">
 
                 <LinearLayout
@@ -260,9 +272,9 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="About"
+                        android:textColor="@color/primary"
                         android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/primary" />
+                        android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/restaurantDetailDescription"
@@ -270,8 +282,8 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:text="Description: A cozy place to enjoy classic Italian dishes."
-                        android:textSize="16sp"
-                        android:textColor="@color/text_secondary" />
+                        android:textColor="@color/text_secondary"
+                        android:textSize="16sp" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
@@ -280,23 +292,23 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
                 <ImageView
                     android:layout_width="20dp"
                     android:layout_height="20dp"
+                    android:layout_marginEnd="4dp"
                     android:src="@drawable/baseline_takeout_dining_24"
-                    app:tint="@color/primary_light"
-                    android:layout_marginEnd="4dp"/>
+                    app:tint="@color/primary_light" />
 
                 <TextView
                     android:id="@+id/restaurantDetailOffersPickup"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Offers Pickup: Yes"
-                    android:textSize="16sp"
-                    android:textColor="@color/text_primary" />
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp" />
             </LinearLayout>
 
             <!-- Edit Button -->
@@ -306,10 +318,10 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="end"
                 android:layout_marginTop="16dp"
-                android:text="Edit Info"
-                android:textSize="16sp"
                 android:backgroundTint="@color/secondary"
+                android:text="Edit Info"
                 android:textColor="@color/white"
+                android:textSize="16sp"
                 android:visibility="gone" />
 
             <LinearLayout
@@ -326,14 +338,14 @@
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="8dp"
                     android:layout_weight="1"
-                    android:text="Navigate to Address"
-                    android:textSize="16sp"
                     android:backgroundTint="@color/secondary"
+                    android:text="Navigate to Address"
                     android:textColor="@color/white"
-                    app:icon="@drawable/baseline_assistant_navigation_24"
-                    app:iconTint="@color/white"
+                    android:textSize="16sp"
+                    android:visibility="gone"
                     app:cornerRadius="8dp"
-                    android:visibility="gone" />
+                    app:icon="@drawable/baseline_assistant_navigation_24"
+                    app:iconTint="@color/white" />
 
                 <!-- Reservation Button -->
                 <com.google.android.material.button.MaterialButton
@@ -341,14 +353,14 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Make a Reservation"
-                    android:textSize="16sp"
                     android:backgroundTint="@color/primary"
+                    android:text="Make a Reservation"
                     android:textColor="@color/white"
-                    app:icon="@drawable/baseline_calendar_month_24"
-                    app:iconTint="@color/white"
+                    android:textSize="16sp"
+                    android:visibility="gone"
                     app:cornerRadius="8dp"
-                    android:visibility="gone" />
+                    app:icon="@drawable/baseline_calendar_month_24"
+                    app:iconTint="@color/white" />
             </LinearLayout>
 
             <!-- Search Bar (hidden by default) -->
@@ -371,9 +383,9 @@
                 android:layout_marginTop="24dp"
                 android:layout_marginBottom="8dp"
                 android:text="Menus"
+                android:textColor="@color/primary"
                 android:textSize="22sp"
-                android:textStyle="bold"
-                android:textColor="@color/primary" />
+                android:textStyle="bold" />
 
             <!-- RecyclerView for Menus -->
             <androidx.recyclerview.widget.RecyclerView
@@ -390,8 +402,8 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:text="No results found"
-                android:textSize="18sp"
                 android:textColor="@color/text_secondary"
+                android:textSize="18sp"
                 android:textStyle="bold"
                 android:visibility="gone" />
 

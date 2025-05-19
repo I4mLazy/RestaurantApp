@@ -141,13 +141,61 @@
             android:layout_height="1dp"
             android:background="@android:color/darker_gray" />
 
-        <!-- Buttons -->
-        <Button
-            android:id="@+id/settingsButton"
-            android:layout_width="match_parent"
+        <!-- General Settings Title -->
+        <TextView
+            android:id="@+id/generalSettingsTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:gravity="center_horizontal"
+            android:text="General Settings"
+            android:textSize="18sp" />
+
+        <!-- Dark Mode Switch -->
+        <Switch
+            android:id="@+id/darkModeSwitch"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="Settings" />
+            android:gravity="center_horizontal"
+            android:text="Dark Mode" />
+
+        <!-- Notifications Switch -->
+        <Switch
+            android:id="@+id/notificationsSwitch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:gravity="center_horizontal"
+            android:text="Enable Notifications" />
+
+        <!-- Divider -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="16dp"
+            android:background="?android:attr/dividerHorizontal" />
+
+        <!-- Account Settings Title -->
+        <TextView
+            android:id="@+id/accountSettingsTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:gravity="center_horizontal"
+            android:text="Account Settings"
+            android:textSize="18sp" />
+
+        <!-- Change Password Button -->
+        <Button
+            android:id="@+id/changePasswordButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:gravity="center_horizontal"
+            android:text="Change Password" />
+
+        <!-- Buttons -->
 
         <Button
             android:id="@+id/logoutButton"

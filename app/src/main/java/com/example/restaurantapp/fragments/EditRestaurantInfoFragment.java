@@ -232,7 +232,7 @@ public class EditRestaurantInfoFragment extends Fragment
         editRestaurantPriceLevel.setValue(priceLevel);
 
         editRestaurantAddress.setText(restaurant.getAddress() != null ? restaurant.getAddress() : "");
-        //editRestaurantHours.setText(restaurant.getBusinessHours() != null ? restaurant.getBusinessHours() : "");
+        editRestaurantHours.setText(restaurant.getBusinessHours() != null ? restaurant.getBusinessHours() : "");
 
         editRestaurantMaxCapacity.setText(String.valueOf(restaurant.getMaxCapacity()));
 
@@ -277,6 +277,7 @@ public class EditRestaurantInfoFragment extends Fragment
 
 
         String address = editRestaurantAddress.getText().toString().trim();
+        String businessHours = editRestaurantHours.getText().toString().trim();
 
         boolean reservable = editRestaurantReservable.isChecked();
         boolean offersPickup = editRestaurantOffersPickup.isChecked();
@@ -319,6 +320,11 @@ public class EditRestaurantInfoFragment extends Fragment
             }));
             editRestaurantAddress.setError(null);
         }
+        if(businessHours.isEmpty())
+        {
+            editRestaurantHours.setError("Restaurant Hours are required");
+            hasError = true;
+        }
 
         if(priceLevel < 1 || priceLevel > 4)
         {
@@ -328,7 +334,7 @@ public class EditRestaurantInfoFragment extends Fragment
 
         if(maxCapacity <= 0)
         {
-            Toast.makeText(requireContext(), "Max capacity must be greater than 0", Toast.LENGTH_SHORT).show();
+            editRestaurantMaxCapacity.setError("Max capacity must be greater than 0");
             hasError = true;
         }
 
@@ -360,8 +366,9 @@ public class EditRestaurantInfoFragment extends Fragment
         restaurantMap.put("tags", tags);
         restaurantMap.put("type", type);
         restaurantMap.put("priceLevel", priceLevel);
-        restaurantMap.put("maxCapacity", maxCapacity);
         restaurantMap.put("address", address);
+        restaurantMap.put("businessHours", businessHours);
+        restaurantMap.put("maxCapacity", maxCapacity);
         restaurantMap.put("reservable", reservable);
         restaurantMap.put("offersPickup", offersPickup);
         restaurantMap.put("lastUpdated", FieldValue.serverTimestamp());

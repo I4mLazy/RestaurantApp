@@ -15,6 +15,7 @@ import com.example.restaurantapp.R;
 import com.example.restaurantapp.models.Restaurant;
 
 import java.util.List;
+import java.util.Locale;
 
 public class RestaurantDiscoveryAdapter extends RecyclerView.Adapter<RestaurantDiscoveryAdapter.ViewHolder> {
 
@@ -43,7 +44,7 @@ public class RestaurantDiscoveryAdapter extends RecyclerView.Adapter<RestaurantD
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(context).inflate(R.layout.discovery_restaurant_item, parent, false);
+        View view = LayoutInflater.from(context).inflate(R.layout.item_discovery_restaurant, parent, false);
         return new ViewHolder(view);
     }
 
@@ -54,8 +55,8 @@ public class RestaurantDiscoveryAdapter extends RecyclerView.Adapter<RestaurantD
         holder.restaurantName.setText(restaurant.getName() != null ? restaurant.getName() : "Unknown");
         holder.restaurantAddress.setText(restaurant.getAddress() != null ? restaurant.getAddress() : "");
 
-        double rating = restaurant.getRating();
-        holder.restaurantRating.setText(rating > 0 ? String.valueOf(rating) : "N/A");
+        double rating = restaurant.getAverageRating();
+        holder.restaurantRating.setText(rating > 0 ? String.format(Locale.getDefault(), "%.1f", rating) : "N/A");
 
         Glide.with(context)
                 .load(restaurant.getImageURL())

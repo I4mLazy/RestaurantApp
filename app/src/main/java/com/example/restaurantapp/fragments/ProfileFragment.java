@@ -2,6 +2,7 @@ package com.example.restaurantapp.fragments;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -18,12 +19,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
@@ -33,13 +36,13 @@ import com.bumptech.glide.Glide;
 import com.example.restaurantapp.R;
 import com.example.restaurantapp.activities.AuthenticationActivity;
 import com.example.restaurantapp.activities.EditInfoActivity;
-import com.example.restaurantapp.activities.SettingsActivity;
+import com.example.restaurantapp.utils.SettingsUtils;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -52,22 +55,27 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 public class ProfileFragment extends Fragment
 {
     private ImageButton editProfilePictureImageButton;
     private TextView profileName, profileEmail, profilePhone, editProfilePictureTextView;
+    private Switch darkModeSwitch, notificationsSwitch;
     private ActivityResultLauncher<Intent> editInfoLauncher;
+    private ActivityResultLauncher<String> requestPermissionLauncher;
     private BottomSheetDialog bottomSheetDialog;
     private UploadTask currentUploadTask;
     private boolean isUploading = false;
     private Uri photoUri;
 
-    FirebaseFirestore db;
-    FirebaseAuth auth;
-    FirebaseStorage storage;
-    StorageReference storageRef;
+    private FirebaseFirestore db;
+    private FirebaseAuth auth;
+    private FirebaseStorage storage;
+    private StorageReference storageRef;
+    private DocumentReference userSettingsRef;
+    private DocumentReference userRef;
     private static final String TAG = "ProfileFragment";
 
     public ProfileFragment()
@@ -75,7 +83,6 @@ public class ProfileFragment extends Fragment
         // Required empty public constructor
     }
 
-    //TODO: CHANGE THE WAY EMAIL IS CHANGED!!! CURRENTLY ONLY CHANGES IT IN FIREBASE!!!
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
@@ -85,8 +92,12 @@ public class ProfileFragment extends Fragment
         profileName = view.findViewById(R.id.profileName);
         profileEmail = view.findViewById(R.id.profileEmail);
         profilePhone = view.findViewById(R.id.profilePhone);
+
         editProfilePictureImageButton = view.findViewById(R.id.editProfilePictureImageButton);
         editProfilePictureTextView = view.findViewById(R.id.editProfilePictureTextView);
+
+        darkModeSwitch = view.findViewById(R.id.darkModeSwitch);
+        notificationsSwitch = view.findViewById(R.id.notificationsSwitch);
 
         // Initialize Firebase
         db = FirebaseFirestore.getInstance();
@@ -94,44 +105,117 @@ public class ProfileFragment extends Fragment
         storage = FirebaseStorage.getInstance();
         storageRef = storage.getReference();
 
+        userRef = db.collection("Users").document(Objects.requireNonNull(auth.getCurrentUser()).getUid());
+
+        // Get reference to user's settings document
+        userSettingsRef = userRef.collection("Settings").document("preferences");
+
         // Load user profile data
         loadUserProfile();
 
         // Set click listeners for profile fields
-        view.findViewById(R.id.editProfileNameContainer).setOnClickListener(v -> launchEditActivity("Name", profileName.getText().toString()));
-        view.findViewById(R.id.editProfileEmailContainer).setOnClickListener(v -> launchEditActivity("Email", profileEmail.getText().toString()));
-        view.findViewById(R.id.editProfilePhoneContainer).setOnClickListener(v -> launchEditActivity("Phone", profilePhone.getText().toString()));
+        view.findViewById(R.id.editProfileNameContainer).setOnClickListener(v -> SettingsUtils.launchEditActivity(requireContext(), editInfoLauncher, "Name", profileName.getText().toString()));
+        view.findViewById(R.id.editProfileEmailContainer).setOnClickListener(v -> SettingsUtils.launchEditActivity(requireContext(), editInfoLauncher, "Email", profileEmail.getText().toString()));
+        view.findViewById(R.id.editProfilePhoneContainer).setOnClickListener(v -> SettingsUtils.launchEditActivity(requireContext(), editInfoLauncher, "Phone", profilePhone.getText().toString()));
+        view.findViewById(R.id.changePasswordButton).setOnClickListener(v -> SettingsUtils.launchEditActivity(requireContext(), editInfoLauncher, "Password", null));
 
         // Set click listeners for profile picture
         editProfilePictureImageButton.setOnClickListener(v -> selectProfilePicture());
         editProfilePictureTextView.setOnClickListener(v -> selectProfilePicture());
 
-        // Settings button
-        Button settingsButton = view.findViewById(R.id.settingsButton);
-        settingsButton.setOnClickListener(v ->
-        {
-            if(getActivity() != null)
-            {
-                Intent intent = new Intent(getActivity(), SettingsActivity.class);
-                startActivity(intent);
-            }
-        });
-
         // Logout button
-        Button logoutButton = view.findViewById(R.id.logoutButton);
-        logoutButton.setOnClickListener(v -> handleLogout());
+        view.findViewById(R.id.logoutButton).setOnClickListener(v -> SettingsUtils.handleLogout(requireActivity(), auth));
 
         // Register the ActivityResultLauncher for profile edits
         editInfoLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
-                result -> handleEditProfileResult(result)
-        );
+                result -> SettingsUtils.handleEditInfoResult(requireContext(), result, userRef, auth, profileName, profilePhone));
 
-        // Set up real-time updates for user profile
-        setupProfileListener();
+        // Initialize permission launcher for Android 13+
+        requestPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(),
+                isGranted ->
+                {
+                    if(isGranted)
+                    {
+                        // Permission granted, update UI and Firestore
+                        notificationsSwitch.setChecked(true);
+                        setNotificationPreference(true);
+                        Toast.makeText(requireContext(), "Notifications enabled", Toast.LENGTH_SHORT).show();
+                    } else
+                    {
+                        // Permission denied, update UI to reflect this
+                        notificationsSwitch.setChecked(false);
+                        setNotificationPreference(false);
+                        Toast.makeText(requireContext(), "Notification permission denied", Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+        loadUserSettings();
+
+        SettingsUtils.setupDarkModeSwitch(this, darkModeSwitch, userSettingsRef);
+
+        notificationsSwitch.setOnCheckedChangeListener((buttonView, isChecked) ->
+        {
+            // Only process if this change was user-initiated (not from loadUserSettings)
+            if(buttonView.isPressed())
+            {
+                if(isChecked)
+                {
+                    // Check if we need to request permission for Android 13+
+                    if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                    {
+                        if(ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.POST_NOTIFICATIONS) !=
+                                android.content.pm.PackageManager.PERMISSION_GRANTED)
+                        {
+
+                            // Request permission instead of enabling notifications
+                            requestNotificationPermission();
+
+                            // Don't update UI yet - wait for permission result
+                            buttonView.setChecked(false);
+                            return;
+                        }
+                    }
+                }
+
+                // Update notification preference in Firestore
+                setNotificationPreference(isChecked);
+
+                // Show confirmation toast
+                Toast.makeText(
+                        requireContext(),
+                        isChecked ? "Notifications enabled" : "Notifications disabled",
+                        Toast.LENGTH_SHORT
+                ).show();
+            }
+        });
 
         return view;
     }
+
+    @Override
+    public void onResume()
+    {
+        super.onResume();
+
+        FirebaseUser user = auth.getCurrentUser();
+        if(user != null)
+        {
+            user.reload().addOnCompleteListener(task ->
+            {
+                if(task.isSuccessful())
+                {
+                    Log.d("ProfileFragment", "User reloaded in onResume");
+                    SettingsUtils.syncPendingEmailIfNeeded(requireContext(), userRef, auth, profileEmail);
+                } else
+                {
+                    Log.e("ProfileFragment", "User reload failed", task.getException());
+                }
+            });
+        }
+    }
+
 
     @Override
     public void onDestroyView()
@@ -154,84 +238,141 @@ public class ProfileFragment extends Fragment
         isUploading = false;
     }
 
-    private void setupProfileListener()
+    // Load user settings from Firestore
+    private void loadUserSettings()
     {
-        FirebaseUser currentUser = auth.getCurrentUser();
-        if(currentUser != null)
-        {
-            DocumentReference userRef = db.collection("Users").document(currentUser.getUid());
-            userRef.addSnapshotListener((documentSnapshot, e) ->
-            {
-                if(e != null)
+        userSettingsRef.get()
+                .addOnSuccessListener(documentSnapshot ->
                 {
-                    Log.e(TAG, "Listen failed", e);
-                    return;
-                }
-
-                if(isAdded() && getActivity() != null && !getActivity().isFinishing())
-                {
-                    loadUserProfile();
-                }
-            });
-        }
-    }
-
-    private void handleLogout()
-    {
-        if(auth.getCurrentUser() != null)
-        {
-            new androidx.appcompat.app.AlertDialog.Builder(requireActivity())
-                    .setTitle("Log Out")
-                    .setMessage("Are you sure you want to log out?")
-                    .setPositiveButton("Yes", (dialog, which) ->
+                    if(documentSnapshot.exists())
                     {
-                        FirebaseAuth.getInstance().signOut();
+                        // Retrieve settings from document
+                        Boolean darkMode = documentSnapshot.getBoolean("dark_mode");
+                        Boolean notifications = documentSnapshot.getBoolean("notifications");
 
-                        // Clear shared preferences
-                        SharedPreferences sharedPreferences = requireActivity()
-                                .getSharedPreferences("FeedMe", FragmentActivity.MODE_PRIVATE);
-                        SharedPreferences.Editor editor = sharedPreferences.edit();
-                        editor.clear();
-                        editor.apply();
+                        // Set switches without triggering listeners
+                        if(darkMode != null)
+                        {
+                            darkModeSwitch.setChecked(darkMode);
+                            // Apply dark mode setting
+                            AppCompatDelegate.setDefaultNightMode(darkMode ?
+                                    AppCompatDelegate.MODE_NIGHT_YES :
+                                    AppCompatDelegate.MODE_NIGHT_NO);
+                        }
 
-                        // Redirect to authentication
-                        Intent intent = new Intent(getActivity(), AuthenticationActivity.class);
-                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP |
-                                Intent.FLAG_ACTIVITY_NEW_TASK |
-                                Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                        startActivity(intent);
-                        requireActivity().finish();
-                    })
-                    .setNegativeButton("No", (dialog, id) -> dialog.dismiss())
-                    .create()
-                    .show();
+                        if(notifications != null)
+                        {
+                            // For Android 13+, check if we have permission before setting checked state
+                            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                            {
+                                boolean hasPermission = ContextCompat.checkSelfPermission(requireContext(),
+                                        Manifest.permission.POST_NOTIFICATIONS) ==
+                                        android.content.pm.PackageManager.PERMISSION_GRANTED;
+
+                                // Only allow notifications to be on if we have permission
+                                notificationsSwitch.setChecked(notifications && hasPermission);
+                            } else
+                            {
+                                notificationsSwitch.setChecked(notifications);
+                            }
+                        }
+                    } else
+                    {
+                        // Document doesn't exist, create it with default values
+                        boolean defaultNotifications;
+
+                        // For Android 13+, check permission status for default value
+                        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                        {
+                            defaultNotifications = ContextCompat.checkSelfPermission(requireContext(),
+                                    Manifest.permission.POST_NOTIFICATIONS) ==
+                                    android.content.pm.PackageManager.PERMISSION_GRANTED;
+                        } else
+                        {
+                            defaultNotifications = true;
+                        }
+
+                        Map<String, Object> defaultSettings = new HashMap<>();
+                        defaultSettings.put("dark_mode", false);
+                        defaultSettings.put("notifications", defaultNotifications);
+
+                        userSettingsRef.set(defaultSettings)
+                                .addOnSuccessListener(aVoid ->
+                                {
+                                    // Set default values on switches
+                                    darkModeSwitch.setChecked(false);
+                                    notificationsSwitch.setChecked(defaultNotifications);
+                                })
+                                .addOnFailureListener(e ->
+                                {
+                                    Toast.makeText(requireContext(),
+                                            "Failed to create settings: " + e.getMessage(),
+                                            Toast.LENGTH_SHORT).show();
+                                });
+                    }
+                })
+                .addOnFailureListener(e ->
+                {
+                    Toast.makeText(requireContext(),
+                            "Failed to load settings: " + e.getMessage(),
+                            Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    // Function to request notification permission
+    private void requestNotificationPermission()
+    {
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+        {
+            requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
+        } else
+        {
+            // Permissions not required before Android 13
+            setNotificationPreference(true);
+            notificationsSwitch.setChecked(true);
         }
     }
 
-    private void handleEditProfileResult(androidx.activity.result.ActivityResult result)
+    private void setNotificationPreference(boolean isEnabled)
     {
-        if(result.getResultCode() == Activity.RESULT_OK && result.getData() != null)
+        userSettingsRef.update("notifications", isEnabled)
+                .addOnFailureListener(e ->
+                {
+                    Toast.makeText(requireContext(),
+                            "Failed to update notification setting: " + e.getMessage(),
+                            Toast.LENGTH_SHORT).show();
+                });
+
+        // Update Firebase Cloud Messaging subscription
+        updateNotificationSubscription(isEnabled);
+    }
+
+    private void updateNotificationSubscription(boolean isSubscribed)
+    {
+        if(isSubscribed)
         {
-            String updatedValue = result.getData().getStringExtra("updatedValue");
-            String fieldType = result.getData().getStringExtra("fieldType");
-
-            if(updatedValue != null && fieldType != null)
-            {
-                // Update UI based on field type
-                if("Name".equals(fieldType))
-                {
-                    profileName.setText(updatedValue);
-                } else if("Email".equals(fieldType))
-                {
-                    profileEmail.setText(updatedValue);
-                } else if("Phone".equals(fieldType))
-                {
-                    profilePhone.setText("+" + updatedValue);
-                }
-
-                // Save to Firestore
-                saveUserProfile(updatedValue, fieldType);
-            }
+            FirebaseMessaging.getInstance().subscribeToTopic("app_notifications")
+                    .addOnCompleteListener(task ->
+                    {
+                        if(!task.isSuccessful())
+                        {
+                            Toast.makeText(requireContext(),
+                                    "Failed to enable notifications",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    });
+        } else
+        {
+            FirebaseMessaging.getInstance().unsubscribeFromTopic("app_notifications")
+                    .addOnCompleteListener(task ->
+                    {
+                        if(!task.isSuccessful())
+                        {
+                            Toast.makeText(requireContext(),
+                                    "Failed to disable notifications",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    });
         }
     }
 
@@ -240,8 +381,6 @@ public class ProfileFragment extends Fragment
         FirebaseUser currentUser = auth.getCurrentUser();
         if(currentUser != null)
         {
-            DocumentReference userRef = db.collection("Users").document(currentUser.getUid());
-
             userRef.get().addOnSuccessListener(documentSnapshot ->
             {
                 if(!isAdded() || getActivity() == null || getActivity().isFinishing())
@@ -296,118 +435,6 @@ public class ProfileFragment extends Fragment
                 }
             });
         }
-    }
-
-    private void saveUserProfile(String updatedValue, String fieldType)
-    {
-        FirebaseUser currentUser = auth.getCurrentUser();
-        if(currentUser != null)
-        {
-            DocumentReference userRef = db.collection("Users").document(currentUser.getUid());
-            Map<String, Object> updatedData = new HashMap<>();
-
-            // Handle different field types
-            if("Name".equals(fieldType))
-            {
-                updatedData.put("name", updatedValue);
-                updateFirestore(userRef, updatedData);
-            } else if("Phone".equals(fieldType))
-            {
-                updatedData.put("phoneNumber", "+" + updatedValue);
-                updateFirestore(userRef, updatedData);
-            } else if("Email".equals(fieldType))
-            {
-                // For email updates, using verifyBeforeUpdateEmail
-                handleEmailUpdate(currentUser, updatedValue, userRef);
-            }
-        }
-    }
-
-    private void updateFirestore(DocumentReference userRef, Map<String, Object> data)
-    {
-        userRef.update(data)
-                .addOnSuccessListener(aVoid ->
-                {
-                    if(isAdded())
-                    {
-                        Toast.makeText(getContext(), "Profile updated successfully", Toast.LENGTH_SHORT).show();
-                    }
-                })
-                .addOnFailureListener(e ->
-                {
-                    if(isAdded())
-                    {
-                        Toast.makeText(getContext(), "Error updating profile", Toast.LENGTH_SHORT).show();
-                        Log.e(TAG, "Error updating profile", e);
-                    }
-                });
-    }
-
-    private void handleEmailUpdate(FirebaseUser user, String newEmail, DocumentReference userRef)
-    {
-        // Send verification email to the new address before updating
-        user.verifyBeforeUpdateEmail(newEmail)
-                .addOnSuccessListener(aVoid ->
-                {
-                    if(isAdded())
-                    {
-                        Toast.makeText(getContext(),
-                                "Verification email sent to " + newEmail + ". Please verify to complete the update.",
-                                Toast.LENGTH_LONG).show();
-                    }
-
-                    // Important: At this point, the email in Authentication is NOT yet updated
-                    // We need to store pending email change in Firestore
-                    Map<String, Object> pendingUpdate = new HashMap<>();
-                    pendingUpdate.put("pendingEmail", newEmail);
-
-                    userRef.update(pendingUpdate)
-                            .addOnSuccessListener(unused ->
-                            {
-                                if(isAdded())
-                                {
-                                    Log.d(TAG, "Pending email update saved to Firestore");
-                                }
-                            })
-                            .addOnFailureListener(e ->
-                            {
-                                if(isAdded())
-                                {
-                                    Log.e(TAG, "Failed to save pending email update", e);
-                                }
-                            });
-
-                    // Note: You'll need a separate mechanism to detect when the email
-                    // verification is complete and then update the primary email field in Firestore
-                })
-                .addOnFailureListener(e ->
-                {
-                    if(isAdded())
-                    {
-                        // This might fail if the user hasn't recently signed in
-                        if(e instanceof FirebaseAuthRecentLoginRequiredException)
-                        {
-                            Toast.makeText(getContext(),
-                                    "Please sign in again before changing your email",
-                                    Toast.LENGTH_LONG).show();
-                            // Here you could prompt for reauthentication
-                        } else
-                        {
-                            Toast.makeText(getContext(),
-                                    "Error initiating email update: " + e.getMessage(),
-                                    Toast.LENGTH_SHORT).show();
-                        }
-                        Log.e(TAG, "Error updating email", e);
-                    }
-                });
-    }
-
-    private void launchEditActivity(String fieldType, String currentValue)
-    {
-        Intent intent = new Intent(getActivity(), EditInfoActivity.class);
-        intent.putExtra("fieldType", fieldType);
-        intent.putExtra("currentValue", currentValue);
-        editInfoLauncher.launch(intent);
     }
 
     private void selectProfilePicture()
@@ -859,8 +886,6 @@ public class ProfileFragment extends Fragment
         FirebaseUser currentUser = auth.getCurrentUser();
         if(currentUser != null)
         {
-            DocumentReference userRef = db.collection("Users").document(currentUser.getUid());
-
             // Delete the old profile image before updating to the new one
             deleteOldProfileImage(imageUrl);
 
@@ -899,8 +924,6 @@ public class ProfileFragment extends Fragment
         FirebaseUser currentUser = auth.getCurrentUser();
         if(currentUser != null)
         {
-            DocumentReference userRef = db.collection("Users").document(currentUser.getUid());
-
             // Get the current profile image URL
             userRef.get().addOnSuccessListener(documentSnapshot ->
             {

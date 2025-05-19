@@ -22,12 +22,11 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
-import androidx.fragment.app.FragmentTransaction;
 
 import com.example.restaurantapp.R;
 import com.example.restaurantapp.activities.AuthenticationActivity;
 import com.example.restaurantapp.activities.EditInfoActivity;
-import com.example.restaurantapp.activities.SettingsActivity;
+import com.example.restaurantapp.utils.SettingsUtils;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
@@ -35,19 +34,18 @@ import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 public class RestaurantSettingsFragment extends Fragment
 {
     private Button logoutButton, changePasswordButton;
     private TextView profileEmail, profilePhone;
-    private LinearLayout editProfileEmailContainer, editProfilePhoneContainer;
     private Switch darkModeSwitch;
     private ActivityResultLauncher<Intent> editInfoLauncher;
 
     private FirebaseFirestore db;
     private FirebaseAuth auth;
     private FirebaseUser currentUser;
+    private DocumentReference userRef;
     private DocumentReference userSettingsRef;
 
 
@@ -67,8 +65,7 @@ public class RestaurantSettingsFragment extends Fragment
         changePasswordButton = view.findViewById(R.id.changePasswordButton);
         profileEmail = view.findViewById(R.id.profileEmail);
         profilePhone = view.findViewById(R.id.profilePhone);
-        editProfileEmailContainer = view.findViewById(R.id.editProfileEmailContainer);
-        editProfilePhoneContainer = view.findViewById(R.id.editProfilePhoneContainer);
+
         darkModeSwitch = view.findViewById(R.id.darkModeSwitch);
 
         // Set the current email and phone if user is authenticated
@@ -78,12 +75,14 @@ public class RestaurantSettingsFragment extends Fragment
 
         if(currentUser != null)
         {
-            userSettingsRef = db.collection("Users")
-                    .document(auth.getCurrentUser().getUid())
-                    .collection("Settings")
-                    .document("preferences");
+            userRef = db.collection("Users").document(auth.getCurrentUser().getUid());
+            userSettingsRef = userRef.collection("Settings").document("preferences");
 
-            profileEmail.setText(currentUser.getEmail());
+            userRef.get().addOnSuccessListener(documentSnapshot ->
+            {
+                profileEmail.setText(documentSnapshot.getString("email"));
+                profilePhone.setText(documentSnapshot.getString("phoneNumber"));
+            });
         }
 
         loadDarkModeSetting();
@@ -91,160 +90,38 @@ public class RestaurantSettingsFragment extends Fragment
         // Register the ActivityResultLauncher for profile edits
         editInfoLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
-                result -> handleEditInfoResults(result)
-        );
+                result -> SettingsUtils.handleEditInfoResult(requireContext(), result, userRef, auth, null, profilePhone));
 
         // Set listeners for the UI components
-        logoutButton.setOnClickListener(v -> handleLogout());
-        editProfileEmailContainer.setOnClickListener(v -> launchEditActivity("Email", profileEmail.getText().toString()));
-        editProfilePhoneContainer.setOnClickListener(v -> launchEditActivity("Phone", profilePhone.getText().toString()));
+        logoutButton.setOnClickListener(v -> SettingsUtils.handleLogout(requireActivity(), auth));
+        view.findViewById(R.id.editProfileEmailContainer).setOnClickListener(v -> SettingsUtils.launchEditActivity(getActivity(), editInfoLauncher, "Email", profileEmail.getText().toString()));
+        view.findViewById(R.id.editProfilePhoneContainer).setOnClickListener(v -> SettingsUtils.launchEditActivity(getActivity(), editInfoLauncher, "Phone", profilePhone.getText().toString()));
+        changePasswordButton.setOnClickListener(v -> SettingsUtils.launchEditActivity(getActivity(), editInfoLauncher, "Password", null));
 
-        /*changePasswordButton.setOnClickListener(v ->
-        {
-            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-            transaction.replace(R.id.fragmentContainer, new ChangePasswordFragment());
-            transaction.addToBackStack(null);
-            transaction.commit();
-
-            findViewById(R.id.fragmentContainer).setVisibility(View.VISIBLE);
-        });*/
-
-        darkModeSwitch.setOnCheckedChangeListener((buttonView, isChecked) ->
-        {
-            // Only process if this change was user-initiated (not from loadUserSettings)
-            if(buttonView.isPressed())
-            {
-                // Update dark mode preference in Firestore and locally
-                setDarkModePreference(isChecked);
-
-                // Apply dark mode change immediately
-                if(isChecked)
-                {
-                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-                } else
-                {
-                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
-                }
-
-                // Show confirmation toast
-                Toast.makeText(
-                        requireContext(),
-                        isChecked ? "Dark mode enabled" : "Dark mode disabled",
-                        Toast.LENGTH_SHORT
-                ).show();
-            }
-        });
+        SettingsUtils.setupDarkModeSwitch(this, darkModeSwitch, userSettingsRef);
 
         return view;
     }
 
-    private void launchEditActivity(String fieldType, String currentValue)
+    @Override
+    public void onResume()
     {
-        Intent intent = new Intent(getActivity(), EditInfoActivity.class);
-        intent.putExtra("fieldType", fieldType);
-        intent.putExtra("currentValue", currentValue);
-        editInfoLauncher.launch(intent);
-    }
+        super.onResume();
 
-    private void handleEditInfoResults(androidx.activity.result.ActivityResult result)
-    {
-        if(result.getResultCode() == Activity.RESULT_OK && result.getData() != null)
+        FirebaseUser user = auth.getCurrentUser();
+        if(user != null)
         {
-            String updatedValue = result.getData().getStringExtra("updatedValue");
-            String fieldType = result.getData().getStringExtra("fieldType");
-
-            if(updatedValue != null && fieldType != null)
+            user.reload().addOnCompleteListener(task ->
             {
-                // Update UI based on field type
-                if("Email".equals(fieldType))
+                if(task.isSuccessful())
                 {
-                    profileEmail.setText(updatedValue);
-                } else if("Phone".equals(fieldType))
+                    Log.d("RestaurantSettingsFragment", "User reloaded in onResume");
+                    SettingsUtils.syncPendingEmailIfNeeded(requireContext(), userRef, auth, profileEmail);
+                } else
                 {
-                    profilePhone.setText("+" + updatedValue);
+                    Log.e("RestaurantSettingsFragment", "User reload failed", task.getException());
                 }
-
-                // Save to Firestore
-                saveUserInfo(updatedValue, fieldType);
-            }
-        }
-    }
-
-    private void saveUserInfo(String updatedValue, String fieldType)
-    {
-        FirebaseUser currentUser = auth.getCurrentUser();
-        if(currentUser != null)
-        {
-            DocumentReference userRef = db.collection("Users").document(currentUser.getUid());
-            Map<String, Object> updatedData = new HashMap<>();
-
-            // Handle different field types
-            if("Name".equals(fieldType))
-            {
-                updatedData.put("name", updatedValue);
-                updateFirestore(userRef, updatedData);
-            } else if("Phone".equals(fieldType))
-            {
-                updatedData.put("phoneNumber", "+" + updatedValue);
-                updateFirestore(userRef, updatedData);
-            } else if("Email".equals(fieldType))
-            {
-                // For email updates, using verifyBeforeUpdateEmail
-                //handleEmailUpdate(currentUser, updatedValue, userRef);
-            }
-        }
-    }
-
-    private void updateFirestore(DocumentReference userRef, Map<String, Object> data)
-    {
-        userRef.update(data)
-                .addOnSuccessListener(aVoid ->
-                {
-                    if(isAdded())
-                    {
-                        Toast.makeText(requireContext(), "Profile updated successfully", Toast.LENGTH_SHORT).show();
-                    }
-                })
-                .addOnFailureListener(e ->
-                {
-                    if(isAdded())
-                    {
-                        Toast.makeText(requireContext(), "Error updating profile", Toast.LENGTH_SHORT).show();
-                        Log.e(TAG, "Error updating profile", e);
-                    }
-                });
-    }
-
-    // Log out functionality
-    private void handleLogout()
-    {
-        if(auth.getCurrentUser() != null)
-        {
-            new androidx.appcompat.app.AlertDialog.Builder(requireActivity())
-                    .setTitle("Log Out")
-                    .setMessage("Are you sure you want to log out?")
-                    .setPositiveButton("Yes", (dialog, which) ->
-                    {
-                        FirebaseAuth.getInstance().signOut();
-
-                        // Clear shared preferences
-                        SharedPreferences sharedPreferences = requireActivity()
-                                .getSharedPreferences("FeedMe", FragmentActivity.MODE_PRIVATE);
-                        SharedPreferences.Editor editor = sharedPreferences.edit();
-                        editor.clear();
-                        editor.apply();
-
-                        // Redirect to authentication screen
-                        Intent intent = new Intent(getActivity(), AuthenticationActivity.class);
-                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP |
-                                Intent.FLAG_ACTIVITY_NEW_TASK |
-                                Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                        startActivity(intent);
-                        requireActivity().finish();
-                    })
-                    .setNegativeButton("No", (dialog, id) -> dialog.dismiss())
-                    .create()
-                    .show();
+            });
         }
     }
 
@@ -306,34 +183,5 @@ public class RestaurantSettingsFragment extends Fragment
                                 Toast.LENGTH_SHORT).show();
                     }
                 });
-    }
-
-    // Function to save the dark mode preference to Firestore and SharedPreferences
-    private void setDarkModePreference(boolean isEnabled)
-    {
-        Log.d(TAG, "User settings reference: " + userSettingsRef.getPath());
-        // Save to Firestore
-        userSettingsRef.update("dark_mode", isEnabled)
-                .addOnFailureListener(e ->
-                {
-                    // Check if the fragment is still attached to its context
-                    if(isAdded())
-                    {
-                        requireContext();
-                        Toast.makeText(requireContext(),
-                                "Failed to update dark mode setting: " + e.getMessage(),
-                                Toast.LENGTH_SHORT).show();
-                    }
-                });
-
-        // Save locally using SharedPreferences
-        if(isAdded())
-        {
-            requireContext();
-            SharedPreferences sharedPreferences = requireContext().getSharedPreferences("FeedMe", Context.MODE_PRIVATE);
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putBoolean("darkMode", isEnabled);
-            editor.apply();
-        }
     }
 }

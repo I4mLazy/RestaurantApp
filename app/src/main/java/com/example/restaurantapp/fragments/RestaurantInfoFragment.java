@@ -3,10 +3,13 @@ package com.example.restaurantapp.fragments;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
 import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.activity.OnBackPressedCallback;
+import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -22,9 +25,11 @@ import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.NumberPicker;
 import android.widget.ProgressBar;
+import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -39,7 +44,9 @@ import com.example.restaurantapp.viewmodels.RestaurantViewModel;
 import com.google.android.material.button.MaterialButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
@@ -50,6 +57,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -63,6 +71,7 @@ public class RestaurantInfoFragment extends Fragment
     private TextView restaurantDetailName, restaurantDetailAddress, restaurantDetailRating,
             restaurantDetailBusinessHours, restaurantDetailContactInfo, restaurantDetailReservable,
             restaurantDetailType, restaurantDetailTags, restaurantDetailPriceLevel, restaurantDetailDescription, noResults;
+    private ImageButton rateButton;
     private Button restaurantDetailEditButton, openReservationOverlayButton, navigateButton;
     private EditText guestAmountEditText, specialRequestsEditText;
     private MaterialButton cancelReservationButton, confirmReservationButton;
@@ -109,6 +118,7 @@ public class RestaurantInfoFragment extends Fragment
         restaurantDetailDescription = view.findViewById(R.id.restaurantDetailDescription);
         noResults = view.findViewById(R.id.noResults);
 
+        rateButton = view.findViewById(R.id.rateButton);
         restaurantDetailEditButton = view.findViewById(R.id.restaurantDetailEditButton);
         openReservationOverlayButton = view.findViewById(R.id.openReserveOverlayButton);
         navigateButton = view.findViewById(R.id.navigateButton);
@@ -135,7 +145,6 @@ public class RestaurantInfoFragment extends Fragment
 
         if(currentUser != null)
         {
-            db = FirebaseFirestore.getInstance();
             db.collection("Users").document(currentUser.getUid())
                     .get()
                     .addOnSuccessListener(documentSnapshot ->
@@ -148,7 +157,9 @@ public class RestaurantInfoFragment extends Fragment
                             if("restaurant".equals(userType))
                             {
                                 restaurantDetailEditButton.setVisibility(View.VISIBLE);
+                                rateButton.setVisibility(View.GONE);
                                 navigateButton.setVisibility(View.GONE);
+
                                 restaurantID = documentSnapshot.getString("restaurantID");
 
                                 if(restaurantID != null && !restaurantID.isEmpty())
@@ -195,6 +206,7 @@ public class RestaurantInfoFragment extends Fragment
                             } else if("user".equals(userType))
                             {
                                 restaurantDetailEditButton.setVisibility(View.GONE);
+                                rateButton.setVisibility(View.VISIBLE);
                                 navigateButton.setVisibility(View.VISIBLE);
                                 viewModel = new ViewModelProvider(requireActivity()).get(RestaurantViewModel.class);
                                 viewModel.getCurrentRestaurant().observe(getViewLifecycleOwner(), restaurant ->
@@ -284,8 +296,9 @@ public class RestaurantInfoFragment extends Fragment
         restaurantDetailAddress.setText(getSafeText(restaurant.getAddress()));
 
         // Rating
-        double rating = restaurant.getRating();
-        restaurantDetailRating.setText(rating > 0 ? "Rating: " + rating : "Rating: N/A");
+        double rating = restaurant.getAverageRating();
+        restaurantDetailRating.setText(rating > 0 ? "Rating: " + String.format(Locale.getDefault(), "%.1f", rating) : "Rating: N/A");
+        rateButton.setOnClickListener(v -> showRatingDialog());
 
         // Business Hours
         restaurantDetailBusinessHours.setText("Hours: " +
@@ -774,6 +787,8 @@ public class RestaurantInfoFragment extends Fragment
         String formattedTime = String.format("%02d:%02d", hour, minute);
         String reservationID = UUID.randomUUID().toString();
         String userID = currentUser.getUid();
+        String restaurantName = viewModel.getCurrentRestaurant().getValue() != null ? viewModel.getCurrentRestaurant().getValue().getName() : "Unknown Restaurant";
+
 
         Map<String, Object> reservationData = new HashMap<>();
         reservationData.put("date", reservationDate);
@@ -783,6 +798,7 @@ public class RestaurantInfoFragment extends Fragment
         reservationData.put("restaurantID", restaurantID);
         reservationData.put("reservationID", reservationID);
         reservationData.put("userID", userID);
+        reservationData.put("restaurantName", restaurantName);
 
 
         // Save to user's reservations
@@ -798,11 +814,12 @@ public class RestaurantInfoFragment extends Fragment
                             {
                                 if(documentSnapshot.exists())
                                 {
-                                    String name = documentSnapshot.getString("username");
+                                    String name = documentSnapshot.getString("name");
                                     String phone = documentSnapshot.getString("phoneNumber");
 
+                                    reservationData.remove("restaurantName");
 
-                                    if(name != null) reservationData.put("userName", name);
+                                    if(name != null) reservationData.put("name", name);
                                     if(phone != null) reservationData.put("phoneNumber", phone);
                                 }
 
@@ -850,5 +867,104 @@ public class RestaurantInfoFragment extends Fragment
         {
             progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
         }
+    }
+
+    private void showRatingDialog()
+    {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_rate_restaurant, null);
+
+        RatingBar ratingBar = dialogView.findViewById(R.id.ratingBar);
+        Button submitButton = dialogView.findViewById(R.id.submitRatingButton);
+        Button cancelButton = dialogView.findViewById(R.id.cancelRatingButton);
+
+        ratingBar.setProgressTintList(ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.gold)));
+        ratingBar.setSecondaryProgressTintList(ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.gold)));
+        ratingBar.setIndeterminateTintList(ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.gold)));
+
+        builder.setView(dialogView);
+        AlertDialog dialog = builder.create();
+
+        submitButton.setOnClickListener(v ->
+        {
+            int rating = (int) ratingBar.getRating();
+            if(rating == 0)
+            {
+                Toast.makeText(requireContext(), "Please select at least 1 star", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            DocumentReference restaurantRef = db.collection("Restaurants").document(restaurantID);
+            DocumentReference userRatingRef = restaurantRef.collection("Ratings").document(currentUser.getUid());
+
+            userRatingRef.get().addOnSuccessListener(docSnapshot ->
+            {
+                Integer oldRating;
+                if(docSnapshot.exists())
+                {
+                    oldRating = Objects.requireNonNull(docSnapshot.getLong("rating")).intValue();
+                } else
+                {
+                    oldRating = null;
+                }
+
+                Map<String, Object> ratingData = new HashMap<>();
+                ratingData.put("rating", rating);
+                ratingData.put("timestamp", FieldValue.serverTimestamp());
+
+                userRatingRef.set(ratingData).addOnSuccessListener(aVoid ->
+                        restaurantRef.get().addOnSuccessListener(restaurantSnapshot ->
+                        {
+                            double oldAverage = restaurantSnapshot.getDouble("averageRating") != null
+                                    ? restaurantSnapshot.getDouble("averageRating")
+                                    : 0.0;
+                            long oldCount = restaurantSnapshot.getLong("ratingsCount") != null
+                                    ? restaurantSnapshot.getLong("ratingsCount")
+                                    : 0;
+
+                            double newAverage;
+                            long newCount = oldCount;
+
+                            if(oldRating == null)
+                            {
+                                // New rating
+                                newAverage = (oldAverage * oldCount + rating) / (oldCount + 1);
+                                newCount = oldCount + 1;
+                            } else
+                            {
+                                // Updated rating
+                                newAverage = (oldAverage * oldCount - oldRating + rating) / oldCount;
+                            }
+
+                            Map<String, Object> updateData = new HashMap<>();
+                            updateData.put("averageRating", newAverage);
+                            updateData.put("ratingsCount", newCount);
+
+                            restaurantRef.update(updateData).addOnSuccessListener(updateVoid ->
+                            {
+                                Toast.makeText(requireContext(), "Rating submitted", Toast.LENGTH_SHORT).show();
+                                dialog.dismiss();
+                                // Update Rating shown
+                                restaurantDetailRating.setText(newAverage > 0 ? "Rating: " + String.format(Locale.getDefault(), "%.1f", newAverage) : "Rating: N/A");
+                            }).addOnFailureListener(e ->
+                            {
+                                Toast.makeText(requireContext(), "Failed to update rating summary", Toast.LENGTH_SHORT).show();
+                            });
+                        }).addOnFailureListener(e ->
+                        {
+                            Toast.makeText(requireContext(), "Failed to fetch restaurant data", Toast.LENGTH_SHORT).show();
+                        })).addOnFailureListener(e ->
+                {
+                    Toast.makeText(requireContext(), "Failed to submit rating", Toast.LENGTH_SHORT).show();
+                });
+            }).addOnFailureListener(e ->
+            {
+                Toast.makeText(requireContext(), "Failed to fetch your previous rating", Toast.LENGTH_SHORT).show();
+            });
+        });
+
+        cancelButton.setOnClickListener(v -> dialog.dismiss());
+
+        dialog.show();
     }
 }

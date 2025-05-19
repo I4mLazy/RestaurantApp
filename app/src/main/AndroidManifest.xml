@@ -36,10 +36,6 @@
             android:exported="false"
             android:screenOrientation="portrait"/>
         <activity
-            android:name=".activities.SettingsActivity"
-            android:exported="false"
-            android:screenOrientation="portrait"/>
-        <activity
             android:name=".activities.EditInfoActivity"
             android:exported="false"
             android:screenOrientation="portrait" />

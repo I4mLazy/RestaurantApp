@@ -65,21 +65,19 @@
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
-                <ImageView
-                    android:id="@+id/starIcon"
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
-                    android:layout_marginStart="4dp"
-                    android:src="@drawable/baseline_star_rate_24"
-                    app:tint="@color/gold" />
-
                 <TextView
                     android:id="@+id/restaurantRating"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="4.5"
-                    android:textColor="@color/black"
-                    android:textSize="14sp" />
+                    android:textColor="#F39C12"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:layout_alignParentEnd="true"
+                    android:drawableEnd="@drawable/baseline_star_rate_24"
+                    android:drawableTint="#F39C12"
+                    android:drawablePadding="4dp" />
+
             </LinearLayout>
 
             <!-- Category / Tags -->

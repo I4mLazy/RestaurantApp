@@ -11,9 +11,10 @@ public class Restaurant
     private String name;
     private String address;
     private GeoPoint location;
-    private double rating;
+    private double averageRating;
+    private int ratingsCount;
     private String imageURL;
-    private BusinessHours businessHours;
+    private String businessHours;
     private Timestamp createdAt;
     private boolean reservable;
     private String type;
@@ -31,15 +32,16 @@ public class Restaurant
     {
     }
 
-    public Restaurant(String name, String address, GeoPoint location, double rating, String imageURL,
-                      BusinessHours businessHours, Timestamp createdAt, boolean reservable, String type,
+    public Restaurant(String name, String address, GeoPoint location, double averageRating, int ratingsCount, String imageURL,
+                      String businessHours, Timestamp createdAt, boolean reservable, String type,
                       List<String> tags, int priceLevel, String restaurantID, String description,
                       Timestamp lastUpdated, boolean offersPickup, Map<String, String> contactInfo, int maxCapacity)
     {
         this.name = name;
         this.address = address;
         this.location = location;
-        this.rating = rating;
+        this.averageRating = averageRating;
+        this.ratingsCount = ratingsCount;
         this.imageURL = imageURL;
         this.businessHours = businessHours;
         this.createdAt = createdAt;
@@ -87,14 +89,24 @@ public class Restaurant
         this.location = location;
     }
 
-    public double getRating()
+    public double getAverageRating()
     {
-        return rating;
+        return averageRating;
     }
 
-    public void setRating(double rating)
+    public void setAverageRating(double averageRating)
     {
-        this.rating = rating;
+        this.averageRating = averageRating;
+    }
+
+    public int getRatingsCount()
+    {
+        return ratingsCount;
+    }
+
+    public void setRatingsCount(int ratingsCount)
+    {
+        this.ratingsCount = ratingsCount;
     }
 
     public String getImageURL()
@@ -107,12 +119,12 @@ public class Restaurant
         this.imageURL = imageURL;
     }
 
-    public BusinessHours getBusinessHours()
+    public String getBusinessHours()
     {
         return businessHours;
     }
 
-    public void setBusinessHours(BusinessHours businessHours)
+    public void setBusinessHours(String businessHours)
     {
         this.businessHours = businessHours;
     }

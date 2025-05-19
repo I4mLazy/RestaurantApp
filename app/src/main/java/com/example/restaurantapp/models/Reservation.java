@@ -9,7 +9,8 @@ public class Reservation
     private String guests;
     private String specialRequests;
     private String status;
-    private String userName;
+    private String name;
+    private String restaurantName;
     private String phoneNumber;
     private String userID;
     private String restaurantID;
@@ -19,14 +20,15 @@ public class Reservation
     {
     }
 
-    public Reservation(Date date, String time, String guests, String specialRequests, String status, String userName, String phoneNumber, String userID, String restaurantID, String reservationID)
+    public Reservation(Date date, String time, String guests, String specialRequests, String status, String name, String restaurantName, String phoneNumber, String userID, String restaurantID, String reservationID)
     {
         this.date = date;
         this.time = time;
         this.guests = guests;
         this.specialRequests = specialRequests;
         this.status = status;
-        this.userName = userName;
+        this.name = name;
+        this.restaurantName = restaurantName;
         this.phoneNumber = phoneNumber;
         this.userID = userID;
         this.restaurantID = restaurantID;
@@ -59,9 +61,9 @@ public class Reservation
         return status;
     }
 
-    public String getUserName()
+    public String getName()
     {
-        return userName;
+        return name;
     }
 
     public String getPhoneNumber()
@@ -95,9 +97,9 @@ public class Reservation
         this.status = status;
     }
 
-    public void setUserName(String userName)
+    public void setName(String name)
     {
-        this.userName = userName;
+        this.name = name;
     }
 
     public void setPhoneNumber(String phoneNumber)
@@ -133,5 +135,15 @@ public class Reservation
     public void setReservationID(String reservationID)
     {
         this.reservationID = reservationID;
+    }
+
+    public String getRestaurantName()
+    {
+        return restaurantName;
+    }
+
+    public void setRestaurantName(String restaurantName)
+    {
+        this.restaurantName = restaurantName;
     }
 }
