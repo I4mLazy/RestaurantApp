@@ -103,23 +103,6 @@ public class LoginFragment extends Fragment
                 });
     }
 
-    private void firebaseAuthWithGoogle(String idToken)
-    {
-        AuthCredential credential = GoogleAuthProvider.getCredential(idToken, null);
-        firebaseAuth.signInWithCredential(credential)
-                .addOnCompleteListener(requireActivity(), task ->
-                {
-                    if(task.isSuccessful())
-                    {
-                        FirebaseUser user = firebaseAuth.getCurrentUser();
-                        navigateToMainActivity(user);
-                    } else
-                    {
-                        Toast.makeText(getContext(), "Google Sign-In failed", Toast.LENGTH_SHORT).show();
-                    }
-                });
-    }
-
     private void navigateToMainActivity(FirebaseUser user)
     {
         if(user == null) return;
