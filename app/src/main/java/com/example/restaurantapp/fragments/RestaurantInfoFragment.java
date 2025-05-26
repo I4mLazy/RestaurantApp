@@ -70,7 +70,7 @@ public class RestaurantInfoFragment extends Fragment
     private ImageView restaurantDetailImage;
     private TextView restaurantDetailName, restaurantDetailAddress, restaurantDetailRating,
             restaurantDetailBusinessHours, restaurantDetailContactInfo, restaurantDetailReservable,
-            restaurantDetailType, restaurantDetailTags, restaurantDetailPriceLevel, restaurantDetailDescription, noResults;
+            restaurantDetailType, restaurantDetailTags, restaurantDetailPriceLevel, restaurantDetailDescription, reservationOverlayBusinessHours, noResults;
     private ImageButton rateButton;
     private Button restaurantDetailEditButton, openReservationOverlayButton, navigateButton;
     private EditText guestAmountEditText, specialRequestsEditText;
@@ -116,6 +116,7 @@ public class RestaurantInfoFragment extends Fragment
         restaurantDetailTags = view.findViewById(R.id.restaurantDetailTags);
         restaurantDetailPriceLevel = view.findViewById(R.id.restaurantDetailPriceLevel);
         restaurantDetailDescription = view.findViewById(R.id.restaurantDetailDescription);
+        reservationOverlayBusinessHours = view.findViewById(R.id.reservationOverlayBusinessHours);
         noResults = view.findViewById(R.id.noResults);
 
         rateButton = view.findViewById(R.id.rateButton);
@@ -623,6 +624,10 @@ public class RestaurantInfoFragment extends Fragment
     {
         // Show the overlay
         reservationOverlay.setVisibility(View.VISIBLE);
+
+        String businessHours = viewModel.getCurrentRestaurant().getValue() != null
+                ? viewModel.getCurrentRestaurant().getValue().getBusinessHours() : "No hours available";
+        reservationOverlayBusinessHours.setText(businessHours);
 
         // Clear any previous input
         guestAmountEditText.setText("");  // Clear guest amount

@@ -87,6 +87,7 @@
             android:visibility="gone" />
     </FrameLayout>
 
+    <!--Item View Overlay -->
     <RelativeLayout
         android:id="@+id/itemViewOverlay"
         android:layout_width="match_parent"
@@ -321,6 +322,7 @@
         android:id="@+id/itemEditOverlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_marginTop="48dp"
         android:background="#99000000"
         android:visibility="gone">
 
@@ -337,6 +339,7 @@
                 android:padding="6dp">
 
                 <TextView
+                    android:id="@+id/itemEditOverlayName"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="4dp"
@@ -505,6 +508,7 @@
             android:padding="20dp">
 
             <TextView
+                android:id="@+id/menuEditOverlayName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"

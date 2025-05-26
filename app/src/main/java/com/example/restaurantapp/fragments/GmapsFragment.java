@@ -51,6 +51,8 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.Task;
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.Place;
@@ -61,6 +63,7 @@ import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
@@ -82,6 +85,7 @@ public class GmapsFragment extends Fragment
     private Handler handler = new Handler(Looper.getMainLooper());
     private Runnable mapLoadRunnable;
     private PlacesClient placesClient;
+    private Marker currentSearchMarker;
 
     public GmapsFragment()
     {
@@ -196,6 +200,18 @@ public class GmapsFragment extends Fragment
             @Override
             public boolean onQueryTextChange(String newText)
             {
+                if(newText.isEmpty())
+                {
+                    recyclerView.setVisibility(View.GONE);
+                    noResultsTextView.setVisibility(View.GONE);
+                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+                }
+
+                if(currentSearchMarker != null)
+                {
+                    currentSearchMarker.remove();
+                    currentSearchMarker = null;
+                }
                 // updateSearchSuggestions(newText);
                 return true;
             }
@@ -257,6 +273,25 @@ public class GmapsFragment extends Fragment
             restaurantSearchResultsAdapter.updateData(results);
             noResultsTextView.setVisibility(View.GONE);
             recyclerView.setVisibility(View.VISIBLE);
+
+            // Show marker for first result
+            Restaurant first = results.get(0);
+            GeoPoint geoPoint = first.getLocation();
+            if(geoPoint != null && mMap != null)
+            {
+                LatLng latLng = new LatLng(geoPoint.getLatitude(), geoPoint.getLongitude());
+
+                if(currentSearchMarker != null)
+                {
+                    currentSearchMarker.remove();
+                }
+
+                currentSearchMarker = mMap.addMarker(new MarkerOptions()
+                        .position(latLng)
+                        .title(first.getName()));
+
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 16));
+            }
         }
 
         // Show the bottom sheet (it will be visible regardless of results)
@@ -406,10 +441,16 @@ public class GmapsFragment extends Fragment
     private void moveMapButtons(SupportMapFragment mapFragment)
     {
         View mapView = mapFragment.getView();
-        if(mapView != null)
+        if(mapView == null)
         {
-            // Move MyLocation button
-            View locationButton = mapView.findViewById(Integer.parseInt("2"));
+            Log.w("MapsFragment", "MapView is null in moveMapButtons");
+            return;
+        }
+
+        // Move MyLocation button
+        View locationButton = mapView.findViewById(Integer.parseInt("2"));
+        if(locationButton != null && locationButton.getLayoutParams() instanceof RelativeLayout.LayoutParams)
+        {
             RelativeLayout.LayoutParams locationParams = (RelativeLayout.LayoutParams) locationButton.getLayoutParams();
             locationParams.addRule(RelativeLayout.ALIGN_PARENT_TOP, 0);
             locationParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
@@ -417,9 +458,15 @@ public class GmapsFragment extends Fragment
             locationButton.setLayoutParams(locationParams);
             locationButton.setScaleX(1.2f);
             locationButton.setScaleY(1.2f);
+        } else
+        {
+            Log.w("MapsFragment", "MyLocation button not found or wrong layout params (id=2)");
+        }
 
-            // Move Zoom controls
-            View zoomControls = mapView.findViewById(Integer.parseInt("1"));
+        // Move Zoom controls
+        View zoomControls = mapView.findViewById(Integer.parseInt("1"));
+        if(zoomControls != null && zoomControls.getLayoutParams() instanceof RelativeLayout.LayoutParams)
+        {
             RelativeLayout.LayoutParams zoomParams = (RelativeLayout.LayoutParams) zoomControls.getLayoutParams();
             zoomParams.addRule(RelativeLayout.ALIGN_PARENT_TOP, 0);
             zoomParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
@@ -427,17 +474,23 @@ public class GmapsFragment extends Fragment
             zoomControls.setLayoutParams(zoomParams);
             zoomControls.setScaleX(1.2f);
             zoomControls.setScaleY(1.2f);
+        } else
+        {
+            Log.w("MapsFragment", "Zoom controls button not found or wrong layout params (id=1)");
+        }
 
-            // Move Compass button lower (~80dp from top)
-            View compassButton = mapView.findViewById(Integer.parseInt("5"));
-            if(compassButton != null)
-            {
-                RelativeLayout.LayoutParams compassParams = (RelativeLayout.LayoutParams) compassButton.getLayoutParams();
-                compassParams.setMargins(0, dpToPx(80), dpToPx(16), 0);  // Top margin 80dp, Right 16dp
-                compassButton.setLayoutParams(compassParams);
-                compassButton.setScaleX(1.2f);
-                compassButton.setScaleY(1.2f);
-            }
+        // Move Compass button lower (~80dp from top)
+        View compassButton = mapView.findViewById(Integer.parseInt("5"));
+        if(compassButton != null && compassButton.getLayoutParams() instanceof RelativeLayout.LayoutParams)
+        {
+            RelativeLayout.LayoutParams compassParams = (RelativeLayout.LayoutParams) compassButton.getLayoutParams();
+            compassParams.setMargins(0, dpToPx(80), dpToPx(16), 0);  // Top margin 80dp, Right 16dp
+            compassButton.setLayoutParams(compassParams);
+            compassButton.setScaleX(1.2f);
+            compassButton.setScaleY(1.2f);
+        } else
+        {
+            Log.w("MapsFragment", "Compass button not found or wrong layout params (id=5)");
         }
     }
 

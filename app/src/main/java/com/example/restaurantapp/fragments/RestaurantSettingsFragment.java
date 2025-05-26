@@ -2,10 +2,13 @@ package com.example.restaurantapp.fragments;
 
 import static android.content.ContentValues.TAG;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -20,6 +23,7 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 
@@ -116,7 +120,7 @@ public class RestaurantSettingsFragment extends Fragment
                 if(task.isSuccessful())
                 {
                     Log.d("RestaurantSettingsFragment", "User reloaded in onResume");
-                    SettingsUtils.syncPendingEmailIfNeeded(requireContext(), userRef, auth, profileEmail);
+                    SettingsUtils.syncPendingEmailIfNeeded(userRef, auth, profileEmail);
                 } else
                 {
                     Log.e("RestaurantSettingsFragment", "User reload failed", task.getException());
@@ -125,63 +129,76 @@ public class RestaurantSettingsFragment extends Fragment
         }
     }
 
-    // Load user settings from Firestore (only for dark mode)
+    // Load user settings from preferences
     private void loadDarkModeSetting()
+    {
+        SharedPreferences prefs = requireContext().getSharedPreferences("FeedMe", Context.MODE_PRIVATE);
+        boolean hasLocalSettings = prefs.contains("dark_mode");
+
+        if(hasLocalSettings)
+        {
+            // Load from SharedPreferences
+            boolean darkMode = prefs.getBoolean("dark_mode", false);
+
+            darkModeSwitch.setChecked(darkMode);
+            AppCompatDelegate.setDefaultNightMode(darkMode ?
+                    AppCompatDelegate.MODE_NIGHT_YES :
+                    AppCompatDelegate.MODE_NIGHT_NO);
+        } else
+        {
+            // Fallback to Firestore
+            fetchFromFirestoreAndStoreLocally(prefs);
+        }
+    }
+
+    //In case load fails, load from firestore and store locally
+    private void fetchFromFirestoreAndStoreLocally(SharedPreferences prefs)
     {
         userSettingsRef.get()
                 .addOnSuccessListener(documentSnapshot ->
                 {
-                    if(isAdded() && documentSnapshot.exists())
-                    {  // Check if the fragment is still added
-                        // Retrieve the dark_mode setting
-                        Boolean darkMode = documentSnapshot.getBoolean("dark_mode");
+                    if(documentSnapshot.exists())
+                    {
+                        // Retrieve setting from document
+                        boolean darkMode = documentSnapshot.getBoolean("dark_mode") != null && Boolean.TRUE.equals(documentSnapshot.getBoolean("dark_mode"));
 
-                        if(darkMode != null)
-                        {
-                            // Ensure the fragment is still attached before interacting with the UI
-                            if(isAdded())
-                            {
-                                darkModeSwitch.setChecked(darkMode);
-                                // Apply the dark mode setting
-                                AppCompatDelegate.setDefaultNightMode(darkMode ?
-                                        AppCompatDelegate.MODE_NIGHT_YES :
-                                        AppCompatDelegate.MODE_NIGHT_NO);
-                            }
-                        }
+                        prefs.edit()
+                                .putBoolean("dark_mode", darkMode)
+                                .apply();
+
+                        // Set switches without triggering listeners
+                        darkModeSwitch.setChecked(darkMode);
+                        // Apply dark mode setting
+                        AppCompatDelegate.setDefaultNightMode(darkMode ?
+                                AppCompatDelegate.MODE_NIGHT_YES :
+                                AppCompatDelegate.MODE_NIGHT_NO);
                     } else
                     {
-                        // Document doesn't exist, create it with the default value for dark mode
                         Map<String, Object> defaultSettings = new HashMap<>();
-                        defaultSettings.put("dark_mode", false); // default value for dark mode
+                        defaultSettings.put("dark_mode", false);
 
                         userSettingsRef.set(defaultSettings)
                                 .addOnSuccessListener(aVoid ->
                                 {
-                                    if(isAdded())
-                                    {  // Ensure fragment is still added before modifying UI
-                                        darkModeSwitch.setChecked(false);
-                                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
-                                    }
+                                    prefs.edit()
+                                            .putBoolean("dark_mode", false)
+                                            .apply();
+                                    // Set default values on switches
+                                    darkModeSwitch.setChecked(false);
                                 })
                                 .addOnFailureListener(e ->
                                 {
-                                    if(isAdded())
-                                    {
-                                        Toast.makeText(requireContext(),
-                                                "Failed to create settings: " + e.getMessage(),
-                                                Toast.LENGTH_SHORT).show();
-                                    }
+                                    Toast.makeText(requireContext(),
+                                            "Failed to create settings: " + e.getMessage(),
+                                            Toast.LENGTH_SHORT).show();
                                 });
                     }
                 })
                 .addOnFailureListener(e ->
                 {
-                    if(isAdded())
-                    {
-                        Toast.makeText(requireContext(),
-                                "Failed to load settings: " + e.getMessage(),
-                                Toast.LENGTH_SHORT).show();
-                    }
+                    Toast.makeText(requireContext(),
+                            "Failed to load settings: " + e.getMessage(),
+                            Toast.LENGTH_SHORT).show();
                 });
     }
 }

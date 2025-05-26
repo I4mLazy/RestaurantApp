@@ -111,7 +111,8 @@ public class ManageMenuFragment extends Fragment
     private DatePicker startDatePicker, endDatePicker;
     private TimePicker startTimePicker, endTimePicker;
     private TextView noResults, itemEditImageTextView, menuEditImageTextView, menuViewName, menuViewDescription, menuItemCount,
-            itemViewName, itemViewPrice, itemViewDescription, itemViewAvailability, itemViewCategory, itemViewAllergens, discountBadge, oldPrice;
+            itemViewName, itemViewPrice, itemViewDescription, itemViewAvailability, itemViewCategory, itemViewAllergens,
+            discountBadge, oldPrice, itemEditOverlayName, menuEditOverlayName;
     private CheckBox editItemAvailability;
     private BottomSheetDialog imageBottomSheetDialog;
     private FirebaseFirestore db;
@@ -280,6 +281,8 @@ public class ManageMenuFragment extends Fragment
         menuViewName = menuViewOverlay.findViewById(R.id.menuViewName);
         discountBadge = itemViewOverlay.findViewById(R.id.discountBadge);
         oldPrice = itemViewOverlay.findViewById(R.id.oldPrice);
+        itemEditOverlayName = itemEditOverlay.findViewById(R.id.itemEditOverlayName);
+        menuEditOverlayName = menuEditOverlay.findViewById(R.id.menuEditOverlayName);
 
         noResults = view.findViewById(R.id.noResults);
 
@@ -338,6 +341,7 @@ public class ManageMenuFragment extends Fragment
             currentType = "MenuItem";
             currentMenuItem = new MenuItem();
 
+            itemEditOverlayName.setText("Create Menu Item");
             editItemName.setText("");
             editItemPrice.setText("");
             editItemDescription.setText("");
@@ -377,6 +381,7 @@ public class ManageMenuFragment extends Fragment
             isEditMode = false;
             currentType = "Menu";
             currentMenu = new Menu();
+            menuEditOverlayName.setText("Create Menu");
             editMenuName.setText("");
             menuEditImage.setImageResource(R.drawable.image_placeholder);
             toggleOverlay(addChoiceOverlay, false);
@@ -1023,6 +1028,7 @@ public class ManageMenuFragment extends Fragment
         currentMenuItem = item;
         currentType = "MenuItem";
 
+        itemEditOverlayName.setText("Edit Item");
         editItemName.setText(item.getName());
         editItemPrice.setText(String.valueOf(item.getPrice()));
         editItemDescription.setText(item.getDescription());
@@ -1082,6 +1088,7 @@ public class ManageMenuFragment extends Fragment
         currentMenu = menu;
         currentType = "Menu";
 
+        menuEditOverlayName.setText("Edit Menu");
         editMenuName.setText(menu.getName());
         editMenuDescription.setText(menu.getDescription());
 

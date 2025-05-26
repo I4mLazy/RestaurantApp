@@ -207,7 +207,7 @@ public class ProfileFragment extends Fragment
                 if(task.isSuccessful())
                 {
                     Log.d("ProfileFragment", "User reloaded in onResume");
-                    SettingsUtils.syncPendingEmailIfNeeded(requireContext(), userRef, auth, profileEmail);
+                    SettingsUtils.syncPendingEmailIfNeeded(userRef, auth, profileEmail);
                 } else
                 {
                     Log.e("ProfileFragment", "User reload failed", task.getException());
@@ -238,8 +238,43 @@ public class ProfileFragment extends Fragment
         isUploading = false;
     }
 
-    // Load user settings from Firestore
+    // Load user settings from preferences
     private void loadUserSettings()
+    {
+        SharedPreferences prefs = requireContext().getSharedPreferences("FeedMe", Context.MODE_PRIVATE);
+        boolean hasLocalSettings = prefs.contains("dark_mode") && prefs.contains("notifications");
+
+        if(hasLocalSettings)
+        {
+            // Load from SharedPreferences
+            boolean darkMode = prefs.getBoolean("dark_mode", false);
+            boolean notifications = prefs.getBoolean("notifications", true); // default true
+
+            darkModeSwitch.setChecked(darkMode);
+            AppCompatDelegate.setDefaultNightMode(darkMode ?
+                    AppCompatDelegate.MODE_NIGHT_YES :
+                    AppCompatDelegate.MODE_NIGHT_NO);
+
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+            {
+                boolean hasPermission = ContextCompat.checkSelfPermission(requireContext(),
+                        Manifest.permission.POST_NOTIFICATIONS) ==
+                        PackageManager.PERMISSION_GRANTED;
+                notificationsSwitch.setChecked(notifications && hasPermission);
+            } else
+            {
+                notificationsSwitch.setChecked(notifications);
+            }
+
+        } else
+        {
+            // Fallback to Firestore
+            fetchFromFirestoreAndStoreLocally(prefs);
+        }
+    }
+
+    //In case load fails, load from firestore and store locally
+    private void fetchFromFirestoreAndStoreLocally(SharedPreferences prefs)
     {
         userSettingsRef.get()
                 .addOnSuccessListener(documentSnapshot ->
@@ -247,21 +282,21 @@ public class ProfileFragment extends Fragment
                     if(documentSnapshot.exists())
                     {
                         // Retrieve settings from document
-                        Boolean darkMode = documentSnapshot.getBoolean("dark_mode");
-                        Boolean notifications = documentSnapshot.getBoolean("notifications");
+                        boolean darkMode = documentSnapshot.getBoolean("dark_mode") != null && Boolean.TRUE.equals(documentSnapshot.getBoolean("dark_mode"));
+                        boolean notifications = documentSnapshot.getBoolean("notifications") != null && Boolean.TRUE.equals(documentSnapshot.getBoolean("notifications"));
+
+                        prefs.edit()
+                                .putBoolean("dark_mode", darkMode)
+                                .putBoolean("notifications", notifications)
+                                .apply();
 
                         // Set switches without triggering listeners
-                        if(darkMode != null)
-                        {
                             darkModeSwitch.setChecked(darkMode);
                             // Apply dark mode setting
                             AppCompatDelegate.setDefaultNightMode(darkMode ?
                                     AppCompatDelegate.MODE_NIGHT_YES :
                                     AppCompatDelegate.MODE_NIGHT_NO);
-                        }
 
-                        if(notifications != null)
-                        {
                             // For Android 13+, check if we have permission before setting checked state
                             if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
                             {
@@ -275,7 +310,6 @@ public class ProfileFragment extends Fragment
                             {
                                 notificationsSwitch.setChecked(notifications);
                             }
-                        }
                     } else
                     {
                         // Document doesn't exist, create it with default values
@@ -299,6 +333,10 @@ public class ProfileFragment extends Fragment
                         userSettingsRef.set(defaultSettings)
                                 .addOnSuccessListener(aVoid ->
                                 {
+                                    prefs.edit()
+                                            .putBoolean("dark_mode", false)
+                                            .putBoolean("notifications", defaultNotifications)
+                                            .apply();
                                     // Set default values on switches
                                     darkModeSwitch.setChecked(false);
                                     notificationsSwitch.setChecked(defaultNotifications);

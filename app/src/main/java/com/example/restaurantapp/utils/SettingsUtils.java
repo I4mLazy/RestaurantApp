@@ -208,7 +208,7 @@ public class SettingsUtils
         }
     }
 
-    public static void syncPendingEmailIfNeeded(Context context, DocumentReference userRef, FirebaseAuth auth, TextView profileEmail)
+    public static void syncPendingEmailIfNeeded(DocumentReference userRef, FirebaseAuth auth, TextView profileEmail)
     {
         FirebaseUser currentUser = auth.getCurrentUser();
         if(currentUser == null) return;
