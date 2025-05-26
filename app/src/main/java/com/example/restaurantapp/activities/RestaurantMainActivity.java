@@ -47,11 +47,6 @@ public class RestaurantMainActivity extends AppCompatActivity
     private final String RESERVATIONS_TAB_LAYOUT_FRAGMENT_TAG = "reservations_tab_layout_fragment";
     private String currentFragmentTag = MANAGE_MENU_FRAGMENT_TAG;
 
-    private View rootView;
-
-    // For Android 13+ permissions
-    private ActivityResultLauncher<String[]> requestMultiplePermissionsLauncher;
-    private ActivityResultLauncher<String> requestSinglePermissionLauncher;
     private boolean isTransactionInProgress = false;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private String pendingFragmentTag = null;
@@ -64,11 +59,7 @@ public class RestaurantMainActivity extends AppCompatActivity
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_restaurant_main);
 
-        rootView = findViewById(R.id.fragment_container);
         bottomNavMenu = findViewById(R.id.bottom_navigation);
-
-        // Initialize permission launchers
-        setupPermissionLaunchers();
 
         // Handle back press with the new API
         setupBackPressHandler();
@@ -89,51 +80,6 @@ public class RestaurantMainActivity extends AppCompatActivity
 
         // Set up navigation listener AFTER initializing the first fragment
         setupBottomNavigation();
-
-        // Request permissions with optimized approach
-        requestRequiredPermissions();
-    }
-
-    private void setupPermissionLaunchers()
-    {
-        // For multiple permissions (Android 13+)
-        requestMultiplePermissionsLauncher = registerForActivityResult(
-                new ActivityResultContracts.RequestMultiplePermissions(),
-                result ->
-                {
-                    StringBuilder grantedPermissions = new StringBuilder();
-                    StringBuilder deniedPermissions = new StringBuilder();
-
-                    for(Map.Entry<String, Boolean> entry : result.entrySet())
-                    {
-                        if(entry.getValue())
-                        {
-                            if(grantedPermissions.length() > 0) grantedPermissions.append(", ");
-                            grantedPermissions.append(getPermissionFriendlyName(entry.getKey()));
-                        } else
-                        {
-                            if(deniedPermissions.length() > 0) deniedPermissions.append(", ");
-                            deniedPermissions.append(getPermissionFriendlyName(entry.getKey()));
-                        }
-                    }
-
-                    // Show appropriate feedback based on results
-                    if(deniedPermissions.length() > 0)
-                    {
-                        showPermissionFeedback(deniedPermissions.toString());
-                    }
-                }
-        );
-
-        // For single permission requests
-        requestSinglePermissionLauncher = registerForActivityResult(
-                new ActivityResultContracts.RequestPermission(),
-                isGranted ->
-                {
-                    Log.d(TAG, "Single permission result: " + isGranted);
-                    // Handle specific permission result if needed
-                }
-        );
     }
 
     private void setupBackPressHandler()
@@ -311,98 +257,6 @@ public class RestaurantMainActivity extends AppCompatActivity
         {
             Log.e(TAG, "Error switching fragments: " + e.getMessage());
             isTransactionInProgress = false;  // Reset in case of exception
-        }
-    }
-
-    private void requestRequiredPermissions()
-    {
-        List<String> permissionsToRequest = new ArrayList<>();
-
-        // Add notification permission for Android 13+
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-        {
-            if(ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
-                    PackageManager.PERMISSION_GRANTED)
-            {
-                permissionsToRequest.add(Manifest.permission.POST_NOTIFICATIONS);
-            }
-        }
-
-        // If we have permissions to request, check if rationale is needed
-        if(!permissionsToRequest.isEmpty())
-        {
-            boolean shouldShowRationale = false;
-
-            for(String permission : permissionsToRequest)
-            {
-                if(ActivityCompat.shouldShowRequestPermissionRationale(this, permission))
-                {
-                    shouldShowRationale = true;
-                    break;
-                }
-            }
-
-            if(shouldShowRationale)
-            {
-                showPermissionRationale(permissionsToRequest);
-            } else
-            {
-                // Request permissions directly
-                requestMultiplePermissionsLauncher.launch(
-                        permissionsToRequest.toArray(new String[0])
-                );
-            }
-        }
-    }
-
-    private void showPermissionRationale(List<String> permissions)
-    {
-        boolean needsNotification = permissions.contains(Manifest.permission.POST_NOTIFICATIONS);
-
-        StringBuilder message = new StringBuilder("This app needs ");
-
-        if(needsNotification)
-        {
-            message.append("notification permission to alert you about new orders, customer messages, and important restaurant updates");
-        }
-
-        new AlertDialog.Builder(this)
-                .setTitle("Permissions Needed")
-                .setMessage(message.toString())
-                .setPositiveButton("OK", (dialog, which) ->
-                        requestMultiplePermissionsLauncher.launch(permissions.toArray(new String[0]))
-                )
-                .setNegativeButton("Cancel", (dialog, which) ->
-                        showPermissionFeedback(permissions.stream()
-                                .map(this::getPermissionFriendlyName)
-                                .reduce((a, b) -> a + ", " + b)
-                                .orElse("requested permissions"))
-                )
-                .create()
-                .show();
-    }
-
-    private void showPermissionFeedback(String deniedPermissions)
-    {
-        Snackbar.make(
-                rootView,
-                "Limited functionality: " + deniedPermissions + " not available",
-                Snackbar.LENGTH_LONG
-        ).setAction("Settings", v ->
-        {
-            // Open app settings
-            // Add intent to open settings if needed
-        }).show();
-    }
-
-    private String getPermissionFriendlyName(String permission)
-    {
-        switch(permission)
-        {
-            case Manifest.permission.POST_NOTIFICATIONS:
-                return "Notifications";
-            default:
-                return permission.substring(permission.lastIndexOf('.') + 1);
         }
     }
 }

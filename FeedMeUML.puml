@@ -1,0 +1,1661 @@
+@startuml
+class com.example.restaurantapp.fragments.UpcomingReservationsFragment {
+- RecyclerView reservationsRecyclerView
+- LinearLayout emptyStateContainer
+- MaterialButton filterByDateButton
+- ChipGroup filterChipGroup
+- ReservationAdapter reservationAdapter
+- List<Reservation> allReservations
+- List<Reservation> filteredReservations
+- List<String> activeDateFilters
+- SimpleDateFormat dateFormat
+~ FirebaseFirestore db
+- FirebaseAuth auth
+- FirebaseUser currentUser
+- boolean isRestaurant
++ <<Create>> UpcomingReservationsFragment()
++ View onCreateView(LayoutInflater,ViewGroup,Bundle)
+- void loadReservationsFromFirestore()
++ void cancelReservation(Reservation,int)
+- void setupFilters()
+- void showDatePickerDialog()
+- void onDateSelected(Date)
+- void addDateFilterChip(String)
+- void applyFilters()
+- void updateEmptyState()
+}
+
+
+class com.example.restaurantapp.databinding.ActivityRestaurantMainBinding {
+- LinearLayout rootView
++ BottomNavigationView bottomNavigation
++ FrameLayout fragmentContainer
+- <<Create>> ActivityRestaurantMainBinding(LinearLayout,BottomNavigationView,FrameLayout)
++ LinearLayout getRoot()
++ {static} ActivityRestaurantMainBinding inflate(LayoutInflater)
++ {static} ActivityRestaurantMainBinding inflate(LayoutInflater,ViewGroup,boolean)
++ {static} ActivityRestaurantMainBinding bind(View)
+}
+
+
+class com.example.restaurantapp.BuildConfig {
++ {static} boolean DEBUG
++ {static} String APPLICATION_ID
++ {static} String BUILD_TYPE
++ {static} int VERSION_CODE
++ {static} String VERSION_NAME
++ {static} String MAPS_API_KEY
+}
+
+class com.example.restaurantapp.viewmodels.MenuItemSelectionViewModel {
+- MutableLiveData<MenuItem> selectedMenuItem
++ void selectMenuItem(MenuItem)
++ LiveData<MenuItem> getSelectedMenuItem()
+}
+note left of com.example.restaurantapp.viewmodels.MenuItemSelectionViewModel::selectedMenuItem
+ LiveData to hold the selected MenuItem
+end note
+
+note left of com.example.restaurantapp.viewmodels.MenuItemSelectionViewModel::selectMenuItem(MenuItem)
+ Call this method when a menu item is selected
+end note
+note right of com.example.restaurantapp.viewmodels.MenuItemSelectionViewModel::getSelectedMenuItem()
+ Other fragments can observe this LiveData to react when a menu item is selected
+end note
+
+class com.example.restaurantapp.fragments.MenuItemFragment {
+- ImageView menuItemImage
+- TextView discountBadge
+- TextView menuItemName
+- TextView menuItemDescription
+- TextView menuItemPrice
+- TextView menuItemOldPrice
+- TextView menuItemCategory
+- TextView menuItemAllergens
+- TextView menuItemAvailability
+- MenuItemSelectionViewModel viewModel
++ <<Create>> MenuItemFragment()
++ View onCreateView(LayoutInflater,ViewGroup,Bundle)
++ void onViewCreated(View,Bundle)
+- void populateViews(MenuItem,Context)
+}
+
+
+class com.example.restaurantapp.adapters.RestaurantSearchResultsAdapter {
+- List<Restaurant> restaurants
+- Context context
+- OnItemClickListener listener
++ <<Create>> RestaurantSearchResultsAdapter(List<Restaurant>,Context,OnItemClickListener)
++ void updateData(List<Restaurant>)
++ ViewHolder onCreateViewHolder(ViewGroup,int)
++ void onBindViewHolder(ViewHolder,int)
++ int getItemCount()
++ void getDistance(Restaurant,DistanceCallback)
+}
+
+
+interface com.example.restaurantapp.adapters.RestaurantSearchResultsAdapter$OnItemClickListener {
+~ void onItemClick(Restaurant)
+~ void onNavigateClick(Restaurant)
+}
+
+class com.example.restaurantapp.adapters.RestaurantSearchResultsAdapter$ViewHolder {
+~ ImageView restaurantImage
+~ TextView nameTextView
+~ ImageButton navButton
++ <<Create>> ViewHolder(View)
+}
+
+
+interface com.example.restaurantapp.adapters.RestaurantSearchResultsAdapter$DistanceCallback {
+~ void onDistanceCalculated(double)
+}
+
+class com.example.restaurantapp.fragments.GmapsFragment {
+- SearchView searchView
+- GoogleMap mMap
+- FusedLocationProviderClient fusedLocationClient
+- TextView noResultsTextView
+- RestaurantSearchResultsAdapter restaurantSearchResultsAdapter
+- RecyclerView recyclerView
+- BottomSheetBehavior<View> bottomSheetBehavior
+- View bottomSheet
+- RestaurantViewModel viewModel
+- boolean isNavigating
+- Handler handler
+- Runnable mapLoadRunnable
+- PlacesClient placesClient
+- Marker currentSearchMarker
+- ActivityResultLauncher<String> locationPermissionLauncher
++ <<Create>> GmapsFragment()
++ View onCreateView(LayoutInflater,ViewGroup,Bundle)
++ void onDestroyView()
++ void onViewCreated(View,Bundle)
+- void performSearch(String)
+- void updateSearchResults(List<Restaurant>)
+- void setCurrentLocation(PlacesClient)
+- void loadMap(PlacesClient)
+- void setMapSettings(GoogleMap,PlacesClient)
+- void moveMapButtons(SupportMapFragment)
+- int dpToPx(int)
+- void setCurrentCameraPosition()
+- void focusOnLocation(GoogleMap,LatLng)
+- void openNavigationApp(String)
+}
+
+note left of com.example.restaurantapp.fragments.GmapsFragment::openNavigationApp(String)
+ Helper to launch navigation
+end note
+
+class com.example.restaurantapp.fragments.LoginFragment {
+- {static} String TAG
+- EditText editTextEmail
+- Button buttonLogin
+- TextView textViewSignUp
+- FirebaseAuth firebaseAuth
++ <<Create>> LoginFragment()
++ View onCreateView(LayoutInflater,ViewGroup,Bundle)
+- void loginWithEmailPassword()
+- void firebaseAuthWithGoogle(String)
+- void navigateToMainActivity(FirebaseUser)
+- void launchMainActivity(String)
++ void onStart()
+}
+
+note left of com.example.restaurantapp.fragments.LoginFragment::launchMainActivity(String)
+ Launches the correct main activity instantly
+end note
+
+class com.example.restaurantapp.ExampleUnitTest {
++ void addition_isCorrect()
+}
+note top of com.example.restaurantapp.ExampleUnitTest
+
+ * Example local unit test, which will execute on the development machine (host).
+ *
+ * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
+ 
+end note
+
+
+class com.example.restaurantapp.fragments.DiscoveryFragment {
+- RecyclerView restaurantRecyclerView
+- RestaurantDiscoveryAdapter restaurantAdapter
+- RestaurantViewModel viewModel
++ <<Create>> DiscoveryFragment()
++ View onCreateView(LayoutInflater,ViewGroup,Bundle)
++ void onResume()
+- void fetchAllRestaurants()
+}
+
+
+class com.example.restaurantapp.databinding.ActivityAuthenticationBinding {
+- FrameLayout rootView
++ FragmentContainerView authenticationContainer
+- <<Create>> ActivityAuthenticationBinding(FrameLayout,FragmentContainerView)
++ FrameLayout getRoot()
++ {static} ActivityAuthenticationBinding inflate(LayoutInflater)
++ {static} ActivityAuthenticationBinding inflate(LayoutInflater,ViewGroup,boolean)
++ {static} ActivityAuthenticationBinding bind(View)
+}
+
+
+class com.example.restaurantapp.ExampleInstrumentedTest {
++ void useAppContext()
+}
+note top of com.example.restaurantapp.ExampleInstrumentedTest
+
+ * Instrumented test, which will execute on an Android device.
+ *
+ * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
+ 
+end note
+
+
+class com.example.restaurantapp.databinding.ActivityEditInfoBinding {
+- RelativeLayout rootView
++ TextInputEditText confirmPasswordEditText
++ TextInputLayout confirmPasswordInputLayout
++ TextInputEditText newPasswordEditText
++ TextInputLayout newPasswordInputLayout
++ Button saveButton
++ Toolbar toolbar
++ TextInputEditText universalEditText
++ TextInputLayout universalInputLayout
+- <<Create>> ActivityEditInfoBinding(RelativeLayout,TextInputEditText,TextInputLayout,TextInputEditText,TextInputLayout,Button,Toolbar,TextInputEditText,TextInputLayout)
++ RelativeLayout getRoot()
++ {static} ActivityEditInfoBinding inflate(LayoutInflater)
++ {static} ActivityEditInfoBinding inflate(LayoutInflater,ViewGroup,boolean)
++ {static} ActivityEditInfoBinding bind(View)
+}
+
+
+class com.example.restaurantapp.databinding.FragmentUserSignUpBinding {
+- ScrollView rootView
++ Button buttonSignUp
++ TextInputEditText editTextConfirmPassword
++ TextInputEditText editTextEmail
++ TextInputEditText editTextName
++ TextInputEditText editTextPassword
++ TextInputEditText editTextPhone
++ TextView textViewRestaurantSignUp
++ TextView textViewSignIn
+- <<Create>> FragmentUserSignUpBinding(ScrollView,Button,TextInputEditText,TextInputEditText,TextInputEditText,TextInputEditText,TextInputEditText,TextView,TextView)
++ ScrollView getRoot()
++ {static} FragmentUserSignUpBinding inflate(LayoutInflater)
++ {static} FragmentUserSignUpBinding inflate(LayoutInflater,ViewGroup,boolean)
++ {static} FragmentUserSignUpBinding bind(View)
+}
+
+
+class com.example.restaurantapp.databinding.FragmentDiscoveryBinding {
+- LinearLayout rootView
++ LinearLayout discoveryContainer
++ RecyclerView restaurantRecyclerView
+- <<Create>> FragmentDiscoveryBinding(LinearLayout,LinearLayout,RecyclerView)
++ LinearLayout getRoot()
++ {static} FragmentDiscoveryBinding inflate(LayoutInflater)
++ {static} FragmentDiscoveryBinding inflate(LayoutInflater,ViewGroup,boolean)
++ {static} FragmentDiscoveryBinding bind(View)
+}
+
+
+class com.example.restaurantapp.fragments.EditRestaurantInfoFragment {
+- ImageView editRestaurantLogo
+- TextInputEditText editRestaurantName
+- AutoCompleteTextView editRestaurantType
+- Slider editRestaurantPriceLevel
+- SwitchMaterial editRestaurantReservable
+- Button saveButton
+- ProgressBar progressBar
+- BottomSheetDialog imageBottomSheetDialog
+- RestaurantViewModel viewModel
+- Uri photoUri
+- Bitmap bitmap
+- UploadTask currentUploadTask
+- boolean imageEdited
+- boolean isUploading
+- boolean hasError
+- Restaurant currentRestaurant
+- String restaurantID
+- FirebaseFirestore db
+- FirebaseAuth auth
+- FirebaseUser currentUser
+- StorageReference storageRef
+- FirebaseStorage storage
+- ActivityResultLauncher<String[]> permissionLauncher
+- ActivityResultLauncher<Intent> cameraLauncher
+- ActivityResultLauncher<Intent> imagePickerLauncher
++ View onCreateView(LayoutInflater,ViewGroup,Bundle)
+- void populateRestaurantViews(Restaurant)
+- void saveRestaurantChanges()
+- void isValidAddress(String,EditRestaurantInfoFragment.AddressValidationCallback)
+- boolean validateWithOpenStreetMap(String)
+- void editImage()
+- boolean checkStoragePermission()
+- void requestPermissions()
+- void showBottomSheetDialog()
+- void takePhoto()
+- void pickFromGallery()
+- File createImageFile()
+- Bitmap fixImageOrientation(Uri,Bitmap)
+- void uploadImageToFirebase(Bitmap)
+- void deleteOldImage(String)
+- void updateImageWithImageUrl(String)
+}
+note left of com.example.restaurantapp.fragments.EditRestaurantInfoFragment::permissionLauncher
+ Permission request launcher
+end note
+note right of com.example.restaurantapp.fragments.EditRestaurantInfoFragment::imagePickerLauncher
+ Handle gallery result
+end note
+
+
+interface com.example.restaurantapp.fragments.EditRestaurantInfoFragment$AddressValidationCallback {
+~ void onResult(boolean)
+}
+
+class com.example.restaurantapp.databinding.FragmentForgotPasswordBinding {
+- ScrollView rootView
++ Button buttonBackToLogin
++ Button buttonResetPassword
++ TextInputEditText editTextEmail
++ ProgressBar progressBar
++ TextView textViewTitle
+- <<Create>> FragmentForgotPasswordBinding(ScrollView,Button,Button,TextInputEditText,ProgressBar,TextView)
++ ScrollView getRoot()
++ {static} FragmentForgotPasswordBinding inflate(LayoutInflater)
++ {static} FragmentForgotPasswordBinding inflate(LayoutInflater,ViewGroup,boolean)
++ {static} FragmentForgotPasswordBinding bind(View)
+}
+
+
+class com.example.restaurantapp.adapters.ReservationAdapter {
+- List<Reservation> reservationList
+- Context context
+- boolean isUpcoming
+- boolean isRestaurant
+- UpcomingReservationsFragment fragment
+- SimpleDateFormat displayDateFormat
++ <<Create>> ReservationAdapter(Context,List<Reservation>,boolean)
++ <<Create>> ReservationAdapter(Context,List<Reservation>,boolean,UpcomingReservationsFragment)
++ ReservationViewHolder onCreateViewHolder(ViewGroup,int)
++ void onBindViewHolder(ReservationViewHolder,int)
++ int getItemCount()
+}
+
+note left of com.example.restaurantapp.adapters.ReservationAdapter::ReservationAdapter(Context,List<Reservation>,boolean,UpcomingReservationsFragment)
+ Optional constructor to directly provide the fragment reference
+end note
+
+class com.example.restaurantapp.adapters.ReservationAdapter$ReservationViewHolder {
+~ TextView dateTimeText
+~ TextView specialRequestsText
+~ Button cancelButton
+~ View bottomSpacer
++ <<Create>> ReservationViewHolder(View)
+}
+
+
+class com.example.restaurantapp.activities.AuthenticationActivity {
+# void onCreate(Bundle)
+}
+
+class com.example.restaurantapp.databinding.ItemReservationBinding {
+- CardView rootView
++ Space bottomSpacer
++ TextView bulletSeparator
++ Button cancelReservationButton
++ CardView reservationCard
++ TextView reservationDateTimeText
++ TextView reservationGuestCount
++ TextView reservationRestaurantName
++ TextView reservationSpecialRequests
++ TextView reservationStatus
++ TextView reservationUserName
++ TextView reservationUserPhone
+- <<Create>> ItemReservationBinding(CardView,Space,TextView,Button,CardView,TextView,TextView,TextView,TextView,TextView,TextView,TextView)
++ CardView getRoot()
++ {static} ItemReservationBinding inflate(LayoutInflater)
++ {static} ItemReservationBinding inflate(LayoutInflater,ViewGroup,boolean)
++ {static} ItemReservationBinding bind(View)
+}
+
+
+class com.example.restaurantapp.databinding.FragmentMenuItemBinding {
+- ScrollView rootView
++ TextView discountBadge
++ TextView menuItemAllergens
++ TextView menuItemAllergensLabel
++ TextView menuItemAvailability
++ TextView menuItemCategory
++ TextView menuItemDescription
++ LinearLayout menuItemDetailContainer
++ ScrollView menuItemDetailScroll
++ ImageView menuItemImage
++ TextView menuItemName
++ TextView menuItemOldPrice
++ TextView menuItemPrice
+- <<Create>> FragmentMenuItemBinding(ScrollView,TextView,TextView,TextView,TextView,TextView,TextView,LinearLayout,ScrollView,ImageView,TextView,TextView,TextView)
++ ScrollView getRoot()
++ {static} FragmentMenuItemBinding inflate(LayoutInflater)
++ {static} FragmentMenuItemBinding inflate(LayoutInflater,ViewGroup,boolean)
++ {static} FragmentMenuItemBinding bind(View)
+}
+
+
+class com.example.restaurantapp.fragments.RestaurantSignUpFragment {
+- TextInputEditText emailEditText
+- TextInputLayout emailLayout
+- Button signUpButton
+- FirebaseAuth firebaseAuth
+- TextView signInRedirectTextView
+- ProgressBar progressBar
++ <<Create>> RestaurantSignUpFragment()
++ View onCreateView(LayoutInflater,ViewGroup,Bundle)
+- void createRestaurantAccount()
+- void isValidAddress(String,AddressValidationCallback)
+- boolean validateWithOpenStreetMap(String)
+- void saveRestaurantData(FirebaseUser,String,String,String,String)
+- void saveUserTypeToPreferences()
+- void navigateToMainActivity(FirebaseUser)
+- void setupErrorClearListeners()
+}
+
+
+interface com.example.restaurantapp.fragments.RestaurantSignUpFragment$AddressValidationCallback {
+~ void onResult(boolean)
+}
+
+class com.example.restaurantapp.databinding.FragmentEditRestaurantInfoBinding {
+- FrameLayout rootView
++ Button cancelButton
++ TextInputEditText editRestaurantAddress
++ TextInputEditText editRestaurantDescription
++ TextInputEditText editRestaurantEmail
++ TextInputEditText editRestaurantHours
++ ImageView editRestaurantLogo
++ TextInputEditText editRestaurantMaxCapacity
++ TextInputEditText editRestaurantName
++ SwitchMaterial editRestaurantOffersPickup
++ TextInputEditText editRestaurantPhone
++ Slider editRestaurantPriceLevel
++ SwitchMaterial editRestaurantReservable
++ TextInputEditText editRestaurantTags
++ AutoCompleteTextView editRestaurantType
++ FrameLayout loadingOverlay
++ TextInputLayout maxCapacityInputLayout
++ Button saveButton
++ ProgressBar saveProgressBar
+- <<Create>> FragmentEditRestaurantInfoBinding(FrameLayout,Button,TextInputEditText,TextInputEditText,TextInputEditText,TextInputEditText,ImageView,TextInputEditText,TextInputEditText,SwitchMaterial,TextInputEditText,Slider,SwitchMaterial,TextInputEditText,AutoCompleteTextView,FrameLayout,TextInputLayout,Button,ProgressBar)
++ FrameLayout getRoot()
++ {static} FragmentEditRestaurantInfoBinding inflate(LayoutInflater)
++ {static} FragmentEditRestaurantInfoBinding inflate(LayoutInflater,ViewGroup,boolean)
++ {static} FragmentEditRestaurantInfoBinding bind(View)
+}
+
+
+class com.example.restaurantapp.databinding.FragmentProfileBinding {
+- ScrollView rootView
++ TextView accountSettingsTitle
++ Button changePasswordButton
++ Switch darkModeSwitch
++ LinearLayout editProfileEmailContainer
++ LinearLayout editProfileNameContainer
++ LinearLayout editProfilePhoneContainer
++ ImageButton editProfilePictureImageButton
++ TextView editProfilePictureTextView
++ TextView generalSettingsTitle
++ Button logoutButton
++ Switch notificationsSwitch
++ LinearLayout profileContainer
++ TextView profileEmail
++ TextView profileName
++ TextView profilePhone
+- <<Create>> FragmentProfileBinding(ScrollView,TextView,Button,Switch,LinearLayout,LinearLayout,LinearLayout,ImageButton,TextView,TextView,Button,Switch,LinearLayout,TextView,TextView,TextView)
++ ScrollView getRoot()
++ {static} FragmentProfileBinding inflate(LayoutInflater)
++ {static} FragmentProfileBinding inflate(LayoutInflater,ViewGroup,boolean)
++ {static} FragmentProfileBinding bind(View)
+}
+
+
+class com.example.restaurantapp.databinding.FragmentMapBinding {
+- FrameLayout rootView
++ MapView gmap
+- <<Create>> FragmentMapBinding(FrameLayout,MapView)
++ FrameLayout getRoot()
++ {static} FragmentMapBinding inflate(LayoutInflater)
++ {static} FragmentMapBinding inflate(LayoutInflater,ViewGroup,boolean)
++ {static} FragmentMapBinding bind(View)
+}
+
+
+class com.example.restaurantapp.databinding.ItemSearchRestaurantBinding {
+- CardView rootView
++ ImageButton navButton
++ TextView restaurantDistance
++ ImageView restaurantImage
++ TextView restaurantName
++ TextView restaurantRating
++ TextView restaurantTags
+- <<Create>> ItemSearchRestaurantBinding(CardView,ImageButton,TextView,ImageView,TextView,TextView,TextView)
++ CardView getRoot()
++ {static} ItemSearchRestaurantBinding inflate(LayoutInflater)
++ {static} ItemSearchRestaurantBinding inflate(LayoutInflater,ViewGroup,boolean)
++ {static} ItemSearchRestaurantBinding bind(View)
+}
+
+
+class com.example.restaurantapp.databinding.FragmentRestaurantSettingsBinding {
+- CoordinatorLayout rootView
++ Button changePasswordButton
++ Switch darkModeSwitch
++ LinearLayout editProfileEmailContainer
++ LinearLayout editProfilePhoneContainer
++ Button logoutButton
++ TextView profileEmail
++ TextView profilePhone
++ Toolbar toolbar
+- <<Create>> FragmentRestaurantSettingsBinding(CoordinatorLayout,Button,Switch,LinearLayout,LinearLayout,Button,TextView,TextView,Toolbar)
++ CoordinatorLayout getRoot()
++ {static} FragmentRestaurantSettingsBinding inflate(LayoutInflater)
++ {static} FragmentRestaurantSettingsBinding inflate(LayoutInflater,ViewGroup,boolean)
++ {static} FragmentRestaurantSettingsBinding bind(View)
+}
+
+
+class com.example.restaurantapp.databinding.FragmentReservationsTabLayoutBinding {
+- CoordinatorLayout rootView
++ AppBarLayout appBarLayout
++ TabLayout tabLayout
++ ViewPager2 viewPager
+- <<Create>> FragmentReservationsTabLayoutBinding(CoordinatorLayout,AppBarLayout,TabLayout,ViewPager2)
++ CoordinatorLayout getRoot()
++ {static} FragmentReservationsTabLayoutBinding inflate(LayoutInflater)
++ {static} FragmentReservationsTabLayoutBinding inflate(LayoutInflater,ViewGroup,boolean)
++ {static} FragmentReservationsTabLayoutBinding bind(View)
+}
+
+
+class com.example.restaurantapp.databinding.ActivityUserMainBinding {
+- LinearLayout rootView
++ BottomNavigationView bottomNavMenu
++ FrameLayout fragmentContainer
+- <<Create>> ActivityUserMainBinding(LinearLayout,BottomNavigationView,FrameLayout)
++ LinearLayout getRoot()
++ {static} ActivityUserMainBinding inflate(LayoutInflater)
++ {static} ActivityUserMainBinding inflate(LayoutInflater,ViewGroup,boolean)
++ {static} ActivityUserMainBinding bind(View)
+}
+
+
+class com.example.restaurantapp.models.Rating {
+- double rating
+- long timestamp
++ <<Create>> Rating()
++ <<Create>> Rating(double,long)
++ double getRating()
++ void setRating(double)
++ long getTimestamp()
++ void setTimestamp(long)
+}
+
+
+class com.example.restaurantapp.databinding.FragmentGmapsBinding {
+- CoordinatorLayout rootView
++ LinearLayout bottomSheet
++ FrameLayout bottomSheetContainer
++ FragmentContainerView mapContainer
++ TextView noResultsTextView
++ SearchView searchBar
++ RecyclerView searchResultsRecyclerView
+- <<Create>> FragmentGmapsBinding(CoordinatorLayout,LinearLayout,FrameLayout,FragmentContainerView,TextView,SearchView,RecyclerView)
++ CoordinatorLayout getRoot()
++ {static} FragmentGmapsBinding inflate(LayoutInflater)
++ {static} FragmentGmapsBinding inflate(LayoutInflater,ViewGroup,boolean)
++ {static} FragmentGmapsBinding bind(View)
+}
+
+
+class com.example.restaurantapp.utils.DiscountUtils {
++ {static} void applyActiveDiscounts(MenuItem,Context,DiscountResultCallback)
+}
+
+interface com.example.restaurantapp.utils.DiscountUtils$DiscountResultCallback {
+~ void onResult(double,double,boolean,boolean,String)
+}
+
+class com.example.restaurantapp.databinding.ItemMenuItemBinding {
+- FrameLayout rootView
++ TextView discountBadge
++ ImageView itemImage
++ TextView itemName
++ TextView itemPrice
++ TextView oldPrice
++ LinearLayout priceLayout
+- <<Create>> ItemMenuItemBinding(FrameLayout,TextView,ImageView,TextView,TextView,TextView,LinearLayout)
++ FrameLayout getRoot()
++ {static} ItemMenuItemBinding inflate(LayoutInflater)
++ {static} ItemMenuItemBinding inflate(LayoutInflater,ViewGroup,boolean)
++ {static} ItemMenuItemBinding bind(View)
+}
+
+
+class com.example.restaurantapp.fragments.RestaurantSettingsFragment {
+- Button logoutButton
+- TextView profileEmail
+- Switch darkModeSwitch
+- ActivityResultLauncher<Intent> editInfoLauncher
+- FirebaseFirestore db
+- FirebaseAuth auth
+- FirebaseUser currentUser
+- DocumentReference userRef
+- DocumentReference userSettingsRef
++ <<Create>> RestaurantSettingsFragment()
++ View onCreateView(LayoutInflater,ViewGroup,Bundle)
++ void onResume()
+- void loadDarkModeSetting()
+- void fetchFromFirestoreAndStoreLocally(SharedPreferences)
+}
+
+note left of com.example.restaurantapp.fragments.RestaurantSettingsFragment::loadDarkModeSetting()
+ Load user settings from preferences
+end note
+note right of com.example.restaurantapp.fragments.RestaurantSettingsFragment::fetchFromFirestoreAndStoreLocally(SharedPreferences)
+In case load fails, load from firestore and store locally
+end note
+
+class com.example.restaurantapp.fragments.UserSignUpFragment {
+- EditText emailEditText
+- Button signUpButton
+- TextView signInRedirectTextView
+- FirebaseAuth firebaseAuth
++ <<Create>> UserSignUpFragment()
++ View onCreateView(LayoutInflater,ViewGroup,Bundle)
+- void createAccount()
+- void saveUserData(String,String,String,String)
+- void saveUserTypeToPreferences()
+- void navigateToMainActivity(FirebaseUser)
+}
+
+
+class com.example.restaurantapp.databinding.FragmentReservationsBinding {
+- LinearLayout rootView
++ MaterialButton clearFilterButton
++ LinearLayout emptyStateContainer
++ MaterialButton filterByDateButton
++ ChipGroup filterChipGroup
++ LinearLayout filterControls
++ TextView noReservationsText
++ RecyclerView reservationsRecyclerView
++ TextView reservationsTitle
+- <<Create>> FragmentReservationsBinding(LinearLayout,MaterialButton,LinearLayout,MaterialButton,ChipGroup,LinearLayout,TextView,RecyclerView,TextView)
++ LinearLayout getRoot()
++ {static} FragmentReservationsBinding inflate(LayoutInflater)
++ {static} FragmentReservationsBinding inflate(LayoutInflater,ViewGroup,boolean)
++ {static} FragmentReservationsBinding bind(View)
+}
+
+
+class com.example.restaurantapp.models.MenuItem {
+- String name
+- String description
+- double price
+- String imageURL
+- String menuID
+- String restaurantID
+- String category
+- Boolean availability
+- List<String> allergens
+- int orderIndex
+- String itemID
++ <<Create>> MenuItem()
++ <<Create>> MenuItem(String,String,double,String,String,String,String,Boolean,List<String>,int,String)
++ String getName()
++ void setName(String)
++ String getDescription()
++ void setDescription(String)
++ double getPrice()
++ void setPrice(double)
++ String getImageURL()
++ void setImageURL(String)
++ String getMenuID()
++ void setMenuID(String)
++ String getRestaurantID()
++ void setRestaurantID(String)
++ String getCategory()
++ void setCategory(String)
++ Boolean getAvailability()
++ void setAvailability(Boolean)
++ List<String> getAllergens()
++ void setAllergens(List<String>)
++ int getOrderIndex()
++ void setOrderIndex(int)
++ String getItemID()
++ void setItemID(String)
+}
+
+
+class com.example.restaurantapp.fragments.ForgotPasswordFragment {
+- EditText editTextEmail
+- Button buttonResetPassword
+- ProgressBar progressBar
+- FirebaseAuth firebaseAuth
++ <<Create>> ForgotPasswordFragment()
++ View onCreateView(LayoutInflater,ViewGroup,Bundle)
+}
+
+
+class com.example.restaurantapp.activities.RestaurantMainActivity {
+- {static} String TAG
+- BottomNavigationView bottomNavMenu
+- String MANAGE_MENU_FRAGMENT_TAG
+- String RESTAURANT_SETTINGS_FRAGMENT_TAG
+- String RESTAURANT_INFO_FRAGMENT_TAG
+- String RESERVATIONS_TAB_LAYOUT_FRAGMENT_TAG
+- String currentFragmentTag
+- View rootView
+- ActivityResultLauncher<String[]> requestMultiplePermissionsLauncher
+- ActivityResultLauncher<String> requestSinglePermissionLauncher
+- boolean isTransactionInProgress
+- Handler handler
+- String pendingFragmentTag
+# void onCreate(Bundle)
+- void setupPermissionLaunchers()
+- void setupBackPressHandler()
+- void setupBottomNavigation()
+# void onSaveInstanceState(Bundle)
+- void updateBottomNavFromTag(String)
+- void switchFragment(String)
+- void loadFragment(Fragment,String)
+- void requestRequiredPermissions()
+- void showPermissionRationale(List<String>)
+- void showPermissionFeedback(String)
+- String getPermissionFriendlyName(String)
+}
+note left of com.example.restaurantapp.activities.RestaurantMainActivity::requestMultiplePermissionsLauncher
+ For Android 13+ permissions
+end note
+
+
+class com.example.restaurantapp.databinding.FragmentManageMenuBinding {
+- FrameLayout rootView
++ RelativeLayout addChoiceOverlay
++ ImageButton btnAdd
++ Button btnApplyDiscount
++ Button btnCancelAddChoice
++ Button btnCancelDiscount
++ Button btnCancelEdit
++ Button btnCancelMenuEdit
++ Button btnChooseAddItem
++ Button btnChooseAddMenu
++ Button btnChooseForDiscount
++ Button btnCloseItemView
++ Button btnCloseMenuView
++ ImageButton btnCreateDiscount
++ Button btnDeleteItem
++ Button btnDeleteMenu
++ Button btnEditItem
++ Button btnEditMenu
++ Button btnSaveItem
++ Button btnSaveMenu
++ DatePicker datePickerEnd
++ DatePicker datePickerStart
++ TextView discountBadge
++ RelativeLayout discountOverlay
++ EditText editDiscountAmount
++ TextInputEditText editItemAllergens
++ TextInputLayout editItemAllergensLayout
++ CheckBox editItemAvailability
++ TextInputEditText editItemCategory
++ TextInputLayout editItemCategoryLayout
++ TextInputEditText editItemDescription
++ TextInputLayout editItemDescriptionLayout
++ ImageButton editItemImage
++ TextInputEditText editItemName
++ TextInputLayout editItemNameLayout
++ TextInputEditText editItemPrice
++ TextInputLayout editItemPriceLayout
++ ImageButton editMenuImage
++ EditText editMenuName
++ TextView itemEditImageTextView
++ RelativeLayout itemEditOverlay
++ TextView itemEditOverlayName
++ TextView itemViewAllergens
++ TextView itemViewAvailability
++ TextView itemViewCategory
++ TextView itemViewDescription
++ ImageView itemViewImage
++ TextView itemViewName
++ RelativeLayout itemViewOverlay
++ TextView itemViewPrice
++ LinearLayout layoutSchedule
++ RelativeLayout loadingOverlay
++ TextView menuEditImageTextView
++ RelativeLayout menuEditOverlay
++ TextView menuEditOverlayName
++ ImageView menuViewImage
++ TextView menuViewName
++ RelativeLayout menuViewOverlay
++ TextView noResults
++ TextView oldPrice
++ ProgressBar progressBar
++ RadioGroup radioApplyScope
++ RadioButton radioApplyToMenuOrItem
++ RadioGroup radioDiscountType
++ RadioButton radioFlat
++ RadioButton radioManualSelect
++ RadioButton radioPercentage
++ RecyclerView recyclerViewMenus
++ NestedScrollView scrollViewMenus
++ SearchView searchBar
++ Spinner spinnerDiscountItem
++ Spinner spinnerDiscountMenu
++ Spinner spinnerMenuSelection
++ Switch switchEnableSchedule
++ TimePicker timePickerEnd
++ TimePicker timePickerStart
+- <<Create>> FragmentManageMenuBinding(FrameLayout,RelativeLayout,ImageButton,Button,Button,Button,Button,Button,Button,Button,Button,Button,Button,ImageButton,Button,Button,Button,Button,Button,Button,DatePicker,DatePicker,TextView,RelativeLayout,EditText,TextInputEditText,TextInputLayout,CheckBox,TextInputEditText,TextInputLayout,TextInputEditText,TextInputLayout,ImageButton,TextInputEditText,TextInputLayout,TextInputEditText,TextInputLayout,ImageButton,EditText,TextView,RelativeLayout,TextView,TextView,TextView,TextView,TextView,ImageView,TextView,RelativeLayout,TextView,LinearLayout,RelativeLayout,TextView,RelativeLayout,TextView,ImageView,TextView,RelativeLayout,TextView,TextView,ProgressBar,RadioGroup,RadioButton,RadioGroup,RadioButton,RadioButton,RadioButton,RecyclerView,NestedScrollView,SearchView,Spinner,Spinner,Spinner,Switch,TimePicker,TimePicker)
++ FrameLayout getRoot()
++ {static} FragmentManageMenuBinding inflate(LayoutInflater)
++ {static} FragmentManageMenuBinding inflate(LayoutInflater,ViewGroup,boolean)
++ {static} FragmentManageMenuBinding bind(View)
+}
+
+
+class com.example.restaurantapp.adapters.RestaurantDiscoveryAdapter {
+- List<Restaurant> restaurants
+- Context context
+- OnRestaurantClickListener listener
++ <<Create>> RestaurantDiscoveryAdapter(List<Restaurant>,Context,OnRestaurantClickListener)
++ void updateData(List<Restaurant>)
++ ViewHolder onCreateViewHolder(ViewGroup,int)
++ void onBindViewHolder(ViewHolder,int)
++ int getItemCount()
+- String getPriceLevelText(int)
+- String joinTags(List<String>)
+}
+
+note left of com.example.restaurantapp.adapters.RestaurantDiscoveryAdapter::updateData(List<Restaurant>)
+ Update adapter data
+end note
+note right of com.example.restaurantapp.adapters.RestaurantDiscoveryAdapter::getPriceLevelText(int)
+ Helper to format price level
+end note
+note left of com.example.restaurantapp.adapters.RestaurantDiscoveryAdapter::joinTags(List<String>)
+ Helper to join tags
+end note
+
+interface com.example.restaurantapp.adapters.RestaurantDiscoveryAdapter$OnRestaurantClickListener {
+~ void onRestaurantClick(Restaurant)
+}
+note top of com.example.restaurantapp.adapters.RestaurantDiscoveryAdapter$OnRestaurantClickListener
+ Interface for item click callback
+end note
+
+
+class com.example.restaurantapp.adapters.RestaurantDiscoveryAdapter$ViewHolder {
+~ ImageView restaurantImage
+~ TextView restaurantName
++ <<Create>> ViewHolder(View)
+}
+
+
+class com.example.restaurantapp.models.Reservation {
+- Date date
+- String time
+- String guests
+- String specialRequests
+- String status
+- String name
+- String restaurantName
+- String phoneNumber
+- String userID
+- String restaurantID
+- String reservationID
++ <<Create>> Reservation()
++ <<Create>> Reservation(Date,String,String,String,String,String,String,String,String,String,String)
++ Date getDate()
++ String getTime()
++ String getGuests()
++ String getSpecialRequests()
++ String getStatus()
++ String getName()
++ String getPhoneNumber()
++ void setDate(Date)
++ void setTime(String)
++ void setGuests(String)
++ void setSpecialRequests(String)
++ void setStatus(String)
++ void setName(String)
++ void setPhoneNumber(String)
++ String getUserID()
++ void setUserID(String)
++ String getRestaurantID()
++ void setRestaurantID(String)
++ String getReservationID()
++ void setReservationID(String)
++ String getRestaurantName()
++ void setRestaurantName(String)
+}
+
+note left of com.example.restaurantapp.models.Reservation::getDate()
+ Getters
+end note
+note right of com.example.restaurantapp.models.Reservation::setDate(Date)
+ Setters
+end note
+
+class com.example.restaurantapp.activities.UserMainActivity {
+- {static} String TAG
+- BottomNavigationView bottomNavMenu
+- String DISCOVERY_FRAGMENT_TAG
+- String GMAPS_FRAGMENT_TAG
+- String PROFILE_FRAGMENT_TAG
+- String RESERVATIONS_TAB_LAYOUT_FRAGMENT_TAG
+- String currentFragmentTag
+- View rootView
+- ActivityResultLauncher<String[]> permissionLauncher
+# void onCreate(Bundle)
+- void setupPermissionLaunchers()
+- void setupBackPressHandler()
+- void setupBottomNavigation()
+# void onSaveInstanceState(Bundle)
+- void updateBottomNavFromTag(String)
+- void switchFragment(String)
+- void loadFragment(Fragment,String)
+- void requestRequiredPermissions()
+}
+
+
+class com.example.restaurantapp.fragments.ProfileFragment {
+- ImageButton editProfilePictureImageButton
+- TextView profileName
+- Switch darkModeSwitch
+- ActivityResultLauncher<Intent> editInfoLauncher
+- ActivityResultLauncher<String> requestPermissionLauncher
+- BottomSheetDialog bottomSheetDialog
+- UploadTask currentUploadTask
+- boolean isUploading
+- Uri photoUri
+- FirebaseFirestore db
+- FirebaseAuth auth
+- FirebaseStorage storage
+- StorageReference storageRef
+- DocumentReference userSettingsRef
+- DocumentReference userRef
+- {static} String TAG
+- ActivityResultLauncher<String[]> permissionLauncher
+- ActivityResultLauncher<Intent> cameraLauncher
+- ActivityResultLauncher<Intent> imagePickerLauncher
++ <<Create>> ProfileFragment()
++ View onCreateView(LayoutInflater,ViewGroup,Bundle)
++ void onResume()
++ void onDestroyView()
+- void loadUserSettings()
+- void fetchFromFirestoreAndStoreLocally(SharedPreferences)
+- void requestNotificationPermission()
+- void setNotificationPreference(boolean)
+- void updateNotificationSubscription(boolean)
+- void loadUserProfile()
+- void selectProfilePicture()
+- boolean checkStoragePermission()
+- void requestPermissions()
+- void showBottomSheetDialog()
+- void takePhoto()
+- void pickFromGallery()
+- File createImageFile()
+- void uploadImageToFirebase(Bitmap)
+- Bitmap fixImageOrientation(Uri,Bitmap)
+- void updateUserProfileWithImageUrl(String)
+- void deleteOldProfileImage(String)
+}
+note left of com.example.restaurantapp.fragments.ProfileFragment::permissionLauncher
+ Permission request launcher
+end note
+note right of com.example.restaurantapp.fragments.ProfileFragment::cameraLauncher
+ Handle camera result
+end note
+note left of com.example.restaurantapp.fragments.ProfileFragment::imagePickerLauncher
+ Handle gallery result
+end note
+
+note left of com.example.restaurantapp.fragments.ProfileFragment::loadUserSettings()
+ Load user settings from preferences
+end note
+note right of com.example.restaurantapp.fragments.ProfileFragment::fetchFromFirestoreAndStoreLocally(SharedPreferences)
+In case load fails, load from firestore and store locally
+end note
+note left of com.example.restaurantapp.fragments.ProfileFragment::requestNotificationPermission()
+ Function to request notification permission
+end note
+
+class com.example.restaurantapp.utils.SettingsUtils {
+- {static} String PREF_NAME
+- {static} String DARK_MODE_KEY
++ {static} void loadUserSettings(Context)
++ {static} void handleLogout(FragmentActivity,FirebaseAuth)
++ {static} void launchEditActivity(Context,ActivityResultLauncher<Intent>,String,String)
++ {static} void handleEditInfoResult(Context,androidx.activity.result.ActivityResult,DocumentReference,FirebaseAuth,TextView,TextView)
++ {static} void saveUserInfo(Context,DocumentReference,String,String)
+- {static} void updateFirestore(Context,DocumentReference,Map<String,Object>)
++ {static} void savePendingEmail(Context,DocumentReference,FirebaseAuth,String)
++ {static} void syncPendingEmailIfNeeded(DocumentReference,FirebaseAuth,TextView)
++ {static} void setupDarkModeSwitch(Fragment,Switch,DocumentReference)
++ {static} void setDarkModePreference(Fragment,boolean,DocumentReference)
+}
+
+note left of com.example.restaurantapp.utils.SettingsUtils::loadUserSettings(Context)
+ Loads and applies the user's settings (e.g., dark mode)
+end note
+note right of com.example.restaurantapp.utils.SettingsUtils::setDarkModePreference(Fragment,boolean,DocumentReference)
+ Function to save the dark mode preference to Firestore and SharedPreferences
+end note
+
+class com.example.restaurantapp.adapters.MenuItemAdapter {
+- List<MenuItem> menuItemList
+- OnItemClickListener onItemClickListener
++ <<Create>> MenuItemAdapter(List<MenuItem>,OnItemClickListener)
++ ItemViewHolder onCreateViewHolder(ViewGroup,int)
++ void onBindViewHolder(ItemViewHolder,int)
++ int getItemCount()
+}
+
+
+interface com.example.restaurantapp.adapters.MenuItemAdapter$OnItemClickListener {
+~ void onItemClick(MenuItem)
+}
+
+class com.example.restaurantapp.adapters.MenuItemAdapter$ItemViewHolder {
+~ ImageView itemImage
+~ TextView itemName
++ <<Create>> ItemViewHolder(View)
++ void bind(MenuItem)
+}
+
+
+class com.example.restaurantapp.databinding.FragmentRestaurantSignUpBinding {
+- LinearLayout rootView
++ Button buttonRestaurantSignUp
++ TextInputEditText editTextRestaurantAddress
++ TextInputEditText editTextRestaurantConfirmPassword
++ TextInputEditText editTextRestaurantEmail
++ TextInputEditText editTextRestaurantName
++ TextInputEditText editTextRestaurantPassword
++ TextInputEditText editTextRestaurantPhone
++ ProgressBar progressBarSignUp
++ TextInputLayout textInputLayoutAddress
++ TextInputLayout textInputLayoutConfirmPassword
++ TextInputLayout textInputLayoutEmail
++ TextInputLayout textInputLayoutPassword
++ TextInputLayout textInputLayoutPhone
++ TextInputLayout textInputLayoutRestaurantName
++ TextView textViewSignIn
++ TextView textViewUserSignUp
+- <<Create>> FragmentRestaurantSignUpBinding(LinearLayout,Button,TextInputEditText,TextInputEditText,TextInputEditText,TextInputEditText,TextInputEditText,TextInputEditText,ProgressBar,TextInputLayout,TextInputLayout,TextInputLayout,TextInputLayout,TextInputLayout,TextInputLayout,TextView,TextView)
++ LinearLayout getRoot()
++ {static} FragmentRestaurantSignUpBinding inflate(LayoutInflater)
++ {static} FragmentRestaurantSignUpBinding inflate(LayoutInflater,ViewGroup,boolean)
++ {static} FragmentRestaurantSignUpBinding bind(View)
+}
+
+
+class com.example.restaurantapp.models.Discount {
+- String discountType
+- double discountValue
+- Timestamp startTime
+- Timestamp endTime
+- String discountID
++ <<Create>> Discount()
++ <<Create>> Discount(String,double,Timestamp,Timestamp,String)
++ String getDiscountType()
++ void setDiscountType(String)
++ double getDiscountValue()
++ void setDiscountValue(double)
++ Timestamp getStartTime()
++ void setStartTime(Timestamp)
++ Timestamp getEndTime()
++ void setEndTime(Timestamp)
++ void setDiscountID(String)
++ String getDiscountID()
+}
+note left of com.example.restaurantapp.models.Discount::discountType
+ "Percentage" or "Flat"
+end note
+
+
+class com.example.restaurantapp.databinding.FragmentRestaurantInfoBinding {
+- FrameLayout rootView
++ MaterialButton cancelReservationButton
++ MaterialButton confirmReservationButton
++ DatePicker datePickerReservation
++ TextInputEditText guestAmountEditText
++ TextInputLayout guestAmountInputLayout
++ NumberPicker hourPicker
++ RecyclerView menusRecyclerView
++ NumberPicker minutePicker
++ MaterialButton navigateButton
++ TextView noResults
++ MaterialButton openReserveOverlayButton
++ ProgressBar progressBar
++ ImageButton rateButton
++ FrameLayout reservationOverlay
++ TextView reservationOverlayBusinessHours
++ TextView reservationTitle
++ TextView restaurantDetailAddress
++ TextView restaurantDetailBusinessHours
++ TextView restaurantDetailContactInfo
++ TextView restaurantDetailDescription
++ Button restaurantDetailEditButton
++ ImageView restaurantDetailLogo
++ TextView restaurantDetailName
++ TextView restaurantDetailOffersPickup
++ TextView restaurantDetailPriceLevel
++ TextView restaurantDetailRating
++ TextView restaurantDetailReservable
++ TextView restaurantDetailTags
++ TextView restaurantDetailType
++ SearchView searchBar
++ TextInputEditText specialRequestsEditText
++ TextInputLayout specialRequestsInputLayout
++ TextView textView
+- <<Create>> FragmentRestaurantInfoBinding(FrameLayout,MaterialButton,MaterialButton,DatePicker,TextInputEditText,TextInputLayout,NumberPicker,RecyclerView,NumberPicker,MaterialButton,TextView,MaterialButton,ProgressBar,ImageButton,FrameLayout,TextView,TextView,TextView,TextView,TextView,TextView,Button,ImageView,TextView,TextView,TextView,TextView,TextView,TextView,TextView,SearchView,TextInputEditText,TextInputLayout,TextView)
++ FrameLayout getRoot()
++ {static} FragmentRestaurantInfoBinding inflate(LayoutInflater)
++ {static} FragmentRestaurantInfoBinding inflate(LayoutInflater,ViewGroup,boolean)
++ {static} FragmentRestaurantInfoBinding bind(View)
+}
+
+
+class com.example.restaurantapp.databinding.FragmentLoginBinding {
+- LinearLayout rootView
++ Button buttonLogin
++ EditText editTextEmail
++ EditText editTextPassword
++ LinearLayout main
++ TextView textViewForgotPassword
++ TextView textViewSignUp
+- <<Create>> FragmentLoginBinding(LinearLayout,Button,EditText,EditText,LinearLayout,TextView,TextView)
++ LinearLayout getRoot()
++ {static} FragmentLoginBinding inflate(LayoutInflater)
++ {static} FragmentLoginBinding inflate(LayoutInflater,ViewGroup,boolean)
++ {static} FragmentLoginBinding bind(View)
+}
+
+
+class com.example.restaurantapp.databinding.BottomSheetImageBinding {
+- LinearLayout rootView
++ TextView SelectImageTextView
++ Button btnCancel
++ Button btnChooseGallery
++ Button btnTakePhoto
+- <<Create>> BottomSheetImageBinding(LinearLayout,TextView,Button,Button,Button)
++ LinearLayout getRoot()
++ {static} BottomSheetImageBinding inflate(LayoutInflater)
++ {static} BottomSheetImageBinding inflate(LayoutInflater,ViewGroup,boolean)
++ {static} BottomSheetImageBinding bind(View)
+}
+
+
+class com.example.restaurantapp.fragments.RestaurantInfoFragment {
+- ImageView restaurantDetailImage
+- TextView restaurantDetailName
+- ImageButton rateButton
+- Button restaurantDetailEditButton
+- EditText guestAmountEditText
+- MaterialButton cancelReservationButton
+- DatePicker datePicker
+- NumberPicker hourPicker
+- SearchView searchBar
+- ProgressBar progressBar
+- RecyclerView recyclerViewMenus
+- FrameLayout reservationOverlay
+- MenuAdapter menuAdapter
+- List<Menu> menuList
+- List<MenuItem> menuItemList
+- String restaurantID
+~ int containerID
+- RestaurantViewModel viewModel
+- FirebaseFirestore db
+- FirebaseAuth auth
+- FirebaseUser currentUser
++ <<Create>> RestaurantInfoFragment()
++ View onCreateView(LayoutInflater,ViewGroup,Bundle)
+- void setUpSearchBar()
+- void bindRestaurantData(Restaurant)
+- String getSafeText(String)
+- String formatList(List<String>)
+- String formatPriceLevel(int)
+- String formatContactInfo(Map<String,String>)
+- String capitalizeFirst(String)
+- void loadMenuData()
+- void setupMenuItems(String)
+- void loadAllMenuItems()
+- void filterResults(String)
+- void setupReservationOverlay()
+- void validateReservationAndSave(Restaurant)
+- void saveReservation(Date,int,int,String)
+- void openNavigationApp(String)
+- void showLoading(boolean)
+- void showRatingDialog()
+}
+
+note left of com.example.restaurantapp.fragments.RestaurantInfoFragment::getSafeText(String)
+ Helper to avoid "null" text
+end note
+note right of com.example.restaurantapp.fragments.RestaurantInfoFragment::formatList(List<String>)
+ Helper to format list without [ ]
+end note
+note left of com.example.restaurantapp.fragments.RestaurantInfoFragment::formatPriceLevel(int)
+ Helper to format price level into $/$$/$$$
+end note
+note right of com.example.restaurantapp.fragments.RestaurantInfoFragment::formatContactInfo(Map<String,String>)
+ Helper to format contact info without {} and = replaced with :
+end note
+note left of com.example.restaurantapp.fragments.RestaurantInfoFragment::capitalizeFirst(String)
+ Capitalize first letter of key (optional, for better formatting)
+end note
+
+class com.example.restaurantapp.fragments.ReservationHistoryFragment {
+- RecyclerView reservationsRecyclerView
+- LinearLayout emptyStateContainer
+- MaterialButton filterByDateButton
+- ChipGroup filterChipGroup
+- List<Reservation> pastReservations
+- List<Reservation> allReservations
+- List<Reservation> filteredReservations
+- List<String> activeDateFilters
+- SimpleDateFormat dateFormat
+- ReservationAdapter reservationAdapter
+- FirebaseFirestore db
+- FirebaseAuth auth
+- FirebaseUser currentUser
+- boolean isRestaurant
++ <<Create>> ReservationHistoryFragment()
++ View onCreateView(LayoutInflater,ViewGroup,Bundle)
+- void loadReservationsFromFirestore()
+- void setupFilters()
+- void showDatePickerDialog()
+- void onDateSelected(Date)
+- void addDateFilterChip(String)
+- void applyFilters()
+- void updateEmptyState()
+}
+note left of com.example.restaurantapp.fragments.ReservationHistoryFragment::reservationsRecyclerView
+ UI components
+end note
+note right of com.example.restaurantapp.fragments.ReservationHistoryFragment::pastReservations
+ Data
+end note
+note left of com.example.restaurantapp.fragments.ReservationHistoryFragment::db
+ Firebase
+end note
+note right of com.example.restaurantapp.fragments.ReservationHistoryFragment::isRestaurant
+ State
+end note
+
+
+class com.example.restaurantapp.activities.EditInfoActivity {
+- Toolbar toolbar
+- TextInputLayout universalInputLayout
+- EditText universalEditText
+- Button saveButton
+- String fieldType
+- FirebaseAuth mAuth
+# void onCreate(Bundle)
+- void validateInput()
+- void saveChanges()
++ boolean onSupportNavigateUp()
+}
+
+
+class com.example.restaurantapp.databinding.ItemMenuBinding {
+- LinearLayout rootView
++ ImageView imgMenuBanner
++ RecyclerView recyclerViewItems
++ TextView txtMenuName
+- <<Create>> ItemMenuBinding(LinearLayout,ImageView,RecyclerView,TextView)
++ LinearLayout getRoot()
++ {static} ItemMenuBinding inflate(LayoutInflater)
++ {static} ItemMenuBinding inflate(LayoutInflater,ViewGroup,boolean)
++ {static} ItemMenuBinding bind(View)
+}
+
+
+class com.example.restaurantapp.fragments.ReservationsTabLayoutFragment {
+- TabLayout tabLayout
+- ViewPager2 viewPager
++ <<Create>> ReservationsTabLayoutFragment()
++ View onCreateView(LayoutInflater,ViewGroup,Bundle)
+}
+
+
+class com.example.restaurantapp.models.Restaurant {
+- String name
+- String address
+- GeoPoint location
+- double averageRating
+- int ratingsCount
+- String imageURL
+- String businessHours
+- Timestamp createdAt
+- boolean reservable
+- String type
+- List<String> tags
+- int priceLevel
+- String restaurantID
+- String description
+- Timestamp lastUpdated
+- boolean offersPickup
+- Map<String,String> contactInfo
+- int maxCapacity
++ <<Create>> Restaurant()
++ <<Create>> Restaurant(String,String,GeoPoint,double,int,String,String,Timestamp,boolean,String,List<String>,int,String,String,Timestamp,boolean,Map<String,String>,int)
++ String getName()
++ void setName(String)
++ String getAddress()
++ void setAddress(String)
++ GeoPoint getLocation()
++ void setLocation(GeoPoint)
++ double getAverageRating()
++ void setAverageRating(double)
++ int getRatingsCount()
++ void setRatingsCount(int)
++ String getImageURL()
++ void setImageURL(String)
++ String getBusinessHours()
++ void setBusinessHours(String)
++ Timestamp getCreatedAt()
++ void setCreatedAt(Timestamp)
++ boolean isReservable()
++ void setReservable(boolean)
++ String getType()
++ void setType(String)
++ List<String> getTags()
++ void setTags(List<String>)
++ int getPriceLevel()
++ void setPriceLevel(int)
++ String getRestaurantID()
++ void setRestaurantID()
++ String getDescription()
++ void setDescription(String)
++ Timestamp getLastUpdated()
++ void setLastUpdated(Timestamp)
++ boolean isOffersPickup()
++ void setOffersPickup(boolean)
++ Map<String,String> getContactInfo()
++ void setContactInfo(Map<String,String>)
++ int getMaxCapacity()
++ void setMaxCapacity(int)
+}
+
+
+class com.example.restaurantapp.fragments.MapFragment {
++ <<Create>> MapFragment()
++ View onCreateView(LayoutInflater,ViewGroup,Bundle)
+}
+
+class com.example.restaurantapp.databinding.ItemDiscoveryRestaurantBinding {
+- CardView rootView
++ TextView restaurantAddress
++ ImageView restaurantImage
++ TextView restaurantName
++ TextView restaurantPriceLevel
++ TextView restaurantRating
++ TextView restaurantTags
+- <<Create>> ItemDiscoveryRestaurantBinding(CardView,TextView,ImageView,TextView,TextView,TextView,TextView)
++ CardView getRoot()
++ {static} ItemDiscoveryRestaurantBinding inflate(LayoutInflater)
++ {static} ItemDiscoveryRestaurantBinding inflate(LayoutInflater,ViewGroup,boolean)
++ {static} ItemDiscoveryRestaurantBinding bind(View)
+}
+
+
+class com.example.restaurantapp.models.Menu {
+- String name
+- String imageURL
+- Timestamp timeCreated
+- String restaurantID
+- String menuID
+- int menuIndex
++ <<Create>> Menu()
++ <<Create>> Menu(String,String,Timestamp,String,String,int)
++ String getName()
++ void setName(String)
++ String getImageURL()
++ void setImageURL(String)
++ Timestamp getTimeCreated()
++ void setTimeCreated(Timestamp)
++ String getRestaurantID()
++ void setRestaurantID(String)
++ String getMenuID()
++ void setMenuID(String)
++ int getMenuIndex()
++ void setMenuIndex(int)
+}
+
+
+class com.example.restaurantapp.adapters.MenuAdapter {
+- List<Menu> allMenuList
+- List<Menu> displayMenuList
+- OnMenuClickListener onMenuClickListener
+- MenuItemAdapter.OnItemClickListener onItemClickListener
+- String restaurantID
+- Set<String> itemMatchMenuIds
+- Set<String> menuMatchIds
+- boolean isFiltering
+- HashMap<String,List<MenuItem>> allMenuItems
+- String currentSearchQuery
++ <<Create>> MenuAdapter(List<Menu>,OnMenuClickListener,MenuItemAdapter.OnItemClickListener,String)
++ void setFilterData(Set<String>,Set<String>)
+- void updateDisplayList()
++ void clearFiltering()
++ void setMenuItems(String,List<MenuItem>)
++ void setCurrentSearchQuery(String)
++ MenuViewHolder onCreateViewHolder(ViewGroup,int)
++ void onBindViewHolder(MenuViewHolder,int)
++ int getItemCount()
+}
+note left of com.example.restaurantapp.adapters.MenuAdapter::itemMatchMenuIds
+ Menus containing matching items
+end note
+note right of com.example.restaurantapp.adapters.MenuAdapter::menuMatchIds
+ Menus that directly match the search
+end note
+note left of com.example.restaurantapp.adapters.MenuAdapter::allMenuItems
+ All items by menu ID
+end note
+
+note left of com.example.restaurantapp.adapters.MenuAdapter::setFilterData(Set<String>,Set<String>)
+ Method to set search filtering information
+end note
+note right of com.example.restaurantapp.adapters.MenuAdapter::updateDisplayList()
+ Update the display list based on current filters
+end note
+note left of com.example.restaurantapp.adapters.MenuAdapter::clearFiltering()
+ Clear filtering
+end note
+note right of com.example.restaurantapp.adapters.MenuAdapter::setMenuItems(String,List<MenuItem>)
+ Store items for a menu
+end note
+note left of com.example.restaurantapp.adapters.MenuAdapter::setCurrentSearchQuery(String)
+ Set current search query
+end note
+
+interface com.example.restaurantapp.adapters.MenuAdapter$OnMenuClickListener {
+~ void onMenuClick(Menu)
+}
+
+class com.example.restaurantapp.adapters.MenuAdapter$MenuViewHolder {
++ ImageView imgMenuBanner
+~ TextView txtMenuName
+~ RecyclerView recyclerViewItems
++ <<Create>> MenuViewHolder(View)
++ void bind(Menu,OnMenuClickListener,MenuItemAdapter.OnItemClickListener,String,boolean,Set<String>,String,HashMap<String,List<MenuItem>>)
+- void loadMenuItems(String,String,boolean,Set<String>,String,HashMap<String,List<MenuItem>>,MenuItemAdapter.OnItemClickListener)
+}
+
+
+class com.example.restaurantapp.fragments.ManageMenuFragment {
+- SearchView searchBar
+- RecyclerView recyclerViewMenus
+- MenuAdapter menuAdapter
+- List<Menu> menuList
+- List<MenuItem> menuItemList
+- List<Menu> filteredMenus
+- List<MenuItem> filteredItems
+- ImageButton btnCreateDiscount
+- ImageView menuViewImage
+- RelativeLayout itemViewOverlay
+- EditText editItemName
+- TextInputLayout editItemNameLayout
+- Button btnChooseAddItem
+- ProgressBar progressBar
+- Switch switchEnableSchedule
+- RadioGroup radioDiscountType
+- Spinner spinnerMenuSelection
+- DatePicker startDatePicker
+- TimePicker startTimePicker
+- TextView noResults
+- CheckBox editItemAvailability
+- BottomSheetDialog imageBottomSheetDialog
+- FirebaseFirestore db
+- FirebaseAuth auth
+- FirebaseUser currentUser
+- StorageReference storageRef
+- FirebaseStorage storage
+- String restaurantID
+- MenuItem currentMenuItem
+- Menu currentMenu
+- String currentType
+- String discountType
+- boolean isUploading
+- boolean isEditMode
+- boolean itemsReordered
+- boolean scheduleOn
+- boolean imageEdited
+- boolean newItem
+- boolean newMenu
+~ boolean deleteMode
+- Uri photoUri
+- Bitmap bitmap
+- UploadTask currentUploadTask
+- {static} String TAG
+- ActivityResultLauncher<String[]> permissionLauncher
+- ActivityResultLauncher<Intent> cameraLauncher
+- ActivityResultLauncher<Intent> imagePickerLauncher
++ <<Create>> ManageMenuFragment()
++ View onCreateView(LayoutInflater,ViewGroup,Bundle)
+- void setupListeners()
+- void loadMenusForSpinner(Spinner)
+- void loadItemsForSpinner(Spinner,String)
+- void setSpinnerSelection(String)
+- void loadMenuData()
+- void loadAllMenuItems()
+- void filterResults(String)
+- void showItemView(MenuItem)
+- void showMenuView(Menu)
+- void editExistingItem(MenuItem)
+- void editExistingMenu(Menu)
+- void saveItem()
+- void getItemAmount(String,OnItemCountFetchedListener)
+- void proceedWithItemUpdate(String)
+- void proceedWithItemSave(String)
+- void shiftIndexesDown(String,int,Runnable)
+- void saveMenu()
+- void proceedWithMenuUpdate(String)
+- void proceedWithMenuSave(String)
+- void deleteItem(MenuItem)
+- void deleteMenu(Menu)
+- void showLoading(boolean)
+- void toggleOverlay(RelativeLayout,boolean)
+- void editImage()
+- boolean checkStoragePermission()
+- void requestPermissions()
+- void showBottomSheetDialog()
+- void takePhoto()
+- void pickFromGallery()
+- File createImageFile()
+- void updateEditImageWithCurrentImage(Bitmap)
+- void uploadImageToFirebase(Bitmap)
+- String generateFileName()
+- Bitmap fixImageOrientation(Uri,Bitmap)
+- void deleteOldImage(String)
+- void applyDiscount()
+}
+note left of com.example.restaurantapp.fragments.ManageMenuFragment::currentMenuItem
+ For tracking item being edited
+end note
+note right of com.example.restaurantapp.fragments.ManageMenuFragment::currentMenu
+ For tracking menu being edited
+end note
+note left of com.example.restaurantapp.fragments.ManageMenuFragment::permissionLauncher
+ Permission request launcher
+end note
+note right of com.example.restaurantapp.fragments.ManageMenuFragment::imagePickerLauncher
+ Handle gallery result
+end note
+
+
+interface com.example.restaurantapp.fragments.ManageMenuFragment$OnItemCountFetchedListener {
+~ void onItemCountFetched(int)
+}
+
+class com.example.restaurantapp.viewmodels.RestaurantViewModel {
+- MutableLiveData<Restaurant> currentRestaurant
++ void setCurrentRestaurant(Restaurant)
++ LiveData<Restaurant> getCurrentRestaurant()
++ void clear()
+}
+
+
+class com.example.restaurantapp.databinding.DialogRateRestaurantBinding {
+- LinearLayout rootView
++ Button cancelRatingButton
++ TextView rateTitle
++ RatingBar ratingBar
++ Button submitRatingButton
+- <<Create>> DialogRateRestaurantBinding(LinearLayout,Button,TextView,RatingBar,Button)
++ LinearLayout getRoot()
++ {static} DialogRateRestaurantBinding inflate(LayoutInflater)
++ {static} DialogRateRestaurantBinding inflate(LayoutInflater,ViewGroup,boolean)
++ {static} DialogRateRestaurantBinding bind(View)
+}
+
+
+
+
+androidx.fragment.app.Fragment <|-- com.example.restaurantapp.fragments.UpcomingReservationsFragment
+androidx.viewbinding.ViewBinding <|.. com.example.restaurantapp.databinding.ActivityRestaurantMainBinding
+androidx.lifecycle.ViewModel <|-- com.example.restaurantapp.viewmodels.MenuItemSelectionViewModel
+androidx.fragment.app.Fragment <|-- com.example.restaurantapp.fragments.MenuItemFragment
+com.example.restaurantapp.adapters.Adapter <|-- com.example.restaurantapp.adapters.RestaurantSearchResultsAdapter
+com.example.restaurantapp.adapters.RestaurantSearchResultsAdapter +.. com.example.restaurantapp.adapters.RestaurantSearchResultsAdapter$OnItemClickListener
+com.example.restaurantapp.adapters.RestaurantSearchResultsAdapter +.. com.example.restaurantapp.adapters.RestaurantSearchResultsAdapter$ViewHolder
+com.example.restaurantapp.adapters.ViewHolder <|-- com.example.restaurantapp.adapters.RestaurantSearchResultsAdapter$ViewHolder
+com.example.restaurantapp.adapters.RestaurantSearchResultsAdapter +.. com.example.restaurantapp.adapters.RestaurantSearchResultsAdapter$DistanceCallback
+androidx.fragment.app.Fragment <|-- com.example.restaurantapp.fragments.GmapsFragment
+androidx.fragment.app.Fragment <|-- com.example.restaurantapp.fragments.LoginFragment
+androidx.fragment.app.Fragment <|-- com.example.restaurantapp.fragments.DiscoveryFragment
+androidx.viewbinding.ViewBinding <|.. com.example.restaurantapp.databinding.ActivityAuthenticationBinding
+androidx.viewbinding.ViewBinding <|.. com.example.restaurantapp.databinding.ActivityEditInfoBinding
+androidx.viewbinding.ViewBinding <|.. com.example.restaurantapp.databinding.FragmentUserSignUpBinding
+androidx.viewbinding.ViewBinding <|.. com.example.restaurantapp.databinding.FragmentDiscoveryBinding
+androidx.fragment.app.Fragment <|-- com.example.restaurantapp.fragments.EditRestaurantInfoFragment
+com.example.restaurantapp.fragments.EditRestaurantInfoFragment +.. com.example.restaurantapp.fragments.EditRestaurantInfoFragment$AddressValidationCallback
+androidx.viewbinding.ViewBinding <|.. com.example.restaurantapp.databinding.FragmentForgotPasswordBinding
+com.example.restaurantapp.adapters.Adapter <|-- com.example.restaurantapp.adapters.ReservationAdapter
+com.example.restaurantapp.adapters.ReservationAdapter +.. com.example.restaurantapp.adapters.ReservationAdapter$ReservationViewHolder
+com.example.restaurantapp.adapters.ViewHolder <|-- com.example.restaurantapp.adapters.ReservationAdapter$ReservationViewHolder
+androidx.appcompat.app.AppCompatActivity <|-- com.example.restaurantapp.activities.AuthenticationActivity
+androidx.viewbinding.ViewBinding <|.. com.example.restaurantapp.databinding.ItemReservationBinding
+androidx.viewbinding.ViewBinding <|.. com.example.restaurantapp.databinding.FragmentMenuItemBinding
+androidx.fragment.app.Fragment <|-- com.example.restaurantapp.fragments.RestaurantSignUpFragment
+com.example.restaurantapp.fragments.RestaurantSignUpFragment +.. com.example.restaurantapp.fragments.RestaurantSignUpFragment$AddressValidationCallback
+androidx.viewbinding.ViewBinding <|.. com.example.restaurantapp.databinding.FragmentEditRestaurantInfoBinding
+androidx.viewbinding.ViewBinding <|.. com.example.restaurantapp.databinding.FragmentProfileBinding
+androidx.viewbinding.ViewBinding <|.. com.example.restaurantapp.databinding.FragmentMapBinding
+androidx.viewbinding.ViewBinding <|.. com.example.restaurantapp.databinding.ItemSearchRestaurantBinding
+androidx.viewbinding.ViewBinding <|.. com.example.restaurantapp.databinding.FragmentRestaurantSettingsBinding
+androidx.viewbinding.ViewBinding <|.. com.example.restaurantapp.databinding.FragmentReservationsTabLayoutBinding
+androidx.viewbinding.ViewBinding <|.. com.example.restaurantapp.databinding.ActivityUserMainBinding
+androidx.viewbinding.ViewBinding <|.. com.example.restaurantapp.databinding.FragmentGmapsBinding
+com.example.restaurantapp.utils.DiscountUtils +.. com.example.restaurantapp.utils.DiscountUtils$DiscountResultCallback
+androidx.viewbinding.ViewBinding <|.. com.example.restaurantapp.databinding.ItemMenuItemBinding
+androidx.fragment.app.Fragment <|-- com.example.restaurantapp.fragments.RestaurantSettingsFragment
+androidx.fragment.app.Fragment <|-- com.example.restaurantapp.fragments.UserSignUpFragment
+androidx.viewbinding.ViewBinding <|.. com.example.restaurantapp.databinding.FragmentReservationsBinding
+androidx.fragment.app.Fragment <|-- com.example.restaurantapp.fragments.ForgotPasswordFragment
+androidx.appcompat.app.AppCompatActivity <|-- com.example.restaurantapp.activities.RestaurantMainActivity
+androidx.viewbinding.ViewBinding <|.. com.example.restaurantapp.databinding.FragmentManageMenuBinding
+com.example.restaurantapp.adapters.Adapter <|-- com.example.restaurantapp.adapters.RestaurantDiscoveryAdapter
+com.example.restaurantapp.adapters.RestaurantDiscoveryAdapter +.. com.example.restaurantapp.adapters.RestaurantDiscoveryAdapter$OnRestaurantClickListener
+com.example.restaurantapp.adapters.RestaurantDiscoveryAdapter +.. com.example.restaurantapp.adapters.RestaurantDiscoveryAdapter$ViewHolder
+com.example.restaurantapp.adapters.ViewHolder <|-- com.example.restaurantapp.adapters.RestaurantDiscoveryAdapter$ViewHolder
+androidx.appcompat.app.AppCompatActivity <|-- com.example.restaurantapp.activities.UserMainActivity
+androidx.fragment.app.Fragment <|-- com.example.restaurantapp.fragments.ProfileFragment
+com.example.restaurantapp.adapters.Adapter <|-- com.example.restaurantapp.adapters.MenuItemAdapter
+com.example.restaurantapp.adapters.MenuItemAdapter +.. com.example.restaurantapp.adapters.MenuItemAdapter$OnItemClickListener
+com.example.restaurantapp.adapters.MenuItemAdapter +.. com.example.restaurantapp.adapters.MenuItemAdapter$ItemViewHolder
+com.example.restaurantapp.adapters.ViewHolder <|-- com.example.restaurantapp.adapters.MenuItemAdapter$ItemViewHolder
+androidx.viewbinding.ViewBinding <|.. com.example.restaurantapp.databinding.FragmentRestaurantSignUpBinding
+androidx.viewbinding.ViewBinding <|.. com.example.restaurantapp.databinding.FragmentRestaurantInfoBinding
+androidx.viewbinding.ViewBinding <|.. com.example.restaurantapp.databinding.FragmentLoginBinding
+androidx.viewbinding.ViewBinding <|.. com.example.restaurantapp.databinding.BottomSheetImageBinding
+androidx.fragment.app.Fragment <|-- com.example.restaurantapp.fragments.RestaurantInfoFragment
+androidx.fragment.app.Fragment <|-- com.example.restaurantapp.fragments.ReservationHistoryFragment
+androidx.appcompat.app.AppCompatActivity <|-- com.example.restaurantapp.activities.EditInfoActivity
+androidx.viewbinding.ViewBinding <|.. com.example.restaurantapp.databinding.ItemMenuBinding
+androidx.fragment.app.Fragment <|-- com.example.restaurantapp.fragments.ReservationsTabLayoutFragment
+androidx.fragment.app.Fragment <|-- com.example.restaurantapp.fragments.MapFragment
+androidx.viewbinding.ViewBinding <|.. com.example.restaurantapp.databinding.ItemDiscoveryRestaurantBinding
+com.example.restaurantapp.adapters.Adapter <|-- com.example.restaurantapp.adapters.MenuAdapter
+com.example.restaurantapp.adapters.MenuAdapter +.. com.example.restaurantapp.adapters.MenuAdapter$OnMenuClickListener
+com.example.restaurantapp.adapters.MenuAdapter +.. com.example.restaurantapp.adapters.MenuAdapter$MenuViewHolder
+com.example.restaurantapp.adapters.ViewHolder <|-- com.example.restaurantapp.adapters.MenuAdapter$MenuViewHolder
+androidx.fragment.app.Fragment <|-- com.example.restaurantapp.fragments.ManageMenuFragment
+com.example.restaurantapp.fragments.ManageMenuFragment +.. com.example.restaurantapp.fragments.ManageMenuFragment$OnItemCountFetchedListener
+androidx.lifecycle.ViewModel <|-- com.example.restaurantapp.viewmodels.RestaurantViewModel
+androidx.viewbinding.ViewBinding <|.. com.example.restaurantapp.databinding.DialogRateRestaurantBinding
+@enduml
