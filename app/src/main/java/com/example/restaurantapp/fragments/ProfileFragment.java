@@ -30,12 +30,9 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentActivity;
 
 import com.bumptech.glide.Glide;
 import com.example.restaurantapp.R;
-import com.example.restaurantapp.activities.AuthenticationActivity;
-import com.example.restaurantapp.activities.EditInfoActivity;
 import com.example.restaurantapp.utils.SettingsUtils;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.firebase.auth.FirebaseAuth;

@@ -122,9 +122,6 @@ public class RestaurantMainActivity extends AppCompatActivity
                     {
                         showPermissionFeedback(deniedPermissions.toString());
                     }
-
-                    // Notify appropriate fragments about permission changes
-                    notifyFragmentsAboutPermissionChanges(result);
                 }
         );
 
@@ -407,14 +404,5 @@ public class RestaurantMainActivity extends AppCompatActivity
             default:
                 return permission.substring(permission.lastIndexOf('.') + 1);
         }
-    }
-
-    private void notifyFragmentsAboutPermissionChanges(Map<String, Boolean> results)
-    {
-        // Get current fragment
-        Fragment currentFragment = getSupportFragmentManager().findFragmentByTag(currentFragmentTag);
-
-        // Add specific fragment handling code if needed
-        // For example, if a restaurant fragment needs to know about permission changes
     }
 }

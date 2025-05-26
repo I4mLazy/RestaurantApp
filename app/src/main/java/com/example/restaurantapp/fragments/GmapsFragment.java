@@ -6,14 +6,12 @@ import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Rect;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -61,7 +59,6 @@ import com.google.android.libraries.places.api.net.FindCurrentPlaceRequest;
 import com.google.android.libraries.places.api.net.FindCurrentPlaceResponse;
 import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -212,12 +209,11 @@ public class GmapsFragment extends Fragment
                     currentSearchMarker.remove();
                     currentSearchMarker = null;
                 }
-                // updateSearchSuggestions(newText);
                 return true;
             }
         });
 
-        String apiKey = BuildConfig.MAPS_API_KEY;
+        String apiKey = "AIzaSyAcuJr7LuNMrciDVv9oACjSOV9wrMRaKwI";
         Places.initializeWithNewPlacesApiEnabled(requireActivity().getApplicationContext(), apiKey);
         placesClient = Places.createClient(requireContext());
 
@@ -297,50 +293,6 @@ public class GmapsFragment extends Fragment
         // Show the bottom sheet (it will be visible regardless of results)
         bottomSheet.setVisibility(View.VISIBLE);
         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-    }
-
-
-    private void updateSearchSuggestions(String newText)
-    {
-        if(newText.isEmpty())
-        {
-            recyclerView.setVisibility(View.GONE);
-            noResultsTextView.setVisibility(View.GONE);
-            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
-            return;
-        }
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("Restaurants")
-                .orderBy("name")
-                .startAt(newText)
-                .endAt(newText + "\uf8ff")
-                .limit(10)
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots ->
-                {
-                    List<Restaurant> filteredList = new ArrayList<>();
-                    for(DocumentSnapshot document : queryDocumentSnapshots)
-                    {
-                        Restaurant restaurant = document.toObject(Restaurant.class);
-                        filteredList.add(restaurant);
-                    }
-                    if(filteredList.isEmpty())
-                    {
-                        recyclerView.setVisibility(View.GONE);
-                        noResultsTextView.setVisibility(View.VISIBLE);
-                        bottomSheet.setVisibility(View.VISIBLE);
-                        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
-                    } else
-                    {
-                        recyclerView.setVisibility(View.VISIBLE);
-                        noResultsTextView.setVisibility(View.GONE);
-                        restaurantSearchResultsAdapter.updateData(filteredList);
-                        bottomSheet.setVisibility(View.VISIBLE);
-                        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-                    }
-                })
-                .addOnFailureListener(e ->
-                        Log.e("Search", "Error fetching search results", e));
     }
 
     private void setCurrentLocation(PlacesClient placesClient)
@@ -558,52 +510,4 @@ public class GmapsFragment extends Fragment
             Toast.makeText(requireContext(), "No navigation apps available", Toast.LENGTH_SHORT).show();
         }
     }
-
-//private void setSearchNearby(PlacesClient placesClient)
-//{
-//    fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity().getApplicationContext());
-//    if (ActivityCompat.checkSelfPermission(requireActivity().getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(requireActivity().getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED)
-//    {
-//        fusedLocationClient.getLastLocation()
-//                .addOnSuccessListener(requireActivity(), location ->
-//                {
-//                    if (location != null)
-//                    {
-//                        LatLng center = new LatLng(location.getLatitude(), location.getLongitude());
-//                        final List<Place.Field> placeFields = Arrays.asList(Place.Field.ID, Place.Field.DISPLAY_NAME);
-//                        CircularBounds circle = CircularBounds.newInstance(center, /* radius = */ 5000);
-//                        final List<String> includedTypes = Arrays.asList("restaurant", "cafe");
-//                        final SearchNearbyRequest searchNearbyRequest =
-//                                SearchNearbyRequest.builder(/* location restriction = */ circle, placeFields)
-//                                        .setIncludedTypes(includedTypes)
-//                                        .setMaxResultCount(10)
-//                                        .build();
-//                        placesClient.searchNearby(searchNearbyRequest)
-//                                .addOnSuccessListener(response ->
-//                                {
-//                                    List<Place> places = response.getPlaces();
-//                                    mMap.clear();
-//                                    for (Place place : places)
-//                                    {
-//                                        LatLng placeLatLng = place.getLocation();
-//                                        if (placeLatLng != null)
-//                                        {
-//                                            mMap.addMarker(new MarkerOptions()
-//                                                    .position(placeLatLng)
-//                                                  .title(place.getDisplayName()));
-//                                        }
-//                                }).addOnFailureListener(exception ->
-//                                    }
-//                                {
-//                                    // Handle error
-//                                    Log.e("SearchNearby", "Error searching nearby places", exception);
-//                                });
-//                    }
-//                }).addOnFailureListener(exception ->
-//                {
-//                    // Handle error
-//                    Log.e("GetLastLocation", "Error getting last location", exception);
-//                });
-//    }
-//}
 }

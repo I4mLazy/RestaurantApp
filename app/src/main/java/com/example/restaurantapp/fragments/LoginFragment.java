@@ -13,19 +13,12 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.IntentSenderRequest;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.example.restaurantapp.R;
 import com.example.restaurantapp.activities.RestaurantMainActivity;
 import com.example.restaurantapp.activities.UserMainActivity;
-import com.google.android.gms.auth.api.identity.BeginSignInRequest;
-import com.google.android.gms.auth.api.identity.Identity;
-import com.google.android.gms.auth.api.identity.SignInClient;
-import com.google.android.gms.auth.api.identity.SignInCredential;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -39,32 +32,10 @@ public class LoginFragment extends Fragment
     private static final String TAG = "LoginFragment";
 
     private EditText editTextEmail, editTextPassword;
-    private Button buttonLogin, buttonGoogleSignIn;
+    private Button buttonLogin;
     private TextView textViewSignUp, textViewForgotPassword;
 
     private FirebaseAuth firebaseAuth;
-    private SignInClient oneTapClient;
-    private BeginSignInRequest signInRequest;
-
-    private final ActivityResultLauncher<IntentSenderRequest> signInLauncher =
-            registerForActivityResult(new ActivityResultContracts.StartIntentSenderForResult(), result ->
-            {
-                if(result.getResultCode() == requireActivity().RESULT_OK && result.getData() != null)
-                {
-                    try
-                    {
-                        SignInCredential credential = oneTapClient.getSignInCredentialFromIntent(result.getData());
-                        String idToken = credential.getGoogleIdToken();
-                        if(idToken != null)
-                        {
-                            firebaseAuthWithGoogle(idToken);
-                        }
-                    } catch(Exception e)
-                    {
-                        Log.e(TAG, "Google Sign-In failed", e);
-                    }
-                }
-            });
 
     public LoginFragment()
     {
@@ -80,25 +51,12 @@ public class LoginFragment extends Fragment
         editTextEmail = view.findViewById(R.id.editTextEmail);
         editTextPassword = view.findViewById(R.id.editTextPassword);
         buttonLogin = view.findViewById(R.id.buttonLogin);
-        buttonGoogleSignIn = view.findViewById(R.id.buttonGoogleSignIn);
         textViewSignUp = view.findViewById(R.id.textViewSignUp);
         textViewForgotPassword = view.findViewById(R.id.textViewForgotPassword);
 
         firebaseAuth = FirebaseAuth.getInstance();
-        oneTapClient = Identity.getSignInClient(requireContext());
-
-        signInRequest = BeginSignInRequest.builder()
-                .setGoogleIdTokenRequestOptions(
-                        BeginSignInRequest.GoogleIdTokenRequestOptions.builder()
-                                .setSupported(true)
-                                .setServerClientId(getString(R.string.default_web_client_id)) // Your Web Client ID
-                                .setFilterByAuthorizedAccounts(false)
-                                .build())
-                .setAutoSelectEnabled(false)
-                .build();
 
         buttonLogin.setOnClickListener(v -> loginWithEmailPassword());
-        buttonGoogleSignIn.setOnClickListener(v -> loginWithGoogle());
 
         // Handle forgot password
         textViewForgotPassword.setOnClickListener(v ->
@@ -142,26 +100,6 @@ public class LoginFragment extends Fragment
                     {
                         Toast.makeText(getContext(), "Authentication failed", Toast.LENGTH_SHORT).show();
                     }
-                });
-    }
-
-    private void loginWithGoogle()
-    {
-        oneTapClient.beginSignIn(signInRequest)
-                .addOnSuccessListener(requireActivity(), result ->
-                {
-                    try
-                    {
-                        // Start the intent sender for Google sign-in
-                        signInLauncher.launch(new IntentSenderRequest.Builder(result.getPendingIntent().getIntentSender()).build());
-                    } catch(Exception e)
-                    {
-                        Log.e(TAG, "Google Sign-In failed", e);
-                    }
-                })
-                .addOnFailureListener(requireActivity(), e ->
-                {
-                    Toast.makeText(getContext(), "Google Sign-In failed", Toast.LENGTH_SHORT).show();
                 });
     }
 

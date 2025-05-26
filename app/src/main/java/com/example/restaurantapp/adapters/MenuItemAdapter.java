@@ -14,14 +14,9 @@ import com.bumptech.glide.Glide;
 import com.example.restaurantapp.R;
 import com.example.restaurantapp.models.MenuItem;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Date;
 
 import com.example.restaurantapp.utils.DiscountUtils;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.Timestamp;
 
 public class MenuItemAdapter extends RecyclerView.Adapter<MenuItemAdapter.ItemViewHolder>
 {

@@ -20,10 +20,8 @@ import androidx.fragment.app.FragmentTransaction;
 
 import com.example.restaurantapp.R;
 import com.example.restaurantapp.activities.RestaurantMainActivity;
-import com.example.restaurantapp.activities.UserMainActivity;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
-import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FieldValue;

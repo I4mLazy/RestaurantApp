@@ -51,13 +51,6 @@
                 android:layout_height="0dp"
                 android:layout_weight="5" />
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="15"
-                android:gravity="center"
-                android:text="Slogan" />
-
             <Space
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
@@ -169,12 +162,12 @@
     <Space
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:layout_weight="5" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="30"
+        android:layout_weight="10"
         android:orientation="horizontal">
 
         <Space
@@ -192,29 +185,9 @@
                 android:id="@+id/buttonLogin"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="25"
+                android:layout_weight="21"
                 android:text="Login" />
 
-            <Button
-                android:id="@+id/buttonGoogleSignIn"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="25"
-                android:text="Sign in with Google" />
-
-            <Button
-                android:id="@+id/button3"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="25"
-                android:text="Button" />
-
-            <Button
-                android:id="@+id/button4"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="25"
-                android:text="Button" />
         </LinearLayout>
 
         <Space
@@ -226,6 +199,6 @@
     <Space
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="5" />
+        android:layout_weight="25" />
 
 </LinearLayout>

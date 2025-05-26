@@ -46,21 +46,10 @@
             android:layout_height="56dp"
             android:layout_gravity="bottom|end"
             android:layout_marginEnd="16dp"
-            android:layout_marginBottom="180dp"
+            android:layout_marginBottom="110dp"
             android:background="@drawable/floating_button_background"
             android:contentDescription="Create Discount"
             android:src="@drawable/baseline_discount_24" />
-
-        <ImageButton
-            android:id="@+id/btnSetOrder"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:layout_gravity="bottom|end"
-            android:layout_marginEnd="16dp"
-            android:layout_marginBottom="110dp"
-            android:background="@drawable/floating_button_background"
-            android:contentDescription="Set Order"
-            android:src="@drawable/baseline_reorder_24" />
 
         <ImageButton
             android:id="@+id/btnAdd"
@@ -72,19 +61,6 @@
             android:background="@drawable/floating_button_background"
             android:contentDescription="Add Item or Menu"
             android:src="@drawable/baseline_add_24" />
-
-        <Button
-            android:id="@+id/btnSaveOrder"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|center"
-            android:layout_marginBottom="40dp"
-            android:background="@drawable/floating_button_background"
-            android:elevation="6dp"
-            android:minWidth="120dp"
-            android:padding="12dp"
-            android:text="Save Order"
-            android:visibility="gone" />
     </FrameLayout>
 
     <!--Item View Overlay -->
@@ -282,26 +258,6 @@
                 android:gravity="center"
                 android:textSize="18sp"
                 android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/menuViewDescription"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:paddingTop="8dp"
-                android:textColor="@android:color/darker_gray"
-                android:textSize="14sp"
-                android:visibility="gone" />
-
-            <TextView
-                android:id="@+id/menuItemCount"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:paddingTop="4dp"
-                android:textColor="@android:color/holo_blue_dark"
-                android:textSize="14sp"
-                android:visibility="gone" />
 
             <Button
                 android:id="@+id/btnEditMenu"
@@ -542,13 +498,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="Menu Name"
-                android:inputType="text" />
-
-            <EditText
-                android:id="@+id/editMenuDescription"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Menu Description"
                 android:inputType="text" />
 
             <Button

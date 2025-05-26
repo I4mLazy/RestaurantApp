@@ -44,7 +44,6 @@ import androidx.appcompat.widget.SearchView;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -98,21 +97,21 @@ public class ManageMenuFragment extends Fragment
     private List<Menu> filteredMenus = new ArrayList<>();
     private List<MenuItem> filteredItems = new ArrayList<>();
 
-    private ImageButton btnCreateDiscount, btnSetOrder, btnAdd, itemEditImage, menuEditImage;
+    private ImageButton btnCreateDiscount, btnAdd, itemEditImage, menuEditImage;
     private ImageView menuViewImage, itemViewImage;
     private RelativeLayout itemViewOverlay, menuViewOverlay, addChoiceOverlay, itemEditOverlay, menuEditOverlay, discountOverlay, loadingOverlay;
-    private EditText editItemName, editItemPrice, editItemDescription, editItemAllergens, editItemCategory, editMenuName, editMenuDescription, editDiscountAmount;
+    private EditText editItemName, editItemPrice, editItemDescription, editItemAllergens, editItemCategory, editMenuName, editDiscountAmount;
     private TextInputLayout editItemNameLayout, editItemPriceLayout, editItemDescriptionLayout, editItemAllergensLayout, editItemCategoryLayout;
-    private Button btnChooseAddItem, btnChooseAddMenu, btnCancelAddChoice, btnSaveItem, btnCancelEdit, btnSaveMenu, btnCancelMenuEdit, btnChooseForDiscount, btnApplyDiscount, btnCancelDiscount, btnSaveOrder;
+    private Button btnChooseAddItem, btnChooseAddMenu, btnCancelAddChoice, btnSaveItem, btnCancelEdit, btnSaveMenu, btnCancelMenuEdit, btnChooseForDiscount, btnApplyDiscount, btnCancelDiscount;
     private ProgressBar progressBar;
     private Switch switchEnableSchedule;
     private RadioGroup radioDiscountType, radioApplyScope;
     private Spinner spinnerMenuSelection, spinnerDiscountMenu, spinnerDiscountItem;
     private DatePicker startDatePicker, endDatePicker;
     private TimePicker startTimePicker, endTimePicker;
-    private TextView noResults, itemEditImageTextView, menuEditImageTextView, menuViewName, menuViewDescription, menuItemCount,
-            itemViewName, itemViewPrice, itemViewDescription, itemViewAvailability, itemViewCategory, itemViewAllergens,
-            discountBadge, oldPrice, itemEditOverlayName, menuEditOverlayName;
+    private TextView noResults, itemEditImageTextView, menuEditImageTextView, menuViewName, itemViewName, itemViewPrice,
+            itemViewDescription, itemViewAvailability, itemViewCategory, itemViewAllergens, discountBadge, oldPrice,
+            itemEditOverlayName, menuEditOverlayName;
     private CheckBox editItemAvailability;
     private BottomSheetDialog imageBottomSheetDialog;
     private FirebaseFirestore db;
@@ -203,9 +202,7 @@ public class ManageMenuFragment extends Fragment
         searchBar = view.findViewById(R.id.searchBar);
         recyclerViewMenus = view.findViewById(R.id.recyclerViewMenus);
         btnCreateDiscount = view.findViewById(R.id.btnCreateDiscount);
-        btnSetOrder = view.findViewById(R.id.btnSetOrder);
         btnAdd = view.findViewById(R.id.btnAdd);
-        btnSaveOrder = view.findViewById(R.id.btnSaveOrder);
 
         itemViewOverlay = view.findViewById(R.id.itemViewOverlay);
         menuViewOverlay = view.findViewById(R.id.menuViewOverlay);
@@ -221,7 +218,6 @@ public class ManageMenuFragment extends Fragment
         editItemAllergens = view.findViewById(R.id.editItemAllergens);
         editItemCategory = view.findViewById(R.id.editItemCategory);
         editMenuName = view.findViewById(R.id.editMenuName);
-        editMenuDescription = view.findViewById(R.id.editMenuDescription);
         editDiscountAmount = view.findViewById(R.id.editDiscountAmount);
 
         editItemNameLayout = view.findViewById(R.id.editItemNameLayout);
@@ -276,8 +272,6 @@ public class ManageMenuFragment extends Fragment
         itemViewDescription = itemViewOverlay.findViewById(R.id.itemViewDescription);
         itemViewName = itemViewOverlay.findViewById(R.id.itemViewName);
         itemViewPrice = itemViewOverlay.findViewById(R.id.itemViewPrice);
-        menuItemCount = menuViewOverlay.findViewById(R.id.menuItemCount);
-        menuViewDescription = menuViewOverlay.findViewById(R.id.menuViewDescription);
         menuViewName = menuViewOverlay.findViewById(R.id.menuViewName);
         discountBadge = itemViewOverlay.findViewById(R.id.discountBadge);
         oldPrice = itemViewOverlay.findViewById(R.id.oldPrice);
@@ -407,19 +401,6 @@ public class ManageMenuFragment extends Fragment
         btnSaveMenu.setOnClickListener(v -> saveMenu());
         btnCancelMenuEdit.setOnClickListener(v -> toggleOverlay(menuEditOverlay, false));
 
-        btnSetOrder.setOnClickListener(v ->
-        {
-            if(restaurantID == null || restaurantID.isEmpty())
-            {
-                Toast.makeText(getContext(), "Invalid restaurant ID", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            searchBar.setQuery("", true);
-            Toast.makeText(getContext(), "Rearrange items by dragging", Toast.LENGTH_SHORT).show();
-            //setupItemTouchHelper();
-        });
-
-        //btnSaveOrder.setOnClickListener(view -> saveOrder());
         btnCreateDiscount.setOnClickListener(v ->
         {
             // Check if menuList is not empty before proceeding with any discount creation
@@ -990,7 +971,6 @@ public class ManageMenuFragment extends Fragment
         toggleOverlay(menuViewOverlay, true);
 
         menuViewName.setText(menu.getName());
-        menuViewDescription.setText(menu.getDescription() != null ? menu.getDescription() : "No description available");
 
         //Load image
         String imageUrl = menu.getImageURL();
@@ -1004,21 +984,6 @@ public class ManageMenuFragment extends Fragment
         {
             menuViewImage.setImageResource(R.drawable.image_placeholder);
         }
-
-        // Load menu item count
-        db.collection("Restaurants").document(restaurantID)
-                .collection("Menus").document(menu.getMenuID())
-                .collection("Items")
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots ->
-                {
-                    int count = queryDocumentSnapshots.size();
-                    menuItemCount.setText(count + " items");
-                })
-                .addOnFailureListener(e ->
-                {
-                    Toast.makeText(getContext(), "Failed to load menu items: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
     }
 
     private void editExistingItem(MenuItem item)
@@ -1090,7 +1055,6 @@ public class ManageMenuFragment extends Fragment
 
         menuEditOverlayName.setText("Edit Menu");
         editMenuName.setText(menu.getName());
-        editMenuDescription.setText(menu.getDescription());
 
         //Load image
         String imageUrl = menu.getImageURL();
@@ -1508,7 +1472,6 @@ public class ManageMenuFragment extends Fragment
     private void proceedWithMenuUpdate(String imageURL)
     {
         String name = editMenuName.getText().toString().trim();
-        String description = editMenuDescription.getText().toString().trim();
 
         if(name.isEmpty())
         {
@@ -1524,7 +1487,6 @@ public class ManageMenuFragment extends Fragment
 
         // Update existing menu
         currentMenu.setName(name);
-        currentMenu.setDescription(description);
         currentMenu.setImageURL(imageURL);
 
         db.collection("Restaurants").document(restaurantID)
@@ -1550,7 +1512,6 @@ public class ManageMenuFragment extends Fragment
     private void proceedWithMenuSave(String imageURL)
     {
         String name = editMenuName.getText().toString().trim();
-        String description = editMenuDescription.getText().toString().trim();
 
         if(name.isEmpty())
         {
@@ -1577,7 +1538,6 @@ public class ManageMenuFragment extends Fragment
 
         Menu newMenu = new Menu();
         newMenu.setName(name);
-        newMenu.setDescription(description);
         newMenu.setMenuID(menuRef.getId());
         newMenu.setRestaurantID(restaurantID);
         newMenu.setTimeCreated(Timestamp.now());

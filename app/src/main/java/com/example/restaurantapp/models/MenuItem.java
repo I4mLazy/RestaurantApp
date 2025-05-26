@@ -12,12 +12,9 @@ public class MenuItem
     private String menuID;
     private String restaurantID;
     private String category;
-    private List<Option> options;
-    private List<RequiredCustomization> requiredCustomizations;
     private Boolean availability;
     private List<String> allergens;
     private int orderIndex;
-    private int maxSelection;
     private String itemID;
 
     public MenuItem()
@@ -25,8 +22,7 @@ public class MenuItem
     }
 
     public MenuItem(String name, String description, double price, String imageURL, String menuID, String restaurantID,
-                    String category, List<Option> options, List<RequiredCustomization> requiredCustomizations,
-                    Boolean availability, List<String> allergens, int orderIndex, int maxSelection, String itemID)
+                    String category, Boolean availability, List<String> allergens, int orderIndex, String itemID)
     {
         this.name = name;
         this.description = description;
@@ -35,12 +31,9 @@ public class MenuItem
         this.menuID = menuID;
         this.restaurantID = restaurantID;
         this.category = category;
-        this.options = options;
-        this.requiredCustomizations = requiredCustomizations;
         this.availability = availability;
         this.allergens = allergens;
         this.orderIndex = orderIndex;
-        this.maxSelection = maxSelection;
         this.itemID = itemID;
     }
 
@@ -114,26 +107,6 @@ public class MenuItem
         this.category = category;
     }
 
-    public List<Option> getOptions()
-    {
-        return options;
-    }
-
-    public void setOptions(List<Option> options)
-    {
-        this.options = options;
-    }
-
-    public List<RequiredCustomization> getRequiredCustomizations()
-    {
-        return requiredCustomizations;
-    }
-
-    public void setRequiredCustomizations(List<RequiredCustomization> requiredCustomizations)
-    {
-        this.requiredCustomizations = requiredCustomizations;
-    }
-
     public Boolean getAvailability()
     {
         return availability;
@@ -164,16 +137,6 @@ public class MenuItem
         this.orderIndex = orderIndex;
     }
 
-    public void setMaxSelection(int maxSelection)
-    {
-        this.maxSelection = maxSelection;
-    }
-
-    public int getMaxSelection()
-    {
-        return maxSelection;
-    }
-
     public String getItemID()
     {
         return itemID;
@@ -182,105 +145,5 @@ public class MenuItem
     public void setItemID(String itemID)
     {
         this.itemID = itemID;
-    }
-
-    public static class Option
-    {
-        private String name; // The name of the option (e.g., "Extra Toppings")
-        private String description; // A brief description of the option
-        private double price; // The price of this option
-
-        public Option(String name, String description, double price)
-        {
-            this.name = name;
-            this.description = description;
-            this.price = price;
-        }
-
-        public String getName()
-        {
-            return name;
-        }
-
-        public void setName(String name)
-        {
-            this.name = name;
-        }
-
-        public String getDescription()
-        {
-            return description;
-        }
-
-        public void setDescription(String description)
-        {
-            this.description = description;
-        }
-
-        public double getPrice()
-        {
-            return price;
-        }
-
-        public void setPrice(double price)
-        {
-            this.price = price;
-        }
-    }
-
-    public static class RequiredCustomization
-    {
-        private String name;
-        private String description;
-        private List<Option> options; // Now a list of Option objects
-        private int maxSelection; // Maximum number of selections allowed
-
-        public RequiredCustomization(String name, String description, List<Option> options, int maxSelection)
-        {
-            this.name = name;
-            this.description = description;
-            this.options = options;
-            this.maxSelection = maxSelection;
-        }
-
-        public String getName()
-        {
-            return name;
-        }
-
-        public void setName(String name)
-        {
-            this.name = name;
-        }
-
-        public String getDescription()
-        {
-            return description;
-        }
-
-        public void setDescription(String description)
-        {
-            this.description = description;
-        }
-
-        public List<Option> getOptions()
-        {
-            return options;
-        }
-
-        public void setOptions(List<Option> options)
-        {
-            this.options = options;
-        }
-
-        public int getMaxSelection()
-        {
-            return maxSelection;
-        }
-
-        public void setMaxSelection(int maxSelection)
-        {
-            this.maxSelection = maxSelection;
-        }
     }
 }

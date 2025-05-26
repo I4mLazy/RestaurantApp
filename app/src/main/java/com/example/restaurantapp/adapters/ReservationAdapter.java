@@ -16,7 +16,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.restaurantapp.R;
 import com.example.restaurantapp.fragments.UpcomingReservationsFragment;
 import com.example.restaurantapp.models.Reservation;
-import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;

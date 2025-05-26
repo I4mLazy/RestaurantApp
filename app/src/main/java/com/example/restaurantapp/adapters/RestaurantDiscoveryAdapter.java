@@ -17,25 +17,29 @@ import com.example.restaurantapp.models.Restaurant;
 import java.util.List;
 import java.util.Locale;
 
-public class RestaurantDiscoveryAdapter extends RecyclerView.Adapter<RestaurantDiscoveryAdapter.ViewHolder> {
+public class RestaurantDiscoveryAdapter extends RecyclerView.Adapter<RestaurantDiscoveryAdapter.ViewHolder>
+{
 
     private List<Restaurant> restaurants;
     private Context context;
     private OnRestaurantClickListener listener;
 
     // Interface for item click callback
-    public interface OnRestaurantClickListener {
+    public interface OnRestaurantClickListener
+    {
         void onRestaurantClick(Restaurant restaurant);
     }
 
-    public RestaurantDiscoveryAdapter(List<Restaurant> restaurants, Context context, OnRestaurantClickListener listener) {
+    public RestaurantDiscoveryAdapter(List<Restaurant> restaurants, Context context, OnRestaurantClickListener listener)
+    {
         this.restaurants = restaurants;
         this.context = context;
         this.listener = listener;
     }
 
     // Update adapter data
-    public void updateData(List<Restaurant> newRestaurants) {
+    public void updateData(List<Restaurant> newRestaurants)
+    {
         this.restaurants.clear();
         this.restaurants.addAll(newRestaurants);
         notifyDataSetChanged();
@@ -43,13 +47,15 @@ public class RestaurantDiscoveryAdapter extends RecyclerView.Adapter<RestaurantD
 
     @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType)
+    {
         View view = LayoutInflater.from(context).inflate(R.layout.item_discovery_restaurant, parent, false);
         return new ViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position)
+    {
         Restaurant restaurant = restaurants.get(position);
 
         holder.restaurantName.setText(restaurant.getName() != null ? restaurant.getName() : "Unknown");
@@ -70,29 +76,36 @@ public class RestaurantDiscoveryAdapter extends RecyclerView.Adapter<RestaurantD
 
         // Bind tags
         List<String> tags = restaurant.getTags();
-        if (tags != null && !tags.isEmpty()) {
+        if(tags != null && !tags.isEmpty())
+        {
             holder.restaurantTags.setText(joinTags(tags));
-        } else {
+        } else
+        {
             holder.restaurantTags.setText("");
         }
 
-        holder.itemView.setOnClickListener(v -> {
-            if (listener != null) {
+        holder.itemView.setOnClickListener(v ->
+        {
+            if(listener != null)
+            {
                 listener.onRestaurantClick(restaurant);
             }
         });
     }
 
     @Override
-    public int getItemCount() {
+    public int getItemCount()
+    {
         return restaurants.size();
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
+    public static class ViewHolder extends RecyclerView.ViewHolder
+    {
         ImageView restaurantImage;
         TextView restaurantName, restaurantAddress, restaurantRating, restaurantPriceLevel, restaurantTags;
 
-        public ViewHolder(@NonNull View itemView) {
+        public ViewHolder(@NonNull View itemView)
+        {
             super(itemView);
             restaurantImage = itemView.findViewById(R.id.restaurantImage);
             restaurantName = itemView.findViewById(R.id.restaurantName);
@@ -104,17 +117,20 @@ public class RestaurantDiscoveryAdapter extends RecyclerView.Adapter<RestaurantD
     }
 
     // Helper to format price level
-    private String getPriceLevelText(int priceLevel) {
-        if (priceLevel <= 0) return "Price: N/A";
+    private String getPriceLevelText(int priceLevel)
+    {
+        if(priceLevel <= 0) return "Price: N/A";
         StringBuilder sb = new StringBuilder("Price: ");
-        for (int i = 0; i < priceLevel; i++) {
+        for(int i = 0; i < priceLevel; i++)
+        {
             sb.append("$");
         }
         return sb.toString();
     }
 
     // Helper to join tags
-    private String joinTags(List<String> tags) {
+    private String joinTags(List<String> tags)
+    {
         return String.join(", ", tags);
     }
 }

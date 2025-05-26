@@ -7,25 +7,21 @@ import java.util.List;
 public class Menu
 {
     private String name;
-    private String description;
     private String imageURL;
     private Timestamp timeCreated;
-    private List<String> tags;
     private String restaurantID;
     private String menuID;
     private int menuIndex;
 
-    public Menu() {
+    public Menu()
+    {
     }
 
-    public Menu(String name, String description, String imageURL, Timestamp timeCreated,
-                List<String> tags, String restaurantID, String menuID, int menuIndex)
+    public Menu(String name, String imageURL, Timestamp timeCreated, String restaurantID, String menuID, int menuIndex)
     {
         this.name = name;
-        this.description = description;
         this.imageURL = imageURL;
         this.timeCreated = timeCreated;
-        this.tags = tags;
         this.restaurantID = restaurantID;
         this.menuID = menuID;
         this.menuIndex = menuIndex;
@@ -39,16 +35,6 @@ public class Menu
     public void setName(String name)
     {
         this.name = name;
-    }
-
-    public String getDescription()
-    {
-        return description;
-    }
-
-    public void setDescription(String description)
-    {
-        this.description = description;
     }
 
     public String getImageURL()
@@ -69,16 +55,6 @@ public class Menu
     public void setTimeCreated(Timestamp timeCreated)
     {
         this.timeCreated = timeCreated;
-    }
-
-    public List<String> getTags()
-    {
-        return tags;
-    }
-
-    public void setTags(List<String> tags)
-    {
-        this.tags = tags;
     }
 
     public String getRestaurantID()

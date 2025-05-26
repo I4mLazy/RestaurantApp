@@ -207,32 +207,6 @@ public class UpcomingReservationsFragment extends Fragment
                 {
                     Log.e("Cancel", "Failed to update restaurant reservation status", e);
                 });
-
-        // If the current user is a restaurant, send notification to the user
-        if(isRestaurant)
-        {
-            //sendCancellationNotificationToUser(userID, reservation);
-        }
-    }
-
-    private void sendCancellationNotificationToUser(String userID, Reservation reservation)
-    {
-        FirebaseFirestore.getInstance()
-                .collection("Users")
-                .document(userID)
-                .get()
-                .addOnSuccessListener(doc ->
-                {
-                    if(doc.contains("fcmToken"))
-                    {
-                        String token = doc.getString("fcmToken");
-                        String title = "Reservation Cancelled";
-                        String message = "Your reservation on " + reservation.getTime() + " at " +
-                                new SimpleDateFormat("MMM d, yyyy").format(reservation.getDate()) + " was cancelled.";
-
-                        //sendFCM(token, title, message);
-                    }
-                });
     }
 
     private void setupFilters()
