@@ -1,6 +1,6 @@
 package com.example.restaurantapp.fragments;
 
-import static android.Manifest.permission.ACCESS_FINE_LOCATION;
+import static android.Manifest.permission.ACCESS_FINE_LOCATION; // Static import for permission string
 
 import android.Manifest;
 import android.content.Context;
@@ -32,7 +32,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.restaurantapp.BuildConfig;
+import com.example.restaurantapp.BuildConfig; // Note: BuildConfig is imported but not used in the provided code.
 import com.example.restaurantapp.R;
 import com.example.restaurantapp.adapters.RestaurantSearchResultsAdapter;
 import com.example.restaurantapp.models.Restaurant;
@@ -67,56 +67,144 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * A {@link Fragment} subclass that displays a Google Map for discovering restaurants.
+ * It allows users to search for restaurants, view results in a bottom sheet RecyclerView,
+ * and see restaurant locations on the map. Users can click on search results to view
+ * restaurant details or navigate to a restaurant using an external navigation app.
+ * The fragment handles location permissions, fetches the user's current location,
+ * and initializes the Google Places API.
+ */
 public class GmapsFragment extends Fragment
 {
+    /**
+     * SearchView for users to input search queries for restaurants.
+     */
     private SearchView searchView;
+    /**
+     * The GoogleMap object used to display the map and markers.
+     */
     private GoogleMap mMap;
+    /**
+     * Client for accessing Google Play services location APIs.
+     */
     private FusedLocationProviderClient fusedLocationClient;
+    /**
+     * TextView displayed when no search results are found.
+     */
     private TextView noResultsTextView;
+    /**
+     * Adapter for the RecyclerView displaying restaurant search results.
+     */
     private RestaurantSearchResultsAdapter restaurantSearchResultsAdapter;
+    /**
+     * RecyclerView to display search results in the bottom sheet.
+     */
     private RecyclerView recyclerView;
+    /**
+     * Behavior controller for the bottom sheet.
+     */
     private BottomSheetBehavior<View> bottomSheetBehavior;
+    /**
+     * The root View of the bottom sheet.
+     */
     private View bottomSheet;
+    /**
+     * ViewModel for managing and sharing restaurant data.
+     */
     private RestaurantViewModel viewModel;
+    /**
+     * Flag to prevent multiple rapid clicks on the navigation button.
+     */
     private boolean isNavigating = false;
+    /**
+     * Handler for posting delayed runnables on the main looper.
+     */
     private Handler handler = new Handler(Looper.getMainLooper());
+    /**
+     * Runnable for delaying the map loading process.
+     */
     private Runnable mapLoadRunnable;
+    /**
+     * Client for interacting with the Google Places API.
+     */
     private PlacesClient placesClient;
+    /**
+     * Marker for the currently searched location or first search result.
+     */
     private Marker currentSearchMarker;
 
+    /**
+     * Required empty public constructor for Fragment instantiation.
+     */
     public GmapsFragment()
     {
+        // Required empty public constructor
     }
 
+    /**
+     * Called to have the fragment instantiate its user interface view.
+     * Inflates the layout for the fragment and initializes the bottom sheet behavior,
+     * setting its initial state to hidden.
+     *
+     * @param inflater           The LayoutInflater object that can be used to inflate
+     *                           any views in the fragment.
+     * @param container          If non-null, this is the parent view that the fragment's
+     *                           UI should be attached to. The fragment should not add the view itself,
+     *                           but this can be used to generate the LayoutParams of the view.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed
+     *                           from a previous saved state as given here.
+     * @return Return the View for the fragment's UI, or null.
+     */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
-
         View view = inflater.inflate(R.layout.fragment_gmaps, container, false);
 
         bottomSheet = view.findViewById(R.id.bottomSheetContainer);
         bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
-        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
-        bottomSheetBehavior.setPeekHeight(1000);
-        bottomSheetBehavior.setHideable(true);
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN); // Initially hidden
+        bottomSheetBehavior.setPeekHeight(1000); // Peek height when collapsed
+        bottomSheetBehavior.setHideable(true);   // Allows hiding the bottom sheet
 
         return view;
     }
 
+    /**
+     * Called when the view previously created by {@link #onCreateView} has
+     * been detached from the fragment.
+     * Removes any pending callbacks for {@link #mapLoadRunnable} to prevent
+     * issues if the fragment is destroyed before the map loads.
+     * Sets {@link #placesClient} to null.
+     */
     @Override
     public void onDestroyView()
     {
         super.onDestroyView();
-        // Remove the delayed runnable if the fragment is destroyed before the delay finishes
+        // Remove the delayed runnable if the fragment is destroyed
         handler.removeCallbacks(mapLoadRunnable);
         if(placesClient != null)
         {
-            placesClient = null;
+            placesClient = null; // Release PlacesClient
         }
     }
 
+    /**
+     * Called immediately after {@link #onCreateView(LayoutInflater, ViewGroup, Bundle)}
+     * has returned, but before any saved state has been restored in to the view.
+     * Initializes UI components like {@link #noResultsTextView}, {@link #recyclerView},
+     * and {@link #searchView}. Sets up the {@link RestaurantSearchResultsAdapter} with click
+     * listeners for item clicks (navigates to {@link RestaurantInfoFragment}) and navigation
+     * button clicks (calls {@link #openNavigationApp(String)}).
+     * Initializes the Google Places API and schedules the map loading via {@link #mapLoadRunnable}
+     * with a delay.
+     *
+     * @param view               The View returned by {@link #onCreateView(LayoutInflater, ViewGroup, Bundle)}.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed
+     *                           from a previous saved state as given here.
+     */
     @Override
-    public void onViewCreated(View view, Bundle savedInstanceState)
+    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) // Added @NonNull for view
     {
         super.onViewCreated(view, savedInstanceState);
 
@@ -124,7 +212,6 @@ public class GmapsFragment extends Fragment
         recyclerView = view.findViewById(R.id.searchResultsRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
 
-        // Create adapter with listener
         viewModel = new ViewModelProvider(requireActivity()).get(RestaurantViewModel.class);
         restaurantSearchResultsAdapter = new RestaurantSearchResultsAdapter(
                 new ArrayList<>(),
@@ -140,10 +227,10 @@ public class GmapsFragment extends Fragment
                         if(getActivity() != null)
                         {
                             getActivity().getSupportFragmentManager().beginTransaction()
-                                    .replace(R.id.fragmentContainer, restaurantInfoFragment)
+                                    .replace(R.id.fragmentContainer, restaurantInfoFragment) // Assumes R.id.fragmentContainer is the main container
                                     .addToBackStack(null)
                                     .commit();
-                            Log.d("GmapsFragment", "Navigated to RestaurantDetailsFragment");
+                            Log.d("GmapsFragment", "Navigated to RestaurantInfoFragment"); // Corrected log message
                         }
                     }
 
@@ -152,46 +239,40 @@ public class GmapsFragment extends Fragment
                     {
                         if(restaurant.getLocation() == null || restaurant.getAddress() == null)
                         {
-                            Log.e("GmapsFragment", "Restaurant location is null, cannot navigate.");
-                            return;  // If restaurant location is null, return early
-                        }
-
-                        if(!isNavigating)
-                        {
-                            isNavigating = true;
-                            // Open the navigation app
-                            openNavigationApp(restaurant.getAddress());
-                        } else
-                        {
+                            Log.e("GmapsFragment", "Restaurant location or address is null, cannot navigate.");
+                            Toast.makeText(getContext(), "Restaurant location not available.", Toast.LENGTH_SHORT).show();
                             return;
                         }
 
-                        // log the navigation action
-                        Log.d("GmapsFragment", "Navigation to: " + restaurant.getAddress());
-
-                        // Re-enable the button after a short delay (500ms)
-                        new Handler(Looper.getMainLooper()).postDelayed(() -> isNavigating = false, 500);
+                        if(!isNavigating) // Prevent rapid clicks
+                        {
+                            isNavigating = true;
+                            openNavigationApp(restaurant.getAddress());
+                            Log.d("GmapsFragment", "Navigation initiated to: " + restaurant.getAddress());
+                            // Re-enable the button after a short delay
+                            new Handler(Looper.getMainLooper()).postDelayed(() -> isNavigating = false, 500);
+                        }
                     }
                 }
         );
-
         recyclerView.setAdapter(restaurantSearchResultsAdapter);
 
         searchView = view.findViewById(R.id.searchBar);
-        searchView.setOnClickListener(v -> searchView.setIconified(false));
+        searchView.setOnClickListener(v -> searchView.setIconified(false)); // Expand search view on click
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener()
         {
             @Override
             public boolean onQueryTextSubmit(String query)
             {
                 performSearch(query);
+                // Hide keyboard
                 InputMethodManager imm = (InputMethodManager) requireContext()
                         .getSystemService(Context.INPUT_METHOD_SERVICE);
-                if(imm != null)
+                if(imm != null && getView() != null) // Added null check for getView()
                 {
-                    imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+                    imm.hideSoftInputFromWindow(getView().getWindowToken(), 0);
                 }
-                return true;
+                return true; // Query handled
             }
 
             @Override
@@ -199,35 +280,43 @@ public class GmapsFragment extends Fragment
             {
                 if(newText.isEmpty())
                 {
+                    // Clear results and hide bottom sheet if query is empty
                     recyclerView.setVisibility(View.GONE);
                     noResultsTextView.setVisibility(View.GONE);
                     bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
                 }
-
+                // Remove previous search marker if text changes
                 if(currentSearchMarker != null)
                 {
                     currentSearchMarker.remove();
                     currentSearchMarker = null;
                 }
-                return true;
+                return true; // Text change handled
             }
         });
 
-        String apiKey = "AIzaSyAcuJr7LuNMrciDVv9oACjSOV9wrMRaKwI";
-        Places.initializeWithNewPlacesApiEnabled(requireActivity().getApplicationContext(), apiKey);
+        // Initialize Places API
+        // Ensure API key is stored securely, e.g., in local.properties and accessed via BuildConfig
+        String apiKey = "AIzaSyAcuJr7LuNMrciDVv9oACjSOV9wrMRaKwI"; // Hardcoded API Key - Not Recommended for production
+        if(!Places.isInitialized())
+        { // Initialize only if not already initialized
+            Places.initializeWithNewPlacesApiEnabled(requireActivity().getApplicationContext(), apiKey);
+        }
         placesClient = Places.createClient(requireContext());
 
-        mapLoadRunnable = new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                loadMap(placesClient);
-            }
-        };
-        handler.postDelayed(mapLoadRunnable, 500);
+        // Delayed map loading
+        mapLoadRunnable = () -> loadMap(placesClient);
+        handler.postDelayed(mapLoadRunnable, 500); // Delay to allow layout inflation
     }
 
+    /**
+     * Performs a search for restaurants in Firestore based on the provided query string.
+     * Searches the "Restaurants" collection, ordering by name, and matching names that
+     * start with the query. On success, calls {@link #updateSearchResults(List)} with the results.
+     * Logs an error on failure.
+     *
+     * @param query The search query string.
+     */
     private void performSearch(String query)
     {
         if(!query.isEmpty())
@@ -236,7 +325,7 @@ public class GmapsFragment extends Fragment
             db.collection("Restaurants")
                     .orderBy("name")
                     .startAt(query)
-                    .endAt(query + "\uf8ff")
+                    .endAt(query + "\uf8ff") // \uf8ff is a high Unicode character for prefix matching
                     .get()
                     .addOnSuccessListener(querySnapshot ->
                     {
@@ -250,71 +339,96 @@ public class GmapsFragment extends Fragment
                     })
                     .addOnFailureListener(e ->
                     {
-                        Log.e("SearchError", "Error performing search: ", e);
+                        Log.e("SearchError", "Error performing search for query: " + query, e);
+                        Toast.makeText(getContext(), "Search failed. Please try again.", Toast.LENGTH_SHORT).show();
                     });
         }
     }
 
+    /**
+     * Updates the UI with the search results.
+     * If results are empty, it shows {@link #noResultsTextView} and hides the {@link #recyclerView}.
+     * Otherwise, it updates the {@link #restaurantSearchResultsAdapter} with the new data,
+     * shows the RecyclerView, and hides the no results text.
+     * If results are found, it adds a marker on the map for the first restaurant in the list
+     * (removing any previous search marker) and animates the camera to its location.
+     * Finally, it makes the bottom sheet visible and sets its state to collapsed.
+     *
+     * @param results The list of {@link Restaurant} objects found by the search.
+     */
     private void updateSearchResults(List<Restaurant> results)
     {
         if(results.isEmpty())
         {
-            // Show no results text and hide the RecyclerView
             noResultsTextView.setVisibility(View.VISIBLE);
-            noResultsTextView.setText("No results found");
+            noResultsTextView.setText("No results found"); // Use string resource
             recyclerView.setVisibility(View.GONE);
         } else
         {
-            // Update the RecyclerView with new data and show it
             restaurantSearchResultsAdapter.updateData(results);
             noResultsTextView.setVisibility(View.GONE);
             recyclerView.setVisibility(View.VISIBLE);
 
-            // Show marker for first result
-            Restaurant first = results.get(0);
-            GeoPoint geoPoint = first.getLocation();
+            // Show marker for the first result on the map
+            Restaurant firstResult = results.get(0);
+            GeoPoint geoPoint = firstResult.getLocation();
             if(geoPoint != null && mMap != null)
             {
                 LatLng latLng = new LatLng(geoPoint.getLatitude(), geoPoint.getLongitude());
 
                 if(currentSearchMarker != null)
                 {
-                    currentSearchMarker.remove();
+                    currentSearchMarker.remove(); // Remove previous marker
                 }
-
                 currentSearchMarker = mMap.addMarker(new MarkerOptions()
                         .position(latLng)
-                        .title(first.getName()));
-
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 16));
+                        .title(firstResult.getName()));
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 16)); // Zoom to marker
             }
         }
 
-        // Show the bottom sheet (it will be visible regardless of results)
+        // Show the bottom sheet
         bottomSheet.setVisibility(View.VISIBLE);
         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
     }
 
+    /**
+     * Fetches the user's current place using the Google Places API.
+     * This method requires {@link Manifest.permission#ACCESS_FINE_LOCATION}.
+     * If permission is granted, it makes a {@link FindCurrentPlaceRequest} and logs the
+     * place likelihoods. If permission is not granted, it launches the {@link #locationPermissionLauncher}.
+     * Handles API exceptions by logging them.
+     *
+     * @param placesClient The {@link PlacesClient} instance to use for the API call.
+     */
     private void setCurrentLocation(PlacesClient placesClient)
     {
         List<Place.Field> placeFields = Collections.singletonList(Place.Field.DISPLAY_NAME);
         Log.d("PlacesDebug", "Before FindCurrentPlaceRequest");
         FindCurrentPlaceRequest request = FindCurrentPlaceRequest.newInstance(placeFields);
         Log.d("PlacesDebug", "After FindCurrentPlaceRequest");
+
         if(ContextCompat.checkSelfPermission(requireActivity().getApplicationContext(), ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
         {
-            Log.d("PlacesDebug", "Before findCurrentPlace");
+            Log.d("PlacesDebug", "Before findCurrentPlace call");
             Task<FindCurrentPlaceResponse> placeResponse = placesClient.findCurrentPlace(request);
-            Log.d("PlacesDebug", "After findCurrentPlace");
+            Log.d("PlacesDebug", "After findCurrentPlace call initiated");
             placeResponse.addOnCompleteListener(task ->
             {
                 if(task.isSuccessful())
                 {
                     FindCurrentPlaceResponse response = task.getResult();
-                    for(PlaceLikelihood placeLikelihood : response.getPlaceLikelihoods())
+                    if(response != null)
                     {
-                        Log.i("CurrentLocation", String.format("Place '%s' has likelihood: %f", placeLikelihood.getPlace().getDisplayName(),
-                                placeLikelihood.getLikelihood()));
+                        for(PlaceLikelihood placeLikelihood : response.getPlaceLikelihoods())
+                        {
+                            Log.i("CurrentLocation", String.format("Place '%s' has likelihood: %f",
+                                    placeLikelihood.getPlace().getDisplayName(),
+                                    placeLikelihood.getLikelihood()));
+                        }
+                    } else
+                    {
+                        Log.w("CurrentLocation", "FindCurrentPlaceResponse is null.");
                     }
                 } else
                 {
@@ -322,143 +436,237 @@ public class GmapsFragment extends Fragment
                     if(exception instanceof ApiException)
                     {
                         ApiException apiException = (ApiException) exception;
-                        Log.e("NotFound", "Place not found: " + apiException.getStatusCode());
+                        Log.e("PlacesAPIError", "Place not found: " + apiException.getStatusCode() + " " + apiException.getMessage());
+                    } else if(exception != null)
+                    {
+                        Log.e("PlacesAPIError", "Error finding current place: " + exception.getMessage(), exception);
+                    } else
+                    {
+                        Log.e("PlacesAPIError", "Unknown error finding current place.");
                     }
                 }
             });
         } else
         {
+            // Request location permission
             locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION);
         }
     }
 
+    /**
+     * ActivityResultLauncher for handling location permission requests.
+     * If {@link Manifest.permission#ACCESS_FINE_LOCATION} is granted, it calls
+     * {@link #setCurrentLocation(PlacesClient)}. Otherwise, it logs a warning.
+     */
     private final ActivityResultLauncher<String> locationPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted ->
             {
                 if(isGranted)
                 {
-                    Log.d("Permission", "Location permission granted.");
-                    setCurrentLocation(placesClient); // make sure this is accessible
+                    Log.d("Permission", "Location permission granted by user.");
+                    if(placesClient != null)
+                    { // Ensure placesClient is not null
+                        setCurrentLocation(placesClient);
+                    } else
+                    {
+                        Log.e("Permission", "PlacesClient is null after permission grant.");
+                    }
                 } else
                 {
-                    Log.w("Permission", "Location permission denied.");
+                    Log.w("Permission", "Location permission denied by user.");
+                    Toast.makeText(getContext(), "Location permission is needed to show current location.", Toast.LENGTH_LONG).show();
                 }
             });
 
 
+    /**
+     * Loads the Google Map into the {@code R.id.mapContainer}.
+     * If the {@link SupportMapFragment} doesn't exist, it creates a new instance with a specific map ID,
+     * replaces the container content with it, and commits the transaction.
+     * Once the map is ready (via {@link OnMapReadyCallback}), it calls {@link #setMapSettings(GoogleMap, PlacesClient)}
+     * and {@link #moveMapButtons(SupportMapFragment)}.
+     *
+     * @param placesClient The {@link PlacesClient} to be used with map settings.
+     */
     private void loadMap(PlacesClient placesClient)
     {
+        if(getContext() == null || getChildFragmentManager() == null)
+        {
+            Log.e("GmapsFragment", "Context or ChildFragmentManager is null in loadMap. Cannot proceed.");
+            return;
+        }
+
         SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.mapContainer);
 
-        // If the map fragment doesn't exist, create it
         if(mapFragment == null)
         {
             final SupportMapFragment newMapFragment = SupportMapFragment.newInstance(
-                    new GoogleMapOptions().mapId(getResources().getString(R.string.map_id)));
+                    new GoogleMapOptions().mapId(getResources().getString(R.string.map_id))); // Use map ID from resources
 
             FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
-            if(!getChildFragmentManager().isStateSaved())
+            if(!getChildFragmentManager().isStateSaved()) // Check if state is saved to prevent IllegalStateException
             {
                 transaction.replace(R.id.mapContainer, newMapFragment);
-                transaction.commit();
+                transaction.commit(); // Use commitNow() if immediate effect is needed and allowed
+            } else
+            {
+                Log.w("GmapsFragment", "Cannot commit fragment transaction: state already saved.");
+                return;
             }
 
-            newMapFragment.getMapAsync(new OnMapReadyCallback()
+            newMapFragment.getMapAsync(googleMap ->
+            { // onMapReady callback
+                mMap = googleMap;
+                setMapSettings(mMap, placesClient);
+                moveMapButtons(newMapFragment); // Pass the fragment instance
+            });
+        } else
+        {
+            // If mapFragment already exists, re-initialize or ensure it's ready
+            mapFragment.getMapAsync(googleMap ->
             {
-                @Override
-                public void onMapReady(@NonNull GoogleMap googleMap)
-                {
-                    mMap = googleMap;
-                    setMapSettings(mMap, placesClient);
-                    moveMapButtons(newMapFragment);
-                }
+                mMap = googleMap;
+                setMapSettings(mMap, placesClient);
+                moveMapButtons(mapFragment);
             });
         }
     }
 
-    private void setMapSettings(GoogleMap mMap, PlacesClient placesClient)
+    /**
+     * Configures settings for the provided {@link GoogleMap} instance.
+     * Calls {@link #setCurrentLocation(PlacesClient)} to attempt to fetch current place data.
+     * Calls {@link #setCurrentCameraPosition()} to move the camera to the user's current location.
+     * Enables UI settings like compass, zoom controls, "My Location" button (if permission granted),
+     * and rotate gestures.
+     *
+     * @param googleMap    The {@link GoogleMap} instance to configure.
+     * @param placesClient The {@link PlacesClient} for location-related operations.
+     */
+    private void setMapSettings(GoogleMap googleMap, PlacesClient placesClient) // Renamed param for clarity
     {
-        setCurrentLocation(placesClient);
-        setCurrentCameraPosition();
+        if(getContext() == null)
+        {
+            Log.e("GmapsFragment", "Context is null in setMapSettings.");
+            return;
+        }
+        this.mMap = googleMap; // Ensure mMap is set
+        setCurrentLocation(placesClient); // Attempt to get current place info
+        setCurrentCameraPosition();       // Move camera to current GPS location
+
         mMap.getUiSettings().setCompassEnabled(true);
-        mMap.getUiSettings().setZoomControlsEnabled(true);
+        mMap.getUiSettings().setZoomControlsEnabled(true); // Default zoom controls
         if(ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
         {
-            mMap.setMyLocationEnabled(true);
+            mMap.setMyLocationEnabled(true); // Show blue dot for current location
         }
-        mMap.getUiSettings().setMyLocationButtonEnabled(true);
+        mMap.getUiSettings().setMyLocationButtonEnabled(true); // Show "My Location" button
         mMap.getUiSettings().setRotateGesturesEnabled(true);
     }
 
+    /**
+     * Repositions the default Google Maps UI buttons (My Location, Zoom, Compass)
+     * to custom locations on the screen. This is done by finding the views by their
+     * internal IDs (which is fragile and might break with SDK updates) and adjusting
+     * their {@link RelativeLayout.LayoutParams} and scale.
+     *
+     * @param mapFragment The {@link SupportMapFragment} whose view contains the map buttons.
+     */
     private void moveMapButtons(SupportMapFragment mapFragment)
     {
         View mapView = mapFragment.getView();
         if(mapView == null)
         {
-            Log.w("MapsFragment", "MapView is null in moveMapButtons");
+            Log.w("GmapsFragment", "MapView is null in moveMapButtons. Cannot move buttons.");
             return;
         }
 
+        // IDs for map buttons are internal and not guaranteed. This is a common workaround.
+        // MyLocation button typically has ID 2
+        // Zoom controls typically have ID 1
+        // Compass button typically has ID 5
+
         // Move MyLocation button
-        View locationButton = mapView.findViewById(Integer.parseInt("2"));
+        View locationButton = mapView.findViewById(Integer.parseInt("2")); // Fragile: internal ID
         if(locationButton != null && locationButton.getLayoutParams() instanceof RelativeLayout.LayoutParams)
         {
             RelativeLayout.LayoutParams locationParams = (RelativeLayout.LayoutParams) locationButton.getLayoutParams();
-            locationParams.addRule(RelativeLayout.ALIGN_PARENT_TOP, 0);
+            locationParams.removeRule(RelativeLayout.ALIGN_PARENT_TOP); // Clear existing top alignment
             locationParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
-            locationParams.setMargins(0, 0, dpToPx(16), dpToPx(16));  // Right 16dp, Bottom 16dp
+            locationParams.setMargins(0, 0, dpToPx(16), dpToPx(16));
             locationButton.setLayoutParams(locationParams);
             locationButton.setScaleX(1.2f);
             locationButton.setScaleY(1.2f);
         } else
         {
-            Log.w("MapsFragment", "MyLocation button not found or wrong layout params (id=2)");
+            Log.w("GmapsFragment", "MyLocation button (id=2) not found or has unexpected LayoutParams.");
         }
 
         // Move Zoom controls
-        View zoomControls = mapView.findViewById(Integer.parseInt("1"));
+        View zoomControls = mapView.findViewById(Integer.parseInt("1")); // Fragile: internal ID
         if(zoomControls != null && zoomControls.getLayoutParams() instanceof RelativeLayout.LayoutParams)
         {
             RelativeLayout.LayoutParams zoomParams = (RelativeLayout.LayoutParams) zoomControls.getLayoutParams();
-            zoomParams.addRule(RelativeLayout.ALIGN_PARENT_TOP, 0);
+            zoomParams.removeRule(RelativeLayout.ALIGN_PARENT_TOP); // Clear existing top alignment
             zoomParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
-            zoomParams.setMargins(0, 0, dpToPx(16), dpToPx(96));  // Slightly higher than MyLocation
+            zoomParams.setMargins(0, 0, dpToPx(16), dpToPx(96)); // Position above MyLocation button
             zoomControls.setLayoutParams(zoomParams);
             zoomControls.setScaleX(1.2f);
             zoomControls.setScaleY(1.2f);
         } else
         {
-            Log.w("MapsFragment", "Zoom controls button not found or wrong layout params (id=1)");
+            Log.w("GmapsFragment", "Zoom controls (id=1) not found or has unexpected LayoutParams.");
         }
 
-        // Move Compass button lower (~80dp from top)
-        View compassButton = mapView.findViewById(Integer.parseInt("5"));
+        // Move Compass button
+        View compassButton = mapView.findViewById(Integer.parseInt("5")); // Fragile: internal ID
         if(compassButton != null && compassButton.getLayoutParams() instanceof RelativeLayout.LayoutParams)
         {
             RelativeLayout.LayoutParams compassParams = (RelativeLayout.LayoutParams) compassButton.getLayoutParams();
-            compassParams.setMargins(0, dpToPx(80), dpToPx(16), 0);  // Top margin 80dp, Right 16dp
+            // Assuming default is top-right, adjust top margin
+            compassParams.setMargins(0, dpToPx(80), dpToPx(16), 0);
             compassButton.setLayoutParams(compassParams);
             compassButton.setScaleX(1.2f);
             compassButton.setScaleY(1.2f);
         } else
         {
-            Log.w("MapsFragment", "Compass button not found or wrong layout params (id=5)");
+            Log.w("GmapsFragment", "Compass button (id=5) not found or has unexpected LayoutParams.");
         }
     }
 
+    /**
+     * Converts density-independent pixels (dp) to physical pixels (px).
+     *
+     * @param dp The value in dp.
+     * @return The equivalent value in px.
+     */
     private int dpToPx(int dp)
     {
+        if(getContext() == null) return dp; // Fallback if context is not available
         return Math.round(dp * getResources().getDisplayMetrics().density);
     }
 
+    /**
+     * Fetches the user's current GPS location using {@link FusedLocationProviderClient}
+     * and moves the map camera to focus on this location.
+     * Requires {@link Manifest.permission#ACCESS_FINE_LOCATION} and
+     * {@link Manifest.permission#ACCESS_COARSE_LOCATION}.
+     * If permissions are granted and location is successfully obtained, it calls
+     * {@link #focusOnLocation(GoogleMap, LatLng)}.
+     */
     private void setCurrentCameraPosition()
     {
+        if(getContext() == null)
+        {
+            Log.e("GmapsFragment", "Context is null in setCurrentCameraPosition.");
+            return;
+        }
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity().getApplicationContext());
-        if(ActivityCompat.checkSelfPermission(requireActivity().getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(requireActivity().getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED)
+        if(ActivityCompat.checkSelfPermission(requireActivity().getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(requireActivity().getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED)
         {
             CurrentLocationRequest currentLocationRequest = new CurrentLocationRequest.Builder()
-                    .setDurationMillis(5000)
-                    .setMaxUpdateAgeMillis(0)
+                    .setDurationMillis(5000)      // How long to actively listen for updates
+                    .setMaxUpdateAgeMillis(0)     // Request a fresh location
                     .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
                     .build();
 
@@ -472,42 +680,65 @@ public class GmapsFragment extends Fragment
                     {
                         LatLng currentLatLng = new LatLng(location.getLatitude(), location.getLongitude());
                         focusOnLocation(mMap, currentLatLng);
+                    } else
+                    {
+                        Log.w("GmapsFragment", "FusedLocationProvider returned null location.");
+                        // Optionally, show a toast or default to a known location
                     }
+                } else
+                {
+                    Log.e("GmapsFragment", "Failed to get current location for camera.", task.getException());
+                    // Optionally, show a toast
                 }
             });
+        } else
+        {
+            Log.w("GmapsFragment", "Location permissions not granted for setCurrentCameraPosition.");
+            // Permissions should have been requested earlier, but this is a fallback log.
         }
     }
 
-    private void focusOnLocation(GoogleMap mMap, LatLng latLng)
+    /**
+     * Animates the Google Map camera to the specified {@link LatLng} with a zoom level of 14.
+     *
+     * @param googleMap The {@link GoogleMap} instance to animate.
+     * @param latLng    The {@link LatLng} to focus on.
+     */
+    private void focusOnLocation(GoogleMap googleMap, LatLng latLng) // Renamed param for clarity
     {
-        if(mMap != null && latLng != null)
+        if(googleMap != null && latLng != null)
         {
             CameraPosition cameraPosition = new CameraPosition.Builder()
                     .target(latLng)
-                    .zoom(14)
+                    .zoom(14) // Default zoom level
                     .build();
-            mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+            googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
         }
     }
 
-    // Helper to launch navigation
+    /**
+     * Opens an external navigation application to provide directions to the given address.
+     * It creates a "geo" URI intent and uses {@link Intent#createChooser(Intent, CharSequence)}
+     * to allow the user to select their preferred navigation app (e.g., Google Maps, Waze).
+     * If no app can handle the intent, a toast message is displayed.
+     *
+     * @param address The destination address string.
+     */
     private void openNavigationApp(String address)
     {
-        // The general geo URI that can be handled by multiple apps (including Maps and other navigation apps)
-        String uri = "geo:0,0?q=" + Uri.encode(address);
-        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
+        // geo:0,0?q=address URI for searching address in map apps
+        String uriString = "geo:0,0?q=" + Uri.encode(address);
+        Intent mapIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(uriString));
 
-        // Create chooser for available navigation apps
-        Intent chooserIntent = Intent.createChooser(intent, "Choose a Navigation App");
+        // Create a chooser to let the user pick a navigation app
+        Intent chooserIntent = Intent.createChooser(mapIntent, "Choose a Navigation App");
 
-        // Check if there's any app that can handle the intent
-        if(intent.resolveActivity(requireContext().getPackageManager()) != null)
+        if(getContext() != null && chooserIntent.resolveActivity(requireContext().getPackageManager()) != null)
         {
-            startActivity(chooserIntent);  // This will show a prompt with apps like Google Maps, Waze, etc.
+            startActivity(chooserIntent);
         } else
         {
-            // Fallback for no apps available
-            Toast.makeText(requireContext(), "No navigation apps available", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "No navigation apps available on this device.", Toast.LENGTH_SHORT).show();
         }
     }
 }

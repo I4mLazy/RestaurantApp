@@ -27,15 +27,46 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException;
 import com.google.firebase.auth.FirebaseUser;
 
+/**
+ * Activity for editing user profile information such as email, phone number, name, or password.
+ * This activity receives the type of field to edit and its current value via an {@link Intent}.
+ * It provides a dynamic UI based on the field type and handles validation and saving of changes,
+ * including re-authentication for sensitive operations like changing email or password.
+ */
 public class EditInfoActivity extends AppCompatActivity
 {
+    /** The toolbar for this activity. */
     private Toolbar toolbar;
-    private TextInputLayout universalInputLayout, newPasswordInputLayout, confirmPasswordInputLayout;
-    private EditText universalEditText, newPasswordEditText, confirmPasswordEditText;
+    /** TextInputLayout for the primary input field, used for most field types. */
+    private TextInputLayout universalInputLayout;
+    /** TextInputLayout for the new password input, visible only when editing password. */
+    private TextInputLayout newPasswordInputLayout;
+    /** TextInputLayout for confirming the password, visible when editing email or password. */
+    private TextInputLayout confirmPasswordInputLayout;
+    /** EditText for the primary input field. */
+    private EditText universalEditText;
+    /** EditText for the new password, visible only when editing password. */
+    private EditText newPasswordEditText;
+    /** EditText for confirming the password, visible when editing email or password. */
+    private EditText confirmPasswordEditText;
+    /** Button to trigger saving the changes. */
     private Button saveButton;
+    /** String indicating the type of field being edited (e.g., "Email", "Phone", "Name", "Password"). */
     private String fieldType;
+    /** Instance of FirebaseAuth for handling user authentication and updates. */
     private FirebaseAuth mAuth;
 
+    /**
+     * Called when the activity is first created.
+     * Initializes the UI components, Firebase Authentication, and sets up the input fields
+     * based on the {@code fieldType} passed in the intent. It also configures a
+     * {@link TextWatcher} to validate input dynamically and enable/disable the save button.
+     *
+     * @param savedInstanceState If the activity is being re-initialized after
+     *                           previously being shut down then this Bundle contains the data it most
+     *                           recently supplied in {@link #onSaveInstanceState}.
+     *                           <b><i>Note: Otherwise it is null.</i></b>
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -124,6 +155,7 @@ public class EditInfoActivity extends AppCompatActivity
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after)
             {
+                // Not used in this implementation
             }
 
             @Override
@@ -135,6 +167,7 @@ public class EditInfoActivity extends AppCompatActivity
             @Override
             public void afterTextChanged(Editable s)
             {
+                // Not used in this implementation
             }
         };
 
@@ -147,6 +180,12 @@ public class EditInfoActivity extends AppCompatActivity
         saveButton.setOnClickListener(v -> saveChanges());
     }
 
+    /**
+     * Validates the input fields based on the current {@code fieldType}.
+     * Enables or disables the save button and adjusts its opacity accordingly.
+     * Validation rules are specific to each field type (e.g., email format, phone number length,
+     * password strength and confirmation).
+     */
     private void validateInput()
     {
         String updatedValue = universalEditText.getText().toString().trim();
@@ -181,6 +220,22 @@ public class EditInfoActivity extends AppCompatActivity
         saveButton.setAlpha(isValid ? 1.0f : 0.5f); // Visually gray out button when disabled
     }
 
+    /**
+     * Handles the process of saving the changes made by the user.
+     * The behavior varies based on the {@code fieldType}:
+     * <ul>
+     *     <li><b>Password:</b> Re-authenticates the user with their current password, then updates to the new password.
+     *         Sets an error on {@code universalInputLayout} or {@code newPasswordInputLayout} on failure.
+     *     </li>
+     *     <li><b>Email:</b> Re-authenticates the user, updates the email in Firebase, and sends a verification email to the new address.
+     *         Sets an error on {@code confirmPasswordInputLayout} or shows a Toast on failure.
+     *     </li>
+     *     <li><b>Other fields (Name, Phone):</b> Directly prepares the result intent with the updated value.</li>
+     * </ul>
+     * On successful update, it sets the activity result to {@link Activity#RESULT_OK} with the
+     * updated field type and value, and then finishes the activity.
+     * Displays appropriate error messages or toasts for failures.
+     */
     private void saveChanges()
     {
         saveButton.setEnabled(false);
@@ -302,6 +357,12 @@ public class EditInfoActivity extends AppCompatActivity
     }
 
 
+    /**
+     * Handles the action when the up navigation button in the toolbar is pressed.
+     * Finishes the current activity, returning the user to the previous screen.
+     *
+     * @return {@code true} to indicate that the navigation event has been handled.
+     */
     @Override
     public boolean onSupportNavigateUp()
     {

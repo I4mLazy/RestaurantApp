@@ -4,7 +4,6 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.graphics.Paint;
@@ -86,62 +85,422 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Fragment for managing restaurant menus and menu items.
+ * Allows restaurant owners to create, view, edit, and delete menus and items,
+ * as well as create and manage discounts for items or entire menus.
+ */
 public class ManageMenuFragment extends Fragment
 {
 
+    /**
+     * SearchView for filtering menus and items.
+     */
     private SearchView searchBar;
+    /**
+     * RecyclerView to display the list of menus.
+     */
     private RecyclerView recyclerViewMenus;
+    /**
+     * Adapter for the {@link #recyclerViewMenus}.
+     */
     private MenuAdapter menuAdapter;
+    /**
+     * List of all {@link Menu} objects for the current restaurant.
+     */
     private List<Menu> menuList = new ArrayList<>();
+    /**
+     * List of all {@link MenuItem} objects across all menus for the current restaurant.
+     */
     private List<MenuItem> menuItemList = new ArrayList<>();
+    /**
+     * List of {@link Menu} objects after filtering by search query. (Note: Not directly used for display, adapter handles filtering)
+     */
     private List<Menu> filteredMenus = new ArrayList<>();
+    /**
+     * List of {@link MenuItem} objects after filtering. (Note: Not directly used for display, adapter handles filtering)
+     */
     private List<MenuItem> filteredItems = new ArrayList<>();
 
-    private ImageButton btnCreateDiscount, btnAdd, itemEditImage, menuEditImage;
-    private ImageView menuViewImage, itemViewImage;
-    private RelativeLayout itemViewOverlay, menuViewOverlay, addChoiceOverlay, itemEditOverlay, menuEditOverlay, discountOverlay, loadingOverlay;
-    private EditText editItemName, editItemPrice, editItemDescription, editItemAllergens, editItemCategory, editMenuName, editDiscountAmount;
-    private TextInputLayout editItemNameLayout, editItemPriceLayout, editItemDescriptionLayout, editItemAllergensLayout, editItemCategoryLayout;
-    private Button btnChooseAddItem, btnChooseAddMenu, btnCancelAddChoice, btnSaveItem, btnCancelEdit, btnSaveMenu, btnCancelMenuEdit, btnChooseForDiscount, btnApplyDiscount, btnCancelDiscount;
+    /**
+     * ImageButton to initiate discount creation.
+     */
+    private ImageButton btnCreateDiscount;
+    /**
+     * ImageButton to initiate adding a new menu or item.
+     */
+    private ImageButton btnAdd;
+    /**
+     * ImageButton within the item edit overlay to change the item's image.
+     */
+    private ImageButton itemEditImage;
+    /**
+     * ImageButton within the menu edit overlay to change the menu's image.
+     */
+    private ImageButton menuEditImage;
+
+    /**
+     * ImageView within the menu view overlay to display the menu's image.
+     */
+    private ImageView menuViewImage;
+    /**
+     * ImageView within the item view overlay to display the item's image.
+     */
+    private ImageView itemViewImage;
+
+    /**
+     * Overlay for viewing details of a single menu item.
+     */
+    private RelativeLayout itemViewOverlay;
+    /**
+     * Overlay for viewing details of a single menu.
+     */
+    private RelativeLayout menuViewOverlay;
+    /**
+     * Overlay for choosing whether to add a new menu or a new item.
+     */
+    private RelativeLayout addChoiceOverlay;
+    /**
+     * Overlay for editing or creating a menu item.
+     */
+    private RelativeLayout itemEditOverlay;
+    /**
+     * Overlay for editing or creating a menu.
+     */
+    private RelativeLayout menuEditOverlay;
+    /**
+     * Overlay for creating and applying discounts.
+     */
+    private RelativeLayout discountOverlay;
+    /**
+     * Overlay displayed during loading operations.
+     */
+    private RelativeLayout loadingOverlay;
+
+    /**
+     * EditText for the name of the item being edited/created.
+     */
+    private EditText editItemName;
+    /**
+     * EditText for the price of the item being edited/created.
+     */
+    private EditText editItemPrice;
+    /**
+     * EditText for the description of the item being edited/created.
+     */
+    private EditText editItemDescription;
+    /**
+     * EditText for the allergens of the item being edited/created (comma-separated).
+     */
+    private EditText editItemAllergens;
+    /**
+     * EditText for the category of the item being edited/created.
+     */
+    private EditText editItemCategory;
+    /**
+     * EditText for the name of the menu being edited/created.
+     */
+    private EditText editMenuName;
+    /**
+     * EditText for the discount amount (percentage or flat).
+     */
+    private EditText editDiscountAmount;
+
+    /**
+     * TextInputLayout for {@link #editItemName} to display errors.
+     */
+    private TextInputLayout editItemNameLayout;
+    /**
+     * TextInputLayout for {@link #editItemPrice} to display errors.
+     */
+    private TextInputLayout editItemPriceLayout;
+    /**
+     * TextInputLayout for {@link #editItemDescription} to display errors.
+     */
+    private TextInputLayout editItemDescriptionLayout;
+    /**
+     * TextInputLayout for {@link #editItemAllergens} to display errors.
+     */
+    private TextInputLayout editItemAllergensLayout;
+    /**
+     * TextInputLayout for {@link #editItemCategory} to display errors.
+     */
+    private TextInputLayout editItemCategoryLayout;
+
+    /**
+     * Button within {@link #addChoiceOverlay} to proceed with adding a new item.
+     */
+    private Button btnChooseAddItem;
+    /**
+     * Button within {@link #addChoiceOverlay} to proceed with adding a new menu.
+     */
+    private Button btnChooseAddMenu;
+    /**
+     * Button within {@link #addChoiceOverlay} to cancel the add choice.
+     */
+    private Button btnCancelAddChoice;
+    /**
+     * Button within {@link #itemEditOverlay} to save the item being edited/created.
+     */
+    private Button btnSaveItem;
+    /**
+     * Button within {@link #itemEditOverlay} to cancel editing/creating an item.
+     */
+    private Button btnCancelEdit;
+    /**
+     * Button within {@link #menuEditOverlay} to save the menu being edited/created.
+     */
+    private Button btnSaveMenu;
+    /**
+     * Button within {@link #menuEditOverlay} to cancel editing/creating a menu.
+     */
+    private Button btnCancelMenuEdit;
+    /**
+     * Button within {@link #discountOverlay} (when manual select is chosen) to confirm selection and close overlay.
+     */
+    private Button btnChooseForDiscount;
+    /**
+     * Button within {@link #discountOverlay} to apply the configured discount.
+     */
+    private Button btnApplyDiscount;
+    /**
+     * Button within {@link #discountOverlay} to cancel discount creation.
+     */
+    private Button btnCancelDiscount;
+
+    /**
+     * ProgressBar for indicating loading states, e.g., during save operations.
+     */
     private ProgressBar progressBar;
+    /**
+     * SwitchMaterial to enable or disable discount scheduling.
+     */
     private Switch switchEnableSchedule;
-    private RadioGroup radioDiscountType, radioApplyScope;
-    private Spinner spinnerMenuSelection, spinnerDiscountMenu, spinnerDiscountItem;
-    private DatePicker startDatePicker, endDatePicker;
-    private TimePicker startTimePicker, endTimePicker;
-    private TextView noResults, itemEditImageTextView, menuEditImageTextView, menuViewName, itemViewName, itemViewPrice,
-            itemViewDescription, itemViewAvailability, itemViewCategory, itemViewAllergens, discountBadge, oldPrice,
-            itemEditOverlayName, menuEditOverlayName;
+    /**
+     * RadioGroup for selecting the discount type (percentage or flat).
+     */
+    private RadioGroup radioDiscountType;
+    /**
+     * RadioGroup for selecting the scope of discount application (specific menu/item or manual select).
+     */
+    private RadioGroup radioApplyScope;
+    /**
+     * Spinner for selecting a menu when adding/editing an item.
+     */
+    private Spinner spinnerMenuSelection;
+    /**
+     * Spinner for selecting a menu when applying a discount.
+     */
+    private Spinner spinnerDiscountMenu;
+    /**
+     * Spinner for selecting an item (or "all items") within a menu when applying a discount.
+     */
+    private Spinner spinnerDiscountItem;
+    /**
+     * DatePicker for selecting the start date of a scheduled discount.
+     */
+    private DatePicker startDatePicker;
+    /**
+     * DatePicker for selecting the end date of a scheduled discount.
+     */
+    private DatePicker endDatePicker;
+    /**
+     * TimePicker for selecting the start time of a scheduled discount.
+     */
+    private TimePicker startTimePicker;
+    /**
+     * TimePicker for selecting the end time of a scheduled discount.
+     */
+    private TimePicker endTimePicker;
+
+    /**
+     * TextView to display "No results found" message for search.
+     */
+    private TextView noResults;
+    /**
+     * TextView acting as a click target to edit an item's image.
+     */
+    private TextView itemEditImageTextView;
+    /**
+     * TextView acting as a click target to edit a menu's image.
+     */
+    private TextView menuEditImageTextView;
+    /**
+     * TextView in item view overlay to display the menu name.
+     */
+    private TextView menuViewName;
+    /**
+     * TextView in item view overlay to display the item name.
+     */
+    private TextView itemViewName;
+    /**
+     * TextView in item view overlay to display the item price.
+     */
+    private TextView itemViewPrice;
+    /**
+     * TextView in item view overlay to display the item description.
+     */
+    private TextView itemViewDescription;
+    /**
+     * TextView in item view overlay to display the item availability.
+     */
+    private TextView itemViewAvailability;
+    /**
+     * TextView in item view overlay to display the item category.
+     */
+    private TextView itemViewCategory;
+    /**
+     * TextView in item view overlay to display the item allergens.
+     */
+    private TextView itemViewAllergens;
+    /**
+     * TextView in item view overlay to display a discount badge.
+     */
+    private TextView discountBadge;
+    /**
+     * TextView in item view overlay to display the original price if discounted.
+     */
+    private TextView oldPrice;
+    /**
+     * TextView in item edit overlay to display the overlay title (e.g., "Create Menu Item").
+     */
+    private TextView itemEditOverlayName;
+    /**
+     * TextView in menu edit overlay to display the overlay title (e.g., "Create Menu").
+     */
+    private TextView menuEditOverlayName;
+
+    /**
+     * CheckBox in item edit overlay to set item availability.
+     */
     private CheckBox editItemAvailability;
+    /**
+     * BottomSheetDialog for choosing image source (camera/gallery).
+     */
     private BottomSheetDialog imageBottomSheetDialog;
+
+    /**
+     * Instance of FirebaseFirestore for database operations.
+     */
     private FirebaseFirestore db;
+    /**
+     * Instance of FirebaseAuth for user authentication.
+     */
     private FirebaseAuth auth;
+    /**
+     * The currently authenticated FirebaseUser.
+     */
     private FirebaseUser currentUser;
+    /**
+     * Reference to the root of Firebase Storage.
+     */
     private StorageReference storageRef;
+    /**
+     * Instance of FirebaseStorage.
+     */
     private FirebaseStorage storage;
 
+    /**
+     * The ID of the current restaurant whose menu is being managed.
+     */
     private String restaurantID;
-    private MenuItem currentMenuItem; // For tracking item being edited
-    private Menu currentMenu; // For tracking menu being edited
+    /**
+     * The {@link MenuItem} currently being viewed or edited.
+     */
+    private MenuItem currentMenuItem;
+    /**
+     * The {@link Menu} currently being viewed or edited.
+     */
+    private Menu currentMenu;
+    /**
+     * String indicating the type of entity being edited/created ("Menu" or "MenuItem").
+     */
     private String currentType;
+    /**
+     * String indicating the type of discount being applied ("Percentage" or "Flat").
+     */
     private String discountType;
+    /**
+     * Flag indicating if an image upload is in progress.
+     */
     private boolean isUploading = false;
+    /**
+     * Flag indicating if an existing entity (menu/item) is being edited (true) or a new one is being created (false).
+     */
     private boolean isEditMode = false;
+    /**
+     * Flag indicating if menu items have been reordered. (Note: Declared but not used in provided code)
+     */
     private boolean itemsReordered = false;
+    /**
+     * Flag indicating if discount scheduling is enabled.
+     */
     private boolean scheduleOn = false;
+    /**
+     * Flag indicating if an image (menu or item) has been edited by the user.
+     */
     private boolean imageEdited = false;
+    /**
+     * Flag indicating if a new item is being created.
+     */
     private boolean newItem = false;
+    /**
+     * Flag indicating if a new menu is being created.
+     */
     private boolean newMenu = false;
+    /**
+     * Flag indicating if an image deletion operation is in progress.
+     */
     boolean deleteMode = false;
+    /**
+     * Uri of the photo taken by camera or selected from gallery.
+     */
     private Uri photoUri;
+    /**
+     * Bitmap representation of the image selected/taken.
+     */
     private Bitmap bitmap;
+    /**
+     * Reference to the current Firebase Storage upload task.
+     */
     private UploadTask currentUploadTask;
+    /**
+     * Tag for logging purposes.
+     */
     private static final String TAG = "ManageMenuFragment";
 
+    /**
+     * Default constructor for ManageMenuFragment.
+     * Required empty public constructor.
+     */
     public ManageMenuFragment()
     {
+        // Required empty public constructor
     }
 
+    /**
+     * Called to have the fragment instantiate its user interface view.
+     * This method inflates the layout for the fragment. It initializes Firebase services (Firestore, Auth, Storage),
+     * retrieves the current user's restaurant ID, and if valid, sets up the {@link MenuAdapter}
+     * and loads initial menu data via {@link #loadMenuData()}.
+     * It then initializes all other UI components (Buttons, EditTexts, Spinners, Overlays, etc.)
+     * and calls {@link #setupListeners()} to configure their behavior and interactions.
+     *
+     * <p>It is recommended to <strong>only</strong> inflate the layout in this method and move
+     * logic that operates on the returned View to {@link #onViewCreated(View, Bundle)}.
+     *
+     * <p>If you return a View from here, you will later be called in
+     * {@link #onDestroyView} when the view is being released.
+     *
+     * @param inflater           The LayoutInflater object that can be used to inflate
+     *                           any views in the fragment.
+     * @param container          If non-null, this is the parent view that the fragment's
+     *                           UI should be attached to. The fragment should not add the view itself,
+     *                           but this can be used to generate the LayoutParams of the view.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed
+     *                           from a previous saved state as given here.
+     * @return Return the View for the fragment's UI.
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState)
@@ -284,6 +643,11 @@ public class ManageMenuFragment extends Fragment
         return view;
     }
 
+    /**
+     * Sets up listeners for various UI components in the fragment.
+     * This includes search bar, add buttons, save/cancel buttons for edit overlays,
+     * discount creation components, and overlay close/edit/delete buttons.
+     */
     private void setupListeners()
     {
         searchBar.setOnClickListener(v -> searchBar.setIconified(false));
@@ -545,6 +909,12 @@ public class ManageMenuFragment extends Fragment
         });
     }
 
+    /**
+     * Loads the list of menus for the current restaurant from Firestore and populates the given spinner.
+     * Stores menu IDs in the spinner's tag for later retrieval.
+     *
+     * @param spinner The Spinner to populate with menu names.
+     */
     private void loadMenusForSpinner(Spinner spinner)
     {
         if(restaurantID == null || restaurantID.isEmpty())
@@ -580,7 +950,11 @@ public class ManageMenuFragment extends Fragment
                     spinner.setTag(menuIDs);
 
                     //Set menu to first menu
-                    setSpinnerSelection(menuIDs.get(0));
+                    if(!menuIDs.isEmpty())
+                    { // Check if menuIDs is not empty before accessing
+                        setSpinnerSelection(menuIDs.get(0));
+                    }
+
 
                     // Set up adapter
                     ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(),
@@ -593,6 +967,14 @@ public class ManageMenuFragment extends Fragment
                 });
     }
 
+    /**
+     * Loads the list of items for a specific menu from Firestore and populates the given spinner.
+     * Adds an "All items in the menu" option at the beginning.
+     * Stores item IDs in the spinner's tag.
+     *
+     * @param spinner The Spinner to populate with item names.
+     * @param menuID  The ID of the menu whose items are to be loaded.
+     */
     private void loadItemsForSpinner(Spinner spinner, String menuID)
     {
         if(restaurantID == null || restaurantID.isEmpty() || menuID == null || menuID.isEmpty())
@@ -645,6 +1027,11 @@ public class ManageMenuFragment extends Fragment
     }
 
 
+    /**
+     * Sets the selection of the {@code spinnerMenuSelection} to the menu with the given ID.
+     *
+     * @param selectedMenuID The ID of the menu to select.
+     */
     private void setSpinnerSelection(String selectedMenuID)
     {
         List<String> menuIDs = (List<String>) spinnerMenuSelection.getTag(); // Retrieve stored menu IDs
@@ -659,6 +1046,12 @@ public class ManageMenuFragment extends Fragment
         }
     }
 
+    /**
+     * Loads all menus for the current restaurant from Firestore, ordered by their index.
+     * Updates the local {@code menuList} and notifies the {@code menuAdapter}.
+     * After loading menus, it calls {@link #loadAllMenuItems()} to fetch items for these menus.
+     * If a search query was active, it reapplies the filter.
+     */
     private void loadMenuData()
     {
         if(restaurantID == null || restaurantID.isEmpty())
@@ -733,6 +1126,11 @@ public class ManageMenuFragment extends Fragment
                 });
     }
 
+    /**
+     * Loads all menu items for all menus in the {@code menuList} from Firestore.
+     * Stores the fetched items in the {@code menuAdapter} and the local {@code menuItemList}.
+     * Notifies the adapter after all items are loaded or if a search query was active, reapplies the filter.
+     */
     private void loadAllMenuItems()
     {
         if(menuAdapter == null)
@@ -808,6 +1206,14 @@ public class ManageMenuFragment extends Fragment
         }
     }
 
+    /**
+     * Filters the displayed menus and items based on the provided query string.
+     * If the query is empty, clears the filter and shows all menus and items.
+     * Otherwise, searches for matches in menu names and item names (case-insensitive).
+     * Updates the {@code menuAdapter} with the filter results and shows/hides a "no results" message.
+     *
+     * @param query The search query string.
+     */
     private void filterResults(String query)
     {
         if(TextUtils.isEmpty(query))
@@ -872,6 +1278,13 @@ public class ManageMenuFragment extends Fragment
     }
 
 
+    /**
+     * Displays an overlay with detailed information about the selected menu item.
+     * Populates the overlay with the item's name, price (including active discounts),
+     * description, category, allergens, availability status, and image.
+     *
+     * @param item The {@link MenuItem} to display.
+     */
     private void showItemView(MenuItem item)
     {
         currentMenuItem = item;
@@ -965,6 +1378,12 @@ public class ManageMenuFragment extends Fragment
     }
 
 
+    /**
+     * Displays an overlay with information about the selected menu.
+     * Populates the overlay with the menu's name and image.
+     *
+     * @param menu The {@link Menu} to display.
+     */
     private void showMenuView(Menu menu)
     {
         currentMenu = menu;
@@ -986,6 +1405,12 @@ public class ManageMenuFragment extends Fragment
         }
     }
 
+    /**
+     * Prepares and displays the item edit overlay for an existing menu item.
+     * Populates the form fields with the item's current data.
+     *
+     * @param item The {@link MenuItem} to be edited.
+     */
     private void editExistingItem(MenuItem item)
     {
         imageEdited = false;
@@ -1046,6 +1471,12 @@ public class ManageMenuFragment extends Fragment
     }
 
 
+    /**
+     * Prepares and displays the menu edit overlay for an existing menu.
+     * Populates the form fields with the menu's current data.
+     *
+     * @param menu The {@link Menu} to be edited.
+     */
     private void editExistingMenu(Menu menu)
     {
         imageEdited = false;
@@ -1086,6 +1517,11 @@ public class ManageMenuFragment extends Fragment
         toggleOverlay(menuEditOverlay, true);
     }
 
+    /**
+     * Saves the changes made to a menu item (either new or existing).
+     * Validates the input fields. If an image was edited, uploads it to Firebase Storage first.
+     * Then proceeds to save or update the item data in Firestore.
+     */
     private void saveItem()
     {
         // Reset errors
@@ -1182,6 +1618,13 @@ public class ManageMenuFragment extends Fragment
         }
     }
 
+    /**
+     * Fetches the current number of items in a given menu.
+     * This is used to determine the {@code orderIndex} for a new item.
+     *
+     * @param menuID   The ID of the menu.
+     * @param listener A callback to receive the item count.
+     */
     private void getItemAmount(String menuID, OnItemCountFetchedListener listener)
     {
         db.collection("Restaurants").document(restaurantID)
@@ -1201,6 +1644,13 @@ public class ManageMenuFragment extends Fragment
                 });
     }
 
+    /**
+     * Proceeds with updating an existing menu item in Firestore.
+     * Handles cases where the item is moved to a different menu, which involves
+     * deleting the item from the old menu, adding it to the new menu, and shifting item indexes.
+     *
+     * @param imageURL The URL of the item's image (can be existing or new).
+     */
     private void proceedWithItemUpdate(String imageURL)
     {
         // Get input values
@@ -1313,6 +1763,12 @@ public class ManageMenuFragment extends Fragment
         }
     }
 
+    /**
+     * Proceeds with saving a new menu item to Firestore.
+     * Determines the item's {@code orderIndex} based on the current number of items in the selected menu.
+     *
+     * @param imageURL The URL of the item's image (can be null if no image was added).
+     */
     private void proceedWithItemSave(String imageURL)
     {
         // Get input values
@@ -1347,12 +1803,12 @@ public class ManageMenuFragment extends Fragment
         {
             // Create new item
             DocumentReference itemRef = null;
-            if(imageURL == null)
+            if(imageURL == null) // If no image was uploaded, generate a new ID
             {
                 itemRef = db.collection("Restaurants").document(restaurantID)
                         .collection("Menus").document(selectedMenuID)
                         .collection("Items").document();
-            } else
+            } else // If an image was uploaded, currentMenuItem.getItemID() was set in generateFileName()
             {
                 itemRef = db.collection("Restaurants").document(restaurantID)
                         .collection("Menus").document(selectedMenuID)
@@ -1392,11 +1848,27 @@ public class ManageMenuFragment extends Fragment
         });
     }
 
+    /**
+     * Interface for a callback to be invoked when the item count for a menu is fetched.
+     */
     interface OnItemCountFetchedListener
     {
+        /**
+         * Called when the item count has been successfully fetched.
+         *
+         * @param itemCount The number of items in the menu.
+         */
         void onItemCountFetched(int itemCount);
     }
 
+    /**
+     * Shifts the {@code orderIndex} of items in a menu downwards after an item is removed.
+     * This ensures that there are no gaps in the ordering.
+     *
+     * @param menuID       The ID of the menu.
+     * @param removedIndex The index of the item that was removed.
+     * @param onComplete   A {@link Runnable} to be executed after the shifting is complete.
+     */
     private void shiftIndexesDown(String menuID, int removedIndex, Runnable onComplete)
     {
         db.collection("Restaurants").document(restaurantID)
@@ -1426,6 +1898,11 @@ public class ManageMenuFragment extends Fragment
     }
 
 
+    /**
+     * Saves the changes made to a menu (either new or existing).
+     * Validates the menu name. If an image was edited, uploads it to Firebase Storage first.
+     * Then proceeds to save or update the menu data in Firestore.
+     */
     private void saveMenu()
     {
         String name = editMenuName.getText().toString().trim();
@@ -1469,6 +1946,11 @@ public class ManageMenuFragment extends Fragment
         }
     }
 
+    /**
+     * Proceeds with updating an existing menu in Firestore.
+     *
+     * @param imageURL The URL of the menu's image (can be existing or new).
+     */
     private void proceedWithMenuUpdate(String imageURL)
     {
         String name = editMenuName.getText().toString().trim();
@@ -1509,6 +1991,12 @@ public class ManageMenuFragment extends Fragment
 
     }
 
+    /**
+     * Proceeds with saving a new menu to Firestore.
+     * Determines the menu's {@code menuIndex} based on the current number of menus.
+     *
+     * @param imageURL The URL of the menu's image (can be null if no image was added).
+     */
     private void proceedWithMenuSave(String imageURL)
     {
         String name = editMenuName.getText().toString().trim();
@@ -1526,15 +2014,16 @@ public class ManageMenuFragment extends Fragment
         }
         // Create new menu
         DocumentReference menuRef = null;
-        if(imageURL == null)
+        if(imageURL == null) // If no image was uploaded, generate a new ID
         {
             menuRef = db.collection("Restaurants").document(restaurantID)
                     .collection("Menus").document();
-        } else
+        } else // If an image was uploaded, currentMenu.getMenuID() was set in generateFileName()
         {
             menuRef = db.collection("Restaurants").document(restaurantID)
                     .collection("Menus").document(currentMenu.getMenuID());
         }
+
 
         Menu newMenu = new Menu();
         newMenu.setName(name);
@@ -1563,6 +2052,12 @@ public class ManageMenuFragment extends Fragment
                 });
     }
 
+    /**
+     * Deletes a specified menu item from Firestore after user confirmation.
+     * Also deletes the item's image from Firebase Storage and shifts the indexes of subsequent items.
+     *
+     * @param item The {@link MenuItem} to delete.
+     */
     private void deleteItem(MenuItem item)
     {
         if(item == null || item.getItemID() == null || item.getMenuID() == null || restaurantID == null)
@@ -1578,7 +2073,7 @@ public class ManageMenuFragment extends Fragment
                 .setPositiveButton("Delete", (dialog, which) ->
                 {
                     deleteMode = true;
-                    deleteOldImage(null);
+                    deleteOldImage(null); // Pass null to indicate deletion without new image
                     int index = item.getOrderIndex();
 
                     db.collection("Restaurants")
@@ -1606,6 +2101,12 @@ public class ManageMenuFragment extends Fragment
     }
 
 
+    /**
+     * Deletes a specified menu and all its associated items from Firestore after user confirmation.
+     * Also deletes the menu's image from Firebase Storage.
+     *
+     * @param menu The {@link Menu} to delete.
+     */
     private void deleteMenu(Menu menu)
     {
         if(menu == null || menu.getMenuID() == null || restaurantID == null)
@@ -1642,7 +2143,7 @@ public class ManageMenuFragment extends Fragment
                                 batch.commit().addOnSuccessListener(aVoid ->
                                 {
                                     deleteMode = true;
-                                    deleteOldImage(null);
+                                    deleteOldImage(null); // Pass null for deletion
                                     // Now delete the menu itself
                                     db.collection("Restaurants")
                                             .document(restaurantID)
@@ -1670,6 +2171,11 @@ public class ManageMenuFragment extends Fragment
                 .show();
     }
 
+    /**
+     * Shows or hides the loading overlay and progress bar.
+     *
+     * @param isLoading True to show loading, false to hide.
+     */
     private void showLoading(boolean isLoading)
     {
         if(progressBar != null)
@@ -1679,6 +2185,12 @@ public class ManageMenuFragment extends Fragment
         }
     }
 
+    /**
+     * Toggles the visibility of a given overlay. Ensures only one overlay is visible at a time.
+     *
+     * @param overlay The {@link RelativeLayout} overlay to show or hide.
+     * @param show    True to show the overlay, false to hide it.
+     */
     private void toggleOverlay(RelativeLayout overlay, boolean show)
     {
         itemViewOverlay.setVisibility(View.GONE);
@@ -1703,6 +2215,10 @@ public class ManageMenuFragment extends Fragment
         }
     }
 
+    /**
+     * Initiates the process of selecting or taking a new image for a menu or menu item.
+     * Checks for camera and storage permissions before proceeding.
+     */
     private void editImage()
     {
         // Check permissions
@@ -1721,6 +2237,11 @@ public class ManageMenuFragment extends Fragment
         }
     }
 
+    /**
+     * Checks if the necessary storage permissions are granted based on the Android version.
+     *
+     * @return True if storage permissions are granted, false otherwise.
+     */
     private boolean checkStoragePermission()
     {
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
@@ -1741,6 +2262,9 @@ public class ManageMenuFragment extends Fragment
         }
     }
 
+    /**
+     * Requests necessary permissions (camera and storage) from the user if not already granted.
+     */
     private void requestPermissions()
     {
         List<String> permissionsToRequest = new ArrayList<>();
@@ -1785,7 +2309,10 @@ public class ManageMenuFragment extends Fragment
         }
     }
 
-    // Permission request launcher
+    /**
+     * ActivityResultLauncher for handling multiple permission requests.
+     * If permissions are granted, shows the image selection bottom sheet.
+     */
     private final ActivityResultLauncher<String[]> permissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result ->
             {
@@ -1821,6 +2348,10 @@ public class ManageMenuFragment extends Fragment
                 }
             });
 
+    /**
+     * Displays a bottom sheet dialog allowing the user to choose between taking a photo
+     * or selecting an image from the gallery.
+     */
     private void showBottomSheetDialog()
     {
         // Dismiss any existing dialog first
@@ -1868,6 +2399,10 @@ public class ManageMenuFragment extends Fragment
         imageBottomSheetDialog.show();
     }
 
+    /**
+     * Launches an intent to capture an image using the device's camera.
+     * The captured image is saved to a temporary file.
+     */
     private void takePhoto()
     {
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -1898,6 +2433,9 @@ public class ManageMenuFragment extends Fragment
         }
     }
 
+    /**
+     * Launches an intent to pick an image from the device's gallery.
+     */
     private void pickFromGallery()
     {
         Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
@@ -1905,6 +2443,10 @@ public class ManageMenuFragment extends Fragment
         imagePickerLauncher.launch(intent);
     }
 
+    /**
+     * ActivityResultLauncher for handling the result from the camera intent.
+     * If an image is successfully captured, it's processed, displayed, and prepared for upload.
+     */
     private final ActivityResultLauncher<Intent> cameraLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result ->
@@ -1955,7 +2497,10 @@ public class ManageMenuFragment extends Fragment
             }
     );
 
-    // Handle gallery result
+    /**
+     * ActivityResultLauncher for handling the result from the gallery picker intent.
+     * If an image is successfully selected, it's processed, displayed, and prepared for upload.
+     */
     private final ActivityResultLauncher<Intent> imagePickerLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result ->
@@ -2003,6 +2548,11 @@ public class ManageMenuFragment extends Fragment
             }
     );
 
+    /**
+     * Creates a temporary image file in the app's external files directory.
+     *
+     * @return The created {@link File} object, or null if an error occurred.
+     */
     private File createImageFile()
     {
         File storageDir = requireContext().getExternalFilesDir(null);
@@ -2022,6 +2572,12 @@ public class ManageMenuFragment extends Fragment
         }
     }
 
+    /**
+     * Updates the appropriate ImageView (for menu or menu item) in the edit overlay
+     * with the newly selected/captured image.
+     *
+     * @param bitmap The {@link Bitmap} of the image to display.
+     */
     private void updateEditImageWithCurrentImage(Bitmap bitmap)
     {
         if("Menu".equals(currentType))
@@ -2035,6 +2591,13 @@ public class ManageMenuFragment extends Fragment
         }
     }
 
+    /**
+     * Uploads the given Bitmap image to Firebase Storage.
+     * Generates a unique filename based on whether it's a new or existing menu/item.
+     * After successful upload, proceeds to save/update the Firestore document with the new image URL.
+     *
+     * @param bitmap The {@link Bitmap} image to upload.
+     */
     private void uploadImageToFirebase(Bitmap bitmap)
     {
         if(bitmap == null)
@@ -2087,14 +2650,14 @@ public class ManageMenuFragment extends Fragment
                     if(isAdded() && getActivity() != null && !getActivity().isFinishing())
                     {
                         // Got the download URL, now update the user's Firestore document
-                        if(newItem || newMenu)
+                        if(newItem || newMenu) // If creating a new entity
                         {
                             if("Menu".equals(currentType))
                             {
                                 if(newMenu)
                                 {
                                     proceedWithMenuSave(downloadUri.toString());
-                                } else
+                                } else // This case should ideally not happen if newItem/newMenu is true
                                 {
                                     proceedWithMenuUpdate(downloadUri.toString());
                                 }
@@ -2104,12 +2667,12 @@ public class ManageMenuFragment extends Fragment
                                 if(newItem)
                                 {
                                     proceedWithItemSave(downloadUri.toString());
-                                } else
+                                } else // This case should ideally not happen if newItem/newMenu is true
                                 {
                                     proceedWithItemUpdate(downloadUri.toString());
                                 }
                             }
-                        } else
+                        } else // If editing an existing entity
                         {
                             deleteOldImage(downloadUri.toString());
                             Log.d(TAG, "Called deleteOldImage with URL: " + downloadUri);
@@ -2146,6 +2709,14 @@ public class ManageMenuFragment extends Fragment
     }
 
 
+    /**
+     * Generates a unique filename for an image to be uploaded to Firebase Storage.
+     * The filename path depends on whether it's an image for a "Menu" or "MenuItem",
+     * and whether it's a new entity or an existing one.
+     * For new entities, it first generates a new Firestore document ID to use in the filename.
+     *
+     * @return The generated unique filename string.
+     */
     private String generateFileName()
     {
         String filename = "";
@@ -2158,7 +2729,7 @@ public class ManageMenuFragment extends Fragment
                 DocumentReference newMenuRef = db.collection("Restaurants").document(restaurantID)
                         .collection("Menus").document();
 
-                currentMenu = new Menu();
+                currentMenu = new Menu(); // Ensure currentMenu is initialized
                 currentMenu.setMenuID(newMenuRef.getId());
 
                 // Generate a unique filename for the menu image
@@ -2179,7 +2750,7 @@ public class ManageMenuFragment extends Fragment
                         .collection("Menus").document(selectedMenuID)
                         .collection("Items").document();
 
-                currentMenuItem = new MenuItem();
+                currentMenuItem = new MenuItem(); // Ensure currentMenuItem is initialized
                 currentMenuItem.setItemID(newItemRef.getId());
                 currentMenuItem.setMenuID(selectedMenuID);
 
@@ -2195,6 +2766,13 @@ public class ManageMenuFragment extends Fragment
     }
 
 
+    /**
+     * Corrects the orientation of an image based on its EXIF data.
+     *
+     * @param imageUri The URI of the image.
+     * @param bitmap   The {@link Bitmap} of the image.
+     * @return The orientation-corrected {@link Bitmap}.
+     */
     private Bitmap fixImageOrientation(Uri imageUri, Bitmap bitmap)
     {
         try
@@ -2226,7 +2804,7 @@ public class ManageMenuFragment extends Fragment
                 case android.media.ExifInterface.ORIENTATION_ROTATE_180:
                     matrix.postRotate(180);
                     break;
-                case ExifInterface.ORIENTATION_ROTATE_270:
+                case ExifInterface.ORIENTATION_ROTATE_270: // Corrected constant
                     matrix.postRotate(270);
                     break;
             }
@@ -2239,6 +2817,12 @@ public class ManageMenuFragment extends Fragment
         }
     }
 
+    /**
+     * Deletes the old image from Firebase Storage before updating to a new one or when deleting an entity.
+     *
+     * @param newImageURL The URL of the new image. If null, it indicates the entity is being deleted,
+     *                    and the old image should be removed without proceeding to an update.
+     */
     private void deleteOldImage(String newImageURL)
     {
         FirebaseUser currentUser = auth.getCurrentUser();
@@ -2265,12 +2849,12 @@ public class ManageMenuFragment extends Fragment
                 {
                     String oldImageURL = documentSnapshot.getString("imageURL");
 
-                    // Only proceed if there's an old image URL and it's different from the new one
+                    // Only proceed if there's an old image URL
                     if(oldImageURL != null && !oldImageURL.isEmpty())
                     {
-                        if(!newImageURL.equals(oldImageURL))
+                        // And it's different from the new one (or if newImageURL is null for deletion)
+                        if(newImageURL == null || !newImageURL.equals(oldImageURL))
                         {
-
                             try
                             {
                                 // Get the path after "/o/" and before "?"
@@ -2288,59 +2872,38 @@ public class ManageMenuFragment extends Fragment
                                 oldImageRef.delete().addOnSuccessListener(aVoid ->
                                 {
                                     Log.d(TAG, "Old image deleted successfully");
-                                    if(deleteMode)
+                                    if(deleteMode) // If in delete mode for the entity
                                     {
-                                        deleteMode = false;
-                                    } else
+                                        deleteMode = false; // Reset flag
+                                    } else if(newImageURL != null) // If not deleting entity, proceed with update
                                     {
                                         if("Menu".equals(currentType))
                                         {
-                                            if(newMenu)
-                                            {
-                                                proceedWithMenuSave(newImageURL);
-                                            } else
-                                            {
-                                                proceedWithMenuUpdate(newImageURL);
-                                            }
-
+                                            if(newMenu) proceedWithMenuSave(newImageURL);
+                                            else proceedWithMenuUpdate(newImageURL);
                                         } else if("MenuItem".equals(currentType))
                                         {
-                                            if(newItem)
-                                            {
-                                                proceedWithItemSave(newImageURL);
-                                            } else
-                                            {
-                                                proceedWithItemUpdate(newImageURL);
-                                            }
+                                            if(newItem) proceedWithItemSave(newImageURL);
+                                            else proceedWithItemUpdate(newImageURL);
                                         }
                                     }
                                 }).addOnFailureListener(e ->
                                 {
                                     Log.e(TAG, "Error deleting old image", e);
+                                    // Even if deletion fails, proceed with saving/updating if not in deleteMode
                                     if(deleteMode)
                                     {
                                         deleteMode = false;
-                                    } else
+                                    } else if(newImageURL != null)
                                     {
                                         if("Menu".equals(currentType))
                                         {
-                                            if(newMenu)
-                                            {
-                                                proceedWithMenuSave(newImageURL);
-                                            } else
-                                            {
-                                                proceedWithMenuUpdate(newImageURL);
-                                            }
-
+                                            if(newMenu) proceedWithMenuSave(newImageURL);
+                                            else proceedWithMenuUpdate(newImageURL);
                                         } else if("MenuItem".equals(currentType))
                                         {
-                                            if(newItem)
-                                            {
-                                                proceedWithItemSave(newImageURL);
-                                            } else
-                                            {
-                                                proceedWithItemUpdate(newImageURL);
-                                            }
+                                            if(newItem) proceedWithItemSave(newImageURL);
+                                            else proceedWithItemUpdate(newImageURL);
                                         }
                                     }
                                 });
@@ -2348,9 +2911,14 @@ public class ManageMenuFragment extends Fragment
                             {
                                 Log.e(TAG, "Error parsing old image URL: " + oldImageURL, e);
                             }
+                        } else if(newImageURL != null)
+                        { // Old and new URLs are the same, no need to delete/re-upload
+                            if("Menu".equals(currentType)) proceedWithMenuUpdate(newImageURL);
+                            else if("MenuItem".equals(currentType))
+                                proceedWithItemUpdate(newImageURL);
                         }
-                    } else
-                    {
+                    } else if(newImageURL != null)
+                    { // No old image, just proceed with saving the new one
                         if(deleteMode)
                         {
                             deleteMode = false;
@@ -2358,34 +2926,34 @@ public class ManageMenuFragment extends Fragment
                         {
                             if("Menu".equals(currentType))
                             {
-                                if(newMenu)
-                                {
-                                    proceedWithMenuSave(newImageURL);
-                                } else
-                                {
-                                    proceedWithMenuUpdate(newImageURL);
-                                }
-
+                                if(newMenu) proceedWithMenuSave(newImageURL);
+                                else proceedWithMenuUpdate(newImageURL);
                             } else if("MenuItem".equals(currentType))
                             {
-                                if(newItem)
-                                {
-                                    proceedWithItemSave(newImageURL);
-                                } else
-                                {
-                                    proceedWithItemUpdate(newImageURL);
-                                }
+                                if(newItem) proceedWithItemSave(newImageURL);
+                                else proceedWithItemUpdate(newImageURL);
                             }
                         }
                     }
+                } else if(newImageURL != null)
+                { // Document doesn't exist (shouldn't happen for edit, but handle for new)
+                    if("Menu".equals(currentType) && newMenu) proceedWithMenuSave(newImageURL);
+                    else if("MenuItem".equals(currentType) && newItem)
+                        proceedWithItemSave(newImageURL);
                 }
             }).addOnFailureListener(e ->
             {
-                Log.e(TAG, "Error fetching user document to delete old image", e);
+                Log.e(TAG, "Error fetching document to delete old image", e);
             });
         }
     }
 
+    /**
+     * Applies a discount to selected menu items or an entire menu.
+     * Gathers discount details (amount, type, scope, schedule) from the UI.
+     * Saves the discount information to the "Discounts" subcollection of the relevant
+     * menu items in Firestore.
+     */
     private void applyDiscount()
     {
         String discountText = editDiscountAmount.getText().toString().trim();
@@ -2522,15 +3090,16 @@ public class ManageMenuFragment extends Fragment
             } else
             {
                 // Apply discount to a single item
-                if(itemIDs == null || selectedItemPosition - 1 >= itemIDs.size())
+                if(itemIDs == null || selectedItemPosition >= itemIDs.size()) // Check against full size
                 {
                     Toast.makeText(getContext(), "Invalid item selection", Toast.LENGTH_SHORT).show();
                     showLoading(false);
                     return;
                 }
+                // Use selectedItemID directly as it's the actual ID from the spinner's tag
                 db.collection("Restaurants").document(restaurantID)
                         .collection("Menus").document(selectedMenuID)
-                        .collection("Items").document(selectedItemID)
+                        .collection("Items").document(selectedItemID) // Use the direct item ID
                         .get()
                         .addOnSuccessListener(doc ->
                         {

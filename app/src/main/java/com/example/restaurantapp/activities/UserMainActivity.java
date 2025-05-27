@@ -38,22 +38,66 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * The main activity for the user-facing side of the application.
+ * This activity serves as a container for various fragments that allow users to discover restaurants,
+ * view them on a map, manage their profile, and handle their reservations.
+ * Navigation between these sections is facilitated by a {@link BottomNavigationView}.
+ * The activity also handles runtime permission requests for location and notifications.
+ */
 public class UserMainActivity extends AppCompatActivity
 {
 
+    /**
+     * Tag for logging purposes.
+     */
     private static final String TAG = "UserMainActivity";
+    /**
+     * The bottom navigation view for switching between main sections of the user app.
+     */
     private BottomNavigationView bottomNavMenu;
+    /**
+     * Tag for the {@link DiscoveryFragment}.
+     */
     private final String DISCOVERY_FRAGMENT_TAG = "discovery_fragment";
+    /**
+     * Tag for the {@link GmapsFragment}.
+     */
     private final String GMAPS_FRAGMENT_TAG = "gmaps_fragment";
+    /**
+     * Tag for the {@link ProfileFragment}.
+     */
     private final String PROFILE_FRAGMENT_TAG = "profile_fragment";
+    /**
+     * Tag for the {@link ReservationsTabLayoutFragment}.
+     */
     private final String RESERVATIONS_TAB_LAYOUT_FRAGMENT_TAG = "reservations_tab_layout_fragment";
+    /**
+     * Stores the tag of the currently displayed fragment. Defaults to {@link #DISCOVERY_FRAGMENT_TAG}.
+     */
     private String currentFragmentTag = DISCOVERY_FRAGMENT_TAG;
 
-    private View rootView;
-
+    /**
+     * Launcher for requesting multiple permissions.
+     * Handles the results of permission requests for location and notifications.
+     */
     private ActivityResultLauncher<String[]> permissionLauncher;
 
 
+    /**
+     * Called when the activity is first created.
+     * Initializes user settings, enables edge-to-edge display, sets the content view,
+     * and initializes UI components like the {@link #bottomNavMenu}
+     * It sets up permission launchers, a custom back press handler, and the bottom navigation listener.
+     * If {@code savedInstanceState} is null, it loads the default {@link DiscoveryFragment}.
+     * Otherwise, it restores the previously active fragment tag.
+     * Finally, it requests necessary runtime permissions.
+     *
+     * @param savedInstanceState If the activity is being re-initialized after
+     *                           previously being shut down then this Bundle contains the data it most
+     *                           recently supplied in {@link #onSaveInstanceState}.
+     *                           <b><i>Note: Otherwise it is null.</i></b>
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -62,7 +106,6 @@ public class UserMainActivity extends AppCompatActivity
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_user_main);
 
-        rootView = findViewById(R.id.fragmentContainer);
         bottomNavMenu = findViewById(R.id.bottom_nav_menu);
 
         // Initialize permission launchers
@@ -88,21 +131,28 @@ public class UserMainActivity extends AppCompatActivity
         requestRequiredPermissions();
     }
 
+    /**
+     * Initializes the {@link #permissionLauncher} for handling results of runtime permission requests.
+     * It registers an {@link ActivityResultContracts.RequestMultiplePermissions} contract
+     * to request location (fine or coarse) and notification (for Android Tiramisu and above) permissions.
+     * The callback logs which permissions were denied.
+     */
     private void setupPermissionLaunchers()
     {
         permissionLauncher = registerForActivityResult(
                 new ActivityResultContracts.RequestMultiplePermissions(),
                 result ->
                 {
-                    boolean locationGranted = result.containsKey(Manifest.permission.ACCESS_FINE_LOCATION) && result.get(Manifest.permission.ACCESS_FINE_LOCATION)
-                            || result.containsKey(Manifest.permission.ACCESS_COARSE_LOCATION) && result.get(Manifest.permission.ACCESS_COARSE_LOCATION);
+                    boolean locationGranted = result.containsKey(Manifest.permission.ACCESS_FINE_LOCATION) && Boolean.TRUE.equals(result.get(Manifest.permission.ACCESS_FINE_LOCATION))
+                            || result.containsKey(Manifest.permission.ACCESS_COARSE_LOCATION) && Boolean.TRUE.equals(result.get(Manifest.permission.ACCESS_COARSE_LOCATION));
 
                     boolean notificationsGranted = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU
-                            || result.getOrDefault(Manifest.permission.POST_NOTIFICATIONS, false);
+                            || Boolean.TRUE.equals(result.getOrDefault(Manifest.permission.POST_NOTIFICATIONS, false));
 
                     List<String> denied = new ArrayList<>();
                     if(!locationGranted) denied.add("Location");
-                    if(!notificationsGranted) denied.add("Notifications");
+                    if(!notificationsGranted && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                        denied.add("Notifications");
 
                     if(!denied.isEmpty())
                     {
@@ -113,6 +163,16 @@ public class UserMainActivity extends AppCompatActivity
     }
 
 
+    /**
+     * Sets up a custom back press handler for the activity using {@link OnBackPressedCallback}.
+     * When the back button is pressed:
+     * <ul>
+     *     <li>If the current fragment is not the {@link DiscoveryFragment}, it navigates to the
+     *         {@link DiscoveryFragment} and updates the bottom navigation selection.</li>
+     *     <li>If the current fragment is already the {@link DiscoveryFragment}, it allows the default
+     *         back press behavior (typically exiting the app).</li>
+     * </ul>
+     */
     private void setupBackPressHandler()
     {
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true)
@@ -125,16 +185,22 @@ public class UserMainActivity extends AppCompatActivity
                 {
                     // Set the bottom navigation selection to Discovery
                     bottomNavMenu.setSelectedItemId(R.id.Discovery);
+                    // Note: The switchFragment will be called by the bottomNavMenu's listener
                 } else
                 {
                     // If already on Discovery, exit the app
-                    setEnabled(false);
-                    getOnBackPressedDispatcher().onBackPressed();
+                    setEnabled(false); // Disable this callback to allow default behavior
+                    getOnBackPressedDispatcher().onBackPressed(); // Trigger default back press
                 }
             }
         });
     }
 
+    /**
+     * Sets up the listener for the {@link #bottomNavMenu}.
+     * When an item in the bottom navigation is selected, it calls {@link #switchFragment(String)}
+     * with the corresponding fragment tag to display the selected section.
+     */
     private void setupBottomNavigation()
     {
         bottomNavMenu.setOnItemSelectedListener(item ->
@@ -161,6 +227,14 @@ public class UserMainActivity extends AppCompatActivity
         });
     }
 
+    /**
+     * Called to retrieve per-instance state from an activity before it is killed
+     * so that the state can be restored in {@link #onCreate(Bundle)} or
+     * {@link #onRestoreInstanceState(Bundle)}.
+     * This implementation saves the {@link #currentFragmentTag}.
+     *
+     * @param outState Bundle in which to place your saved state.
+     */
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState)
     {
@@ -168,6 +242,13 @@ public class UserMainActivity extends AppCompatActivity
         outState.putString("currentFragmentTag", currentFragmentTag);
     }
 
+    /**
+     * Updates the selected item in the {@link #bottomNavMenu} based on the provided fragment tag.
+     * This ensures the navigation view visually reflects the currently active fragment.
+     *
+     * @param tag The tag of the fragment to select in the bottom navigation view.
+     *            Defaults to {@link R.id#Discovery} if the tag does not match other specific sections.
+     */
     private void updateBottomNavFromTag(String tag)
     {
         if(GMAPS_FRAGMENT_TAG.equals(tag))
@@ -179,12 +260,24 @@ public class UserMainActivity extends AppCompatActivity
         } else if(RESERVATIONS_TAB_LAYOUT_FRAGMENT_TAG.equals(tag))
         {
             bottomNavMenu.setSelectedItemId(R.id.Reservations);
-        } else
+        } else // Default to DISCOVERY_FRAGMENT_TAG or any other
         {
             bottomNavMenu.setSelectedItemId(R.id.Discovery);
         }
     }
 
+    /**
+     * Switches the currently displayed fragment in the {@code R.id.fragmentContainer}.
+     * If the requested fragment is already the current one, no action is taken.
+     * Otherwise, it instantiates the new fragment based on {@code fragmentTag} and
+     * calls {@link #loadFragment(Fragment, String)} to perform the replacement.
+     *
+     * @param fragmentTag The tag identifying the fragment to switch to.
+     *                    Supported tags are {@link #DISCOVERY_FRAGMENT_TAG},
+     *                    {@link #GMAPS_FRAGMENT_TAG}, {@link #PROFILE_FRAGMENT_TAG}, and
+     *                    {@link #RESERVATIONS_TAB_LAYOUT_FRAGMENT_TAG}.
+     *                    Defaults to {@link DiscoveryFragment} if an unrecognized tag is provided.
+     */
     private void switchFragment(String fragmentTag)
     {
         // Check if we're already on this fragment
@@ -207,7 +300,7 @@ public class UserMainActivity extends AppCompatActivity
                 fragment = new ReservationsTabLayoutFragment();
                 break;
             case DISCOVERY_FRAGMENT_TAG:
-            default:
+            default: // Default to DiscoveryFragment
                 fragment = new DiscoveryFragment();
                 break;
         }
@@ -215,6 +308,14 @@ public class UserMainActivity extends AppCompatActivity
         loadFragment(fragment, fragmentTag);
     }
 
+    /**
+     * Loads the specified fragment into the {@code R.id.fragmentContainer}.
+     * This method updates the {@link #currentFragmentTag} and performs a fragment replacement
+     * transaction. It sets a transition animation and commits the transaction.
+     *
+     * @param fragment The {@link Fragment} instance to load.
+     * @param tag      The tag to associate with the fragment. This tag will also become the {@link #currentFragmentTag}.
+     */
     private void loadFragment(Fragment fragment, String tag)
     {
         // Update current fragment tag
@@ -230,17 +331,27 @@ public class UserMainActivity extends AppCompatActivity
                 .commit();
     }
 
+    /**
+     * Requests necessary runtime permissions for the application.
+     * It checks for location permissions ({@link Manifest.permission#ACCESS_FINE_LOCATION} and
+     * {@link Manifest.permission#ACCESS_COARSE_LOCATION}) and notification permission
+     * ({@link Manifest.permission#POST_NOTIFICATIONS} on Android Tiramisu and above).
+     * If any of these permissions are not granted, it launches the {@link #permissionLauncher}
+     * to request them from the user.
+     */
     private void requestRequiredPermissions()
     {
         List<String> permissionsToRequest = new ArrayList<>();
 
+        // Check for location permissions
         if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                 ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
         {
             permissionsToRequest.add(Manifest.permission.ACCESS_FINE_LOCATION);
-            permissionsToRequest.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+            permissionsToRequest.add(Manifest.permission.ACCESS_COARSE_LOCATION); // Request both, user can choose one
         }
 
+        // Check for notification permission on Android 13 (Tiramisu) and above
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
                 ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
         {

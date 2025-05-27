@@ -40,20 +40,121 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+/**
+ * A {@link Fragment} subclass that provides a user interface for new restaurant account registration.
+ * Users can enter their email, password, restaurant name, address, and phone number.
+ * The fragment validates the input, including address validation using Android's Geocoder and
+ * OpenStreetMap's Nominatim API as a fallback.
+ * Upon successful validation and Firebase Authentication account creation, it saves the restaurant's
+ * data (including a geocoded location) to a "Restaurants" collection in Firestore and updates
+ * the user's document in the "Users" collection with their type ("restaurant") and a reference
+ * to the new restaurant ID. It also stores the user type in SharedPreferences.
+ * Finally, it navigates to {@link RestaurantMainActivity}.
+ * Provides links to navigate to the login screen ({@link LoginFragment}) or user sign-up screen
+ * ({@link UserSignUpFragment}).
+ */
 public class RestaurantSignUpFragment extends Fragment
 {
 
-    private TextInputEditText emailEditText, passwordEditText, confirmPasswordEditText, restaurantNameEditText, addressEditText, phoneEditText;
-    private TextInputLayout emailLayout, passwordLayout, confirmPasswordLayout, nameLayout, addressLayout, phoneLayout;
+    /**
+     * TextInputEditText for restaurant's email input.
+     */
+    private TextInputEditText emailEditText;
+    /**
+     * TextInputEditText for restaurant's password input.
+     */
+    private TextInputEditText passwordEditText;
+    /**
+     * TextInputEditText for confirming the restaurant's password.
+     */
+    private TextInputEditText confirmPasswordEditText;
+    /**
+     * TextInputEditText for the restaurant's name input.
+     */
+    private TextInputEditText restaurantNameEditText;
+    /**
+     * TextInputEditText for the restaurant's address input.
+     */
+    private TextInputEditText addressEditText;
+    /**
+     * TextInputEditText for the restaurant's phone number input.
+     */
+    private TextInputEditText phoneEditText;
+
+    /**
+     * TextInputLayout for {@link #emailEditText} to display errors.
+     */
+    private TextInputLayout emailLayout;
+    /**
+     * TextInputLayout for {@link #passwordEditText} to display errors.
+     */
+    private TextInputLayout passwordLayout;
+    /**
+     * TextInputLayout for {@link #confirmPasswordEditText} to display errors.
+     */
+    private TextInputLayout confirmPasswordLayout;
+    /**
+     * TextInputLayout for {@link #restaurantNameEditText} to display errors.
+     */
+    private TextInputLayout nameLayout;
+    /**
+     * TextInputLayout for {@link #addressEditText} to display errors.
+     */
+    private TextInputLayout addressLayout;
+    /**
+     * TextInputLayout for {@link #phoneEditText} to display errors.
+     */
+    private TextInputLayout phoneLayout;
+
+    /**
+     * Button to initiate the restaurant account creation process.
+     */
     private Button signUpButton;
+    /**
+     * Instance of FirebaseAuth for handling user authentication (account creation).
+     */
     private FirebaseAuth firebaseAuth;
-    private TextView signInRedirectTextView, userSignUpTextView;
+    /**
+     * TextView that acts as a link to navigate to the login screen.
+     */
+    private TextView signInRedirectTextView;
+    /**
+     * TextView that acts as a link to navigate to the regular user sign-up screen.
+     */
+    private TextView userSignUpTextView;
+    /**
+     * ProgressBar to indicate the progress of the sign-up process.
+     */
     private ProgressBar progressBar;
 
+    /**
+     * Required empty public constructor for Fragment instantiation.
+     */
     public RestaurantSignUpFragment()
     {
     }
 
+    /**
+     * Called to have the fragment instantiate its user interface view.
+     * Inflates the layout, initializes UI components (EditTexts, TextInputLayouts, Buttons, ProgressBar, TextViews),
+     * and obtains an instance of {@link FirebaseAuth}.
+     * Sets up click listeners for:
+     * <ul>
+     *     <li>Sign Up button: calls {@link #createRestaurantAccount()}.</li>
+     *     <li>Sign In redirect text: navigates to {@link LoginFragment}.</li>
+     *     <li>User Sign Up text: navigates to {@link UserSignUpFragment}.</li>
+     * </ul>
+     * Calls {@link #setupErrorClearListeners()} to configure listeners that clear input field errors on focus.
+     *
+     * @param inflater           The LayoutInflater object that can be used to inflate
+     *                           any views in the fragment.
+     * @param container          If non-null, this is the parent view that the fragment's
+     *                           UI should be attached to. The fragment should not add the view itself,
+     *                           but this can be used to generate the LayoutParams of the view.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed
+     *                           from a previous saved state as given here.
+     * @return Return the View for the fragment's UI.
+     */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
@@ -102,6 +203,18 @@ public class RestaurantSignUpFragment extends Fragment
         return view;
     }
 
+    /**
+     * Attempts to create a new restaurant account.
+     * Retrieves and validates input for email, password, confirm password, restaurant name, address, and phone.
+     * If any validation fails, sets an error on the corresponding {@link TextInputLayout} and returns.
+     * If basic validations pass, it disables the sign-up button, shows a progress bar, and calls
+     * {@link #isValidAddress(String, AddressValidationCallback)} to validate the address asynchronously.
+     * If the address is valid, it proceeds to create a Firebase user with email and password using
+     * {@link FirebaseAuth#createUserWithEmailAndPassword(String, String)}.
+     * On successful Firebase user creation, it calls {@link #saveRestaurantData(FirebaseUser, String, String, String, String)}.
+     * If Firebase user creation fails, a toast message is shown.
+     * Re-enables the sign-up button and hides the progress bar after the process completes or fails.
+     */
     private void createRestaurantAccount()
     {
         String email = emailEditText.getText().toString().trim();
@@ -113,43 +226,43 @@ public class RestaurantSignUpFragment extends Fragment
 
         boolean valid = true;
 
-        if (TextUtils.isEmpty(email))
+        if(TextUtils.isEmpty(email))
         {
             emailLayout.setError("Email is required");
             valid = false;
         }
-        if (TextUtils.isEmpty(password))
+        if(TextUtils.isEmpty(password))
         {
             passwordLayout.setError("Password is required");
             valid = false;
         }
-        if (TextUtils.isEmpty(confirmPassword))
+        if(TextUtils.isEmpty(confirmPassword))
         {
             confirmPasswordLayout.setError("Confirm password is required");
             valid = false;
         }
-        if (!password.equals(confirmPassword))
+        if(!password.equals(confirmPassword))
         {
             confirmPasswordLayout.setError("Passwords do not match");
             valid = false;
         }
-        if (TextUtils.isEmpty(name))
+        if(TextUtils.isEmpty(name))
         {
             nameLayout.setError("Restaurant name is required");
             valid = false;
         }
-        if (TextUtils.isEmpty(address))
+        if(TextUtils.isEmpty(address))
         {
             addressLayout.setError("Address is required");
             valid = false;
         }
-        if (TextUtils.isEmpty(phone))
+        if(TextUtils.isEmpty(phone))
         {
             phoneLayout.setError("Phone number is required");
             valid = false;
         }
 
-        if (!valid) return;
+        if(!valid) return;
 
         // Disable the sign-up button and show the progress bar
         signUpButton.setEnabled(false);
@@ -158,7 +271,7 @@ public class RestaurantSignUpFragment extends Fragment
         // Validate address before proceeding
         isValidAddress(address, isValid -> getActivity().runOnUiThread(() ->
         {
-            if (!isValid)
+            if(!isValid)
             {
                 addressLayout.setError("Invalid address. Please enter a valid location.");
                 signUpButton.setEnabled(true);
@@ -169,15 +282,14 @@ public class RestaurantSignUpFragment extends Fragment
             firebaseAuth.createUserWithEmailAndPassword(email, password)
                     .addOnCompleteListener(getActivity(), task ->
                     {
-                        if (task.isSuccessful())
+                        if(task.isSuccessful())
                         {
                             FirebaseUser user = firebaseAuth.getCurrentUser();
-                            if (user != null)
+                            if(user != null)
                             {
                                 saveRestaurantData(user, name, email, address, phone);
                             }
-                        }
-                        else
+                        } else
                         {
                             Toast.makeText(getActivity(), "Registration failed: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
                             signUpButton.setEnabled(true);
@@ -187,6 +299,15 @@ public class RestaurantSignUpFragment extends Fragment
         }));
     }
 
+    /**
+     * Validates an address asynchronously using Android's {@link Geocoder} and, as a fallback,
+     * OpenStreetMap's Nominatim API via {@link #validateWithOpenStreetMap(String)}.
+     * The result is passed to the provided {@link AddressValidationCallback}.
+     * This operation runs on a background thread.
+     *
+     * @param address  The address string to validate.
+     * @param callback The callback to be invoked with the validation result.
+     */
     private void isValidAddress(String address, AddressValidationCallback callback)
     {
         new Thread(() ->
@@ -211,6 +332,14 @@ public class RestaurantSignUpFragment extends Fragment
         }).start();
     }
 
+    /**
+     * Validates an address using the OpenStreetMap Nominatim API.
+     * Sends a GET request to the Nominatim search endpoint. If the JSON response
+     * contains a "lat" field, the address is considered valid.
+     *
+     * @param address The address string to validate.
+     * @return True if the address is found by OpenStreetMap, false otherwise or if an error occurs.
+     */
     private boolean validateWithOpenStreetMap(String address)
     {
         try
@@ -233,6 +362,24 @@ public class RestaurantSignUpFragment extends Fragment
         }
     }
 
+    /**
+     * Saves the new restaurant's data to Firestore and updates the user's document.
+     * Generates a unique ID for the restaurant. Attempts to geocode the provided address
+     * to get a {@link GeoPoint} for the location.
+     * Creates a restaurant data map including ID, name, address, phone, ownerID, creation timestamp, and location.
+     * Creates a user data map to set "userType" to "restaurant", store email, and link to the {@code restaurantId}.
+     * Saves the restaurant data to the "Restaurants" collection.
+     * Initializes an empty "Menus" subcollection for the new restaurant (with a temporary placeholder document that is then deleted).
+     * Merges the user data into the user's document in the "Users" collection.
+     * On successful completion of all saves, calls {@link #saveUserTypeToPreferences()} and then
+     * {@link #navigateToMainActivity(FirebaseUser)}.
+     *
+     * @param user    The newly created {@link FirebaseUser} for the restaurant owner.
+     * @param name    The name of the restaurant.
+     * @param email   The email address of the restaurant.
+     * @param address The address of the restaurant.
+     * @param phone   The phone number of the restaurant.
+     */
     private void saveRestaurantData(FirebaseUser user, String name, String email, String address, String phone)
     {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -292,6 +439,10 @@ public class RestaurantSignUpFragment extends Fragment
         }).addOnFailureListener(e -> Toast.makeText(getActivity(), "Failed to save restaurant: " + e.getMessage(), Toast.LENGTH_SHORT).show());
     }
 
+    /**
+     * Saves the user type ("restaurant") to SharedPreferences ("FeedMe").
+     * This allows for quicker determination of user type on subsequent app launches or logins.
+     */
     private void saveUserTypeToPreferences()
     {
         SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("FeedMe", getContext().MODE_PRIVATE);
@@ -302,6 +453,12 @@ public class RestaurantSignUpFragment extends Fragment
     }
 
 
+    /**
+     * Navigates to the {@link RestaurantMainActivity} after successful restaurant account creation and data saving.
+     * Finishes the current hosting activity.
+     *
+     * @param user The authenticated {@link FirebaseUser}. If null, no navigation occurs.
+     */
     private void navigateToMainActivity(FirebaseUser user)
     {
         if(user != null)
@@ -311,11 +468,24 @@ public class RestaurantSignUpFragment extends Fragment
         }
     }
 
+    /**
+     * Interface for receiving the result of an asynchronous address validation.
+     */
     private interface AddressValidationCallback
     {
+        /**
+         * Called when address validation is complete.
+         *
+         * @param isValid True if the address is considered valid, false otherwise.
+         */
         void onResult(boolean isValid);
     }
 
+    /**
+     * Sets up focus change listeners for all {@link TextInputEditText} fields.
+     * When a field gains focus, any error message previously set on its corresponding
+     * {@link TextInputLayout} is cleared (set to null).
+     */
     private void setupErrorClearListeners()
     {
         emailEditText.setOnFocusChangeListener((v, hasFocus) ->
